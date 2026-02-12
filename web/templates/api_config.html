@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG Log Analyzer - API Configuration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <h1>Agentic RAG</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/log-analyzer" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>Log Analyzer</span>
+                </a>
+                <a href="/api-config" class="nav-item active">
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
+                </a>
+                <a href="/sources" class="nav-item">
+                    <i class="fas fa-plug"></i>
+                    <span>Log Sources</span>
+                </a>
+                <a href="/chat" class="nav-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/evaluation" class="nav-item">
+                    <i class="fas fa-flask"></i>
+                    <span>Evaluation</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h2>API Configuration</h2>
+                    <p class="header-subtitle">Connect to external log sources and fetch logs via API</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="addAPIConnection()">
+                        <i class="fas fa-plus"></i> Add Connection
+                    </button>
+                </div>
+            </header>
+
+            <!-- API Connections -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-link"></i> Configured API Connections</h3>
+                </div>
+                <div class="api-connections-grid" id="apiConnectionsGrid">
+                    <div class="empty-state">
+                        <i class="fas fa-plug"></i>
+                        <p>No API connections configured. Click "Add Connection" to get started!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fetch Logs Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-download"></i> Fetch Logs from API</h3>
+                </div>
+                <div class="fetch-container">
+                    <div class="form-group">
+                        <label>Select API Connection</label>
+                        <select id="apiConnectionSelect" class="form-select">
+                            <option value="">Select a connection...</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Time</label>
+                            <input type="datetime-local" id="startTime" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>End Time</label>
+                            <input type="datetime-local" id="endTime" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Query/Filter (Optional)</label>
+                        <input type="text" id="queryFilter" class="form-input" placeholder="e.g., severity:ERROR">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Logs to Fetch</label>
+                        <input type="number" id="maxFetch" class="form-input" value="1000" min="1" max="10000">
+                    </div>
+                    <button class="btn btn-primary btn-lg" onclick="fetchLogs()">
+                        <i class="fas fa-cloud-download-alt"></i> Fetch Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- Fetched Logs Preview -->
+            <div class="section" id="fetchedLogsSection" style="display: none;">
+                <div class="section-header">
+                    <h3><i class="fas fa-list"></i> Fetched Logs</h3>
+                    <div class="header-actions">
+                        <button class="btn btn-sm btn-primary" onclick="analyzeFetchedLogs()">
+                            <i class="fas fa-play"></i> Analyze
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="exportFetchedLogs()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="logs-preview" id="logsPreview">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-book"></i> Supported API Types</h3>
+                </div>
+                <div class="api-types-grid">
+                    <div class="api-type-card">
+                        <div class="api-type-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <h4>Syslog API</h4>
+                        <p>Fetch logs from syslog servers</p>
+                        <ul>
+                            <li>TCP/UDP support</li>
+                            <li>RFC 5424/3164 formats</li>
+                            <li>Time-based filtering</li>
+                        </ul>
+                    </div>
+                    <div class="api-type-card">
+                        <div class="api-type-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h4>Elasticsearch</h4>
+                        <p>Query logs from Elasticsearch</p>
+                        <ul>
+                            <li>Query DSL support</li>
+                            <li>Index patterns</li>
+                            <li>Aggregations</li>
+                        </ul>
+                    </div>
+                    <div class="api-type-card">
+                        <div class="api-type-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h4>Splunk</h4>
+                        <p>Fetch logs from Splunk</p>
+                        <ul>
+                            <li>Search API</li>
+                            <li>SPL queries</li>
+                            <li>Real-time search</li>
+                        </ul>
+                    </div>
+                    <div class="api-type-card">
+                        <div class="api-type-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h4>REST API</h4>
+                        <p>Generic REST API support</p>
+                        <ul>
+                            <li>Custom endpoints</li>
+                            <li>Authentication</li>
+                            <li>JSON/XML parsing</li>
+                        </ul>
+                    </div>
+                    <div class="api-type-card">
+                        <div class="api-type-icon">
+                            <i class="fab fa-aws"></i>
+                        </div>
+                        <h4>AWS CloudWatch</h4>
+                        <p>Fetch logs from CloudWatch</p>
+                        <ul>
+                            <li>Log groups/streams</li>
+                            <li>Filter patterns</li>
+                            <li>IAM authentication</li>
+                        </ul>
+                    </div>
+                    <div class="api-type-card">
+                        <div class="api-type-icon">
+                            <i class="fab fa-microsoft"></i>
+                        </div>
+                        <h4>Azure Monitor</h4>
+                        <p>Query Azure Monitor logs</p>
+                        <ul>
+                            <li>KQL queries</li>
+                            <li>Log Analytics</li>
+                            <li>OAuth authentication</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add API Connection Modal -->
+    <div id="addAPIModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Add API Connection</h3>
+                <button class="modal-close" onclick="closeAPIModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addAPIForm">
+                    <div class="form-group">
+                        <label>Connection Name</label>
+                        <input type="text" id="apiName" required placeholder="e.g., Production Elasticsearch">
+                    </div>
+                    <div class="form-group">
+                        <label>API Type</label>
+                        <select id="apiType" required onchange="updateAPIFields()">
+                            <option value="">Select API type...</option>
+                            <option value="elasticsearch">Elasticsearch</option>
+                            <option value="splunk">Splunk</option>
+                            <option value="cloudwatch">AWS CloudWatch</option>
+                            <option value="azure">Azure Monitor</option>
+                            <option value="syslog">Syslog</option>
+                            <option value="rest">Generic REST API</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>API Endpoint/URL</label>
+                        <input type="text" id="apiEndpoint" required placeholder="https://api.example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Authentication Type</label>
+                        <select id="authType">
+                            <option value="none">None</option>
+                            <option value="basic">Basic Auth</option>
+                            <option value="bearer">Bearer Token</option>
+                            <option value="apikey">API Key</option>
+                            <option value="oauth">OAuth 2.0</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="authFields">
+                        <!-- Dynamic auth fields will be inserted here -->
+                    </div>
+                    <div class="form-group">
+                        <label>Test Connection</label>
+                        <button type="button" class="btn btn-secondary" onclick="testAPIConnection()">
+                            <i class="fas fa-plug"></i> Test Connection
+                        </button>
+                        <span id="testResult"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAPIModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAPIConnection()">Save Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/api_config.js') }}"></script>
+</body>
+</html>

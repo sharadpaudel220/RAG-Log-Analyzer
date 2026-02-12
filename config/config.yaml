@@ -1,0 +1,126 @@
+# Agentic RAG System Configuration
+
+# System Settings
+system:
+  name: "Agentic RAG Log Analyzer"
+  version: "1.0.0"
+  random_seed: 42
+
+# Input Layer Configuration
+input:
+  supported_formats:
+    - "txt"
+    - "log"
+    - "json"
+  batch_size: 1000
+  stream_mode: false
+
+# Preprocessing Configuration
+preprocessing:
+  log_parser: "drain3"
+  drain3:
+    depth: 4
+    similarity_threshold: 0.4
+    max_children: 100
+  normalization:
+    timestamp_format: "%Y-%m-%d %H:%M:%S"
+    extract_severity: true
+    extract_component: true
+
+# Knowledge Base Configuration
+knowledge_base:
+  storage_path: "data/knowledge_base"
+  vector_store: "faiss"
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  embedding_dimension: 384
+  chunk_size: 512
+  chunk_overlap: 50
+
+# Retrieval System Configuration
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.7
+  retrieval_strategy: "hybrid"  # semantic, keyword, hybrid
+  rerank: true
+
+# LLM Engine Configuration
+llm:
+  provider: "ollama"
+  model: "mistral:7b-instruct"
+  temperature: 0.1
+  max_tokens: 2048
+  timeout: 120
+  base_url: "http://localhost:11434"
+
+# Agentic Controller Configuration
+agentic:
+  max_reasoning_steps: 5
+  reasoning_strategy: "react"  # react, chain-of-thought
+  enable_self_reflection: true
+  confidence_threshold: 0.75
+
+# Alert Generator Configuration
+alerts:
+  severity_levels:
+    - "CRITICAL"
+    - "HIGH"
+    - "MEDIUM"
+    - "LOW"
+    - "INFO"
+  include_reasoning_chain: true
+  include_source_attribution: true
+  include_recommendations: true
+
+# Baseline Systems Configuration
+baselines:
+  rule_based:
+    error_keywords:
+      - "ERROR"
+      - "FATAL"
+      - "CRITICAL"
+      - "EXCEPTION"
+      - "FAILED"
+    threshold: 1
+  
+  isolation_forest:
+    contamination: 0.1
+    n_estimators: 100
+    max_samples: 256
+    random_state: 42
+  
+  non_agentic_rag:
+    top_k: 5
+    single_pass: true
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "false_positive_rate"
+    - "false_negative_rate"
+  efficiency_metrics:
+    - "latency"
+    - "memory_usage"
+    - "throughput"
+  statistical_tests:
+    - "paired_t_test"
+  significance_level: 0.05
+
+# Dataset Configuration
+datasets:
+  hdfs:
+    path: "data/datasets/hdfs"
+    train_split: 0.7
+    test_split: 0.3
+  bgl:
+    path: "data/datasets/bgl"
+    train_split: 0.7
+    test_split: 0.3
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  log_file: "logs/system.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

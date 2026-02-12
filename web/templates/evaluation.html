@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG Log Analyzer - Evaluation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <h1>Agentic RAG</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/log-analyzer" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>Log Analyzer</span>
+                </a>
+                <a href="/api-config" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
+                </a>
+                <a href="/sources" class="nav-item">
+                    <i class="fas fa-plug"></i>
+                    <span>Log Sources</span>
+                </a>
+                <a href="/chat" class="nav-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/evaluation" class="nav-item active">
+                    <i class="fas fa-flask"></i>
+                    <span>Evaluation</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h2>System Evaluation</h2>
+                    <p class="header-subtitle">Compare performance of all 4 detection systems</p>
+                </div>
+            </header>
+
+            <!-- Evaluation Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-flask"></i> Comparative System Evaluation</h3>
+                </div>
+                <div class="evaluation-container">
+                    <div class="evaluation-controls">
+                        <button class="btn btn-primary btn-lg" onclick="runEvaluation()">
+                            <i class="fas fa-play"></i> Run Comparative Evaluation
+                        </button>
+                        <span class="eval-info">Compare all 4 systems on sample data</span>
+                    </div>
+                    <div id="evaluationResults" class="evaluation-results"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Reuse dashboard.js evaluation function
+        document.addEventListener('DOMContentLoaded', function() {
+            checkHealth();
+        });
+
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                if (data.status === 'healthy') {
+                    statusDot.style.background = '#10b981';
+                    statusText.textContent = 'System Healthy';
+                } else {
+                    statusDot.style.background = '#f59e0b';
+                    statusText.textContent = 'Initializing...';
+                }
+            } catch (error) {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                statusDot.style.background = '#ef4444';
+                statusText.textContent = 'System Error';
+            }
+        }
+
+        async function runEvaluation() {
+            const evaluationResults = document.getElementById('evaluationResults');
+            evaluationResults.innerHTML = '<div class="loading"></div> Running comparative evaluation...';
+            
+            try {
+                const response = await fetch('/api/evaluate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        log_file: 'data/datasets/sample/sample_logs.log',
+                        max_logs: 10
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `<div style="margin-bottom: 1rem; color: var(--text-secondary);">Analyzed ${data.logs_analyzed} logs</div>`;
+                    
+                    data.results.forEach(result => {
+                        html += `
+                            <div class="eval-result-card">
+                                <div class="eval-system-name">${result.system}</div>
+                                <div class="eval-metrics">
+                                    <div class="eval-metric">
+                                        <span class="eval-metric-label">F1-Score</span>
+                                        <span class="eval-metric-value">${result.f1_score.toFixed(4)}</span>
+                                    </div>
+                                    <div class="eval-metric">
+                                        <span class="eval-metric-label">Precision</span>
+                                        <span class="eval-metric-value">${result.precision.toFixed(4)}</span>
+                                    </div>
+                                    <div class="eval-metric">
+                                        <span class="eval-metric-label">Recall</span>
+                                        <span class="eval-metric-value">${result.recall.toFixed(4)}</span>
+                                    </div>
+                                    <div class="eval-metric">
+                                        <span class="eval-metric-label">Accuracy</span>
+                                        <span class="eval-metric-value">${result.accuracy.toFixed(4)}</span>
+                                    </div>
+                                    <div class="eval-metric">
+                                        <span class="eval-metric-label">Latency</span>
+                                        <span class="eval-metric-value">${result.latency.toFixed(4)}s</span>
+                                    </div>
+                                    <div class="eval-metric">
+                                        <span class="eval-metric-label">Throughput</span>
+                                        <span class="eval-metric-value">${result.throughput.toFixed(2)} logs/s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    evaluationResults.innerHTML = html;
+                } else {
+                    evaluationResults.innerHTML = `<div style="color: var(--danger-color);">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                evaluationResults.innerHTML = `<div style="color: var(--danger-color);">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

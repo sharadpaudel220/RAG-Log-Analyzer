@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG Log Analyzer - Log Sources</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <h1>Agentic RAG</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/log-analyzer" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>Log Analyzer</span>
+                </a>
+                <a href="/api-config" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
+                </a>
+                <a href="/sources" class="nav-item active">
+                    <i class="fas fa-plug"></i>
+                    <span>Log Sources</span>
+                </a>
+                <a href="/chat" class="nav-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/evaluation" class="nav-item">
+                    <i class="fas fa-flask"></i>
+                    <span>Evaluation</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h2>Log Sources Management</h2>
+                    <p class="header-subtitle">Configure and manage multiple log sources with API keys</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddSourceModal()">
+                        <i class="fas fa-plus"></i> Add Source
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshSources()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Source Type Filters -->
+            <div class="section">
+                <div class="filter-chips">
+                    <button class="filter-chip active" onclick="filterSources('all')">
+                        <i class="fas fa-list"></i> All Sources
+                    </button>
+                    <button class="filter-chip" onclick="filterSources('system')">
+                        <i class="fas fa-server"></i> System
+                    </button>
+                    <button class="filter-chip" onclick="filterSources('network')">
+                        <i class="fas fa-network-wired"></i> Network
+                    </button>
+                    <button class="filter-chip" onclick="filterSources('application')">
+                        <i class="fas fa-code"></i> Application
+                    </button>
+                    <button class="filter-chip" onclick="filterSources('security')">
+                        <i class="fas fa-shield-alt"></i> Security
+                    </button>
+                    <button class="filter-chip" onclick="filterSources('container')">
+                        <i class="fas fa-box"></i> Container
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sources Grid -->
+            <div class="sources-grid" id="sourcesGrid">
+                <div class="empty-state">
+                    <i class="fas fa-plug"></i>
+                    <p>Loading sources...</p>
+                </div>
+            </div>
+
+            <!-- API Documentation Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-book"></i> API Integration Guide</h3>
+                </div>
+                <div class="api-docs">
+                    <div class="api-endpoint">
+                        <h4>1. Ingest Logs via API</h4>
+                        <pre><code>POST /api/ingest
+Headers:
+  X-API-Key: your-api-key-here
+  Content-Type: application/json
+
+Body (single log):
+{
+  "message": "ERROR: Connection timeout",
+  "timestamp": "2024-01-15T10:23:45Z",
+  "severity": "ERROR",
+  "hostname": "server-01"
+}
+
+Body (batch):
+[
+  {"message": "log 1", "timestamp": "..."},
+  {"message": "log 2", "timestamp": "..."}
+]</code></pre>
+                    </div>
+
+                    <div class="api-endpoint">
+                        <h4>2. Webhook Integration</h4>
+                        <pre><code>POST /api/ingest/webhook/{source_id}
+
+Send logs in real-time to the webhook URL.
+No authentication required for webhooks.</code></pre>
+                    </div>
+
+                    <div class="api-endpoint">
+                        <h4>3. File Upload</h4>
+                        <pre><code>POST /api/ingest/upload
+Content-Type: multipart/form-data
+
+Form Data:
+  file: log_file.log
+  source_id: your-source-id
+  source_type: system|network|application|security</code></pre>
+                    </div>
+
+                    <div class="api-endpoint">
+                        <h4>4. Example: Python Client</h4>
+                        <pre><code>import requests
+
+api_key = "your-api-key"
+url = "http://localhost:5001/api/ingest"
+
+logs = [
+    {
+        "message": "ERROR: Database connection failed",
+        "timestamp": "2024-01-15T10:23:45Z",
+        "severity": "ERROR"
+    }
+]
+
+response = requests.post(
+    url,
+    json=logs,
+    headers={"X-API-Key": api_key}
+)
+
+print(response.json())</code></pre>
+                    </div>
+
+                    <div class="api-endpoint">
+                        <h4>5. Example: cURL</h4>
+                        <pre><code>curl -X POST http://localhost:5001/api/ingest \
+  -H "X-API-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "ERROR: Connection timeout",
+    "timestamp": "2024-01-15T10:23:45Z",
+    "severity": "ERROR"
+  }'</code></pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Source Modal -->
+    <div id="addSourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Log Source</h3>
+                <button class="modal-close" onclick="closeAddSourceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addSourceForm">
+                    <div class="form-group">
+                        <label>Source Name</label>
+                        <input type="text" id="sourceName" required placeholder="e.g., Production Web Servers">
+                    </div>
+                    <div class="form-group">
+                        <label>Source ID</label>
+                        <input type="text" id="sourceId" required placeholder="e.g., prod-web-servers">
+                    </div>
+                    <div class="form-group">
+                        <label>Source Type</label>
+                        <select id="sourceType" required>
+                            <option value="system">System Logs</option>
+                            <option value="network">Network Logs</option>
+                            <option value="application">Application Logs</option>
+                            <option value="security">Security/Audit Logs</option>
+                            <option value="database">Database Logs</option>
+                            <option value="web_server">Web Server Logs</option>
+                            <option value="container">Container Logs</option>
+                            <option value="cloud">Cloud Service Logs</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingestion Method</label>
+                        <select id="ingestionMethod" required>
+                            <option value="api">API (Push)</option>
+                            <option value="webhook">Webhook</option>
+                            <option value="file_upload">File Upload</option>
+                            <option value="streaming">Streaming</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="sourceDescription" rows="3" placeholder="Optional description"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddSourceModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createSource()">Create Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Source Detail Modal -->
+    <div id="sourceDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detailSourceName">Source Details</h3>
+                <button class="modal-close" onclick="closeSourceDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="sourceDetailContent">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSourceDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/sources.js') }}"></script>
+</body>
+</html>

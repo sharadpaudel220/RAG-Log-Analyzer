@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG Log Analyzer - Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <h1>Agentic RAG</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/log-analyzer" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>Log Analyzer</span>
+                </a>
+                <a href="/api-config" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
+                </a>
+                <a href="/sources" class="nav-item">
+                    <i class="fas fa-plug"></i>
+                    <span>Log Sources</span>
+                </a>
+                <a href="/chat" class="nav-item active">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/evaluation" class="nav-item">
+                    <i class="fas fa-flask"></i>
+                    <span>Evaluation</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h2>Chat with AI Assistant</h2>
+                    <p class="header-subtitle">Conversational log analysis powered by Agentic RAG</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="clearChat()">
+                        <i class="fas fa-trash"></i> Clear Chat
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-author">AI Assistant</span>
+                                <span class="message-time">Just now</span>
+                            </div>
+                            <div class="message-text">
+                                <p>👋 Hello! I'm your Agentic RAG Log Analyzer assistant.</p>
+                                <p>I can help you:</p>
+                                <ul>
+                                    <li>Analyze system logs for anomalies</li>
+                                    <li>Explain error patterns and root causes</li>
+                                    <li>Provide recommendations for issues</li>
+                                    <li>Compare different detection systems</li>
+                                </ul>
+                                <p>Just paste a log entry or ask me a question!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea 
+                            id="chatInput" 
+                            placeholder="Type a message or paste a log entry..."
+                            rows="3"
+                            onkeydown="handleChatKeydown(event)"
+                        ></textarea>
+                        <button class="btn btn-primary btn-send" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="chat-suggestions">
+                        <button class="suggestion-chip" onclick="useSuggestion('Analyze this log: ERROR Connection timeout')">
+                            <i class="fas fa-lightbulb"></i> Analyze error log
+                        </button>
+                        <button class="suggestion-chip" onclick="useSuggestion('What types of anomalies can you detect?')">
+                            <i class="fas fa-question-circle"></i> What can you detect?
+                        </button>
+                        <button class="suggestion-chip" onclick="useSuggestion('Compare agentic vs non-agentic RAG')">
+                            <i class="fas fa-balance-scale"></i> Compare systems
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>

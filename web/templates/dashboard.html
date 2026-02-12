@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RAG Log Analyzer - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <h1>Agentic RAG</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/log-analyzer" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>Log Analyzer</span>
+                </a>
+                <a href="/api-config" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
+                </a>
+                <a href="/sources" class="nav-item">
+                    <i class="fas fa-plug"></i>
+                    <span>Log Sources</span>
+                </a>
+                <a href="/chat" class="nav-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/evaluation" class="nav-item">
+                    <i class="fas fa-flask"></i>
+                    <span>Evaluation</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h2>System Dashboard</h2>
+                    <p class="header-subtitle">Real-time monitoring and system overview</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalLogs">0</h3>
+                        <p>Total Logs Analyzed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="anomaliesDetected">0</h3>
+                        <p>Anomalies Detected</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="alertsGenerated">0</h3>
+                        <p>Alerts Generated</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="knowledgeBase">0</h3>
+                        <p>Knowledge Base Docs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                </div>
+                <div class="quick-actions-grid">
+                    <a href="/log-analyzer" class="action-card">
+                        <div class="action-icon blue">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h4>Analyze Logs</h4>
+                        <p>Upload files or analyze individual log entries</p>
+                    </a>
+                    <a href="/api-config" class="action-card">
+                        <div class="action-icon purple">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <h4>Configure APIs</h4>
+                        <p>Connect to external log sources</p>
+                    </a>
+                    <a href="/sources" class="action-card">
+                        <div class="action-icon green">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <h4>Manage Sources</h4>
+                        <p>Configure log sources and API keys</p>
+                    </a>
+                    <a href="/evaluation" class="action-card">
+                        <div class="action-icon orange">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h4>Run Evaluation</h4>
+                        <p>Compare system performance</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-bell"></i> Recent Alerts</h3>
+                    <button class="btn btn-sm btn-secondary" onclick="loadAlerts()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="alerts-container" id="alertsContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No alerts yet. Analyze some logs to get started!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-server"></i> System Status</h3>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">LLM Engine</div>
+                        <div class="status-value" id="llmStatus">
+                            <span class="status-indicator checking"></span> Checking...
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Knowledge Base</div>
+                        <div class="status-value" id="kbStatus">
+                            <span class="status-indicator checking"></span> Checking...
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Active Sources</div>
+                        <div class="status-value" id="sourcesStatus">
+                            <span class="status-indicator checking"></span> Checking...
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">System Uptime</div>
+                        <div class="status-value" id="uptimeStatus">
+                            <span class="status-indicator checking"></span> Checking...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

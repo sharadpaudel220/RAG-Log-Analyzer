@@ -1,0 +1,15 @@
+2024-01-15 10:23:45 INFO [DataNode] Received block blk_123456789 from /10.0.0.1:50010
+2024-01-15 10:23:46 INFO [DataNode] PacketResponder: received block blk_123456789
+2024-01-15 10:23:47 ERROR [DataNode] Exception in receiveBlock for block blk_987654321
+2024-01-15 10:23:48 FATAL [DataNode] Out of memory error while processing block
+2024-01-15 10:23:49 WARN [NameNode] Connection timeout to DataNode at /10.0.0.2:50010
+2024-01-15 10:23:50 ERROR [NameNode] Failed to connect to DataNode /10.0.0.2:50010
+2024-01-15 10:23:51 INFO [DataNode] Successfully stored block blk_111222333
+2024-01-15 10:23:52 CRITICAL [DataNode] Disk space exhausted on /data/hadoop
+2024-01-15 10:23:53 ERROR [NameNode] Authentication failed for user hadoop
+2024-01-15 10:23:54 INFO [DataNode] Heartbeat sent to NameNode
+2024-01-15 10:23:55 ERROR [DataNode] Block blk_444555666 is corrupt
+2024-01-15 10:23:56 WARN [NameNode] Replica not found for block blk_777888999
+2024-01-15 10:23:57 INFO [DataNode] Block received: blk_123123123
+2024-01-15 10:23:58 ERROR [DataNode] Connection refused by NameNode
+2024-01-15 10:23:59 FATAL [NameNode] Service unavailable - backend down

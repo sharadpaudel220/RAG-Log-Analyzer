@@ -1,93 +1,272 @@
-# Log Analyzer
+# Agentic RAG Framework for Real-Time System Log Analysis
 
+This is the implementation of the dissertation project: **"Design and Evaluation of an Agentic Retrieval-Augmented Generation Framework for Real-Time System Log Analysis and Alerting"**
 
+## Overview
 
-## Getting started
+This system implements an agentic RAG (Retrieval-Augmented Generation) framework that uses multi-step reasoning to analyze system logs, detect anomalies, and generate actionable alerts. The framework is compared against three baseline approaches:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+1. **Rule-Based System** - Pattern matching with predefined rules
+2. **Isolation Forest** - Classical ML anomaly detection
+3. **Non-Agentic RAG** - Single-pass RAG without iterative reasoning
+4. **Agentic RAG** (Proposed) - Multi-step reasoning with ReAct-style agent
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## System Architecture
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/sharad.neplearn/log-analyzer.git
-git branch -M main
-git push -uf origin main
+Input Layer → Preprocessing Layer → Core Processing Layer → Output Layer
+                                    ├─ Agentic Controller
+                                    ├─ Retrieval System
+                                    └─ LLM Engine
 ```
 
-## Integrate with your tools
+### Key Components
 
-* [Set up project integrations](https://gitlab.com/sharad.neplearn/log-analyzer/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- **Log Preprocessor**: Drain3-based log parsing and normalization
+- **Knowledge Base**: FAISS vector store with historical incidents
+- **Retrieval System**: Hybrid semantic + keyword retrieval
+- **LLM Engine**: Mistral 7B via Ollama
+- **Agentic Controller**: ReAct-style multi-step reasoning (max 5 steps)
+- **Alert Generator**: Structured alerts with explanations
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+### Prerequisites
+
+- Python 3.12+
+- Ollama (for LLM inference)
+- 8GB+ RAM recommended
+- macOS, Linux, or Windows
+
+### Step 1: Clone and Setup
+
+```bash
+cd "Log Analyzer"
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Step 2: Install and Setup Ollama
+
+```bash
+# Install Ollama (macOS)
+brew install ollama
+
+# Or download from https://ollama.ai
+
+# Start Ollama service
+ollama serve
+
+# Pull Mistral model (in another terminal)
+chmod +x scripts/setup_ollama.sh
+./scripts/setup_ollama.sh
+```
+
+### Step 3: Setup Datasets
+
+```bash
+python scripts/download_datasets.py
+```
+
+This will create sample logs and provide instructions for downloading HDFS and BGL datasets.
+
+### Step 4: Initialize Knowledge Base
+
+```bash
+python main.py setup
+```
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### 1. Check System Health
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+python main.py health
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### 2. Analyze Logs (Agentic RAG)
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```bash
+python main.py analyze --log-file data/datasets/sample/sample_logs.log --output-dir results
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### 3. Run Comparative Evaluation
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+python main.py evaluate --log-file data/datasets/sample/sample_logs.log --ground-truth data/datasets/sample/ground_truth.json
+```
+
+This will:
+- Evaluate all 4 systems (Rule-Based, Isolation Forest, Non-Agentic RAG, Agentic RAG)
+- Generate performance metrics (Precision, Recall, F1-Score, Latency, Memory)
+- Create visualization plots in `results/figures/`
+- Save evaluation report to `results/evaluation_report.json`
+
+### 4. Rebuild Knowledge Base
+
+```bash
+python main.py setup --rebuild-kb
+```
+
+## Project Structure
+
+```
+Log Analyzer/
+├── config/
+│   └── config.yaml              # System configuration
+├── src/
+│   ├── input_layer/
+│   │   └── log_ingestion.py     # Log file ingestion
+│   ├── preprocessing/
+│   │   └── log_preprocessor.py  # Drain3 parsing
+│   ├── knowledge_base/
+│   │   └── knowledge_manager.py # FAISS vector store
+│   ├── retrieval/
+│   │   └── retrieval_system.py  # Hybrid retrieval
+│   ├── llm_engine/
+│   │   └── llm_interface.py     # Ollama/Mistral interface
+│   ├── agentic_controller/
+│   │   └── agentic_rag.py       # ReAct agent
+│   ├── output_layer/
+│   │   └── alert_generator.py   # Alert generation
+│   ├── baselines/
+│   │   ├── rule_based.py        # Rule-based baseline
+│   │   ├── isolation_forest.py  # ML baseline
+│   │   └── non_agentic_rag.py   # Non-agentic RAG
+│   ├── evaluation/
+│   │   ├── metrics.py           # Metrics calculation
+│   │   ├── evaluator.py         # System evaluation
+│   │   └── visualizer.py        # Result visualization
+│   └── utils/
+│       ├── config_loader.py     # Configuration management
+│       └── logger.py            # Logging utilities
+├── scripts/
+│   ├── download_datasets.py     # Dataset setup
+│   └── setup_ollama.sh          # Ollama setup
+├── main.py                      # Main entry point
+├── requirements.txt             # Python dependencies
+└── README.md                    # This file
+```
+
+## Configuration
+
+Edit `config/config.yaml` to customize:
+
+- **LLM settings**: Model, temperature, max tokens
+- **Retrieval settings**: Top-k, similarity threshold
+- **Agentic settings**: Max reasoning steps, confidence threshold
+- **Baseline settings**: Rule patterns, contamination rate
+
+## Evaluation Metrics
+
+### Detection Performance
+- Precision
+- Recall
+- F1-Score
+- False Positive Rate (FPR)
+- False Negative Rate (FNR)
+- Accuracy
+
+### Efficiency
+- Average Latency (seconds per log)
+- Throughput (logs per second)
+- Memory Usage (MB)
+- Total Processing Time
+
+## Research Questions
+
+**RQ1**: Does agentic RAG improve detection accuracy compared to non-agentic RAG and rule-based approaches?
+
+**RQ2**: What are the computational costs of agentic RAG compared to baseline approaches?
+
+## Expected Results
+
+Based on the dissertation proposal, the system should demonstrate:
+
+1. **Higher F1-scores** for Agentic RAG (target: >0.90 on HDFS/BGL)
+2. **Better interpretability** through reasoning chains
+3. **Increased latency** due to multi-step reasoning
+4. **Trade-off analysis** between accuracy and computational cost
+
+## Sample Output
+
+```
+================================================================================
+ALERT: HIGH: Error Detected in DataNode
+================================================================================
+Alert ID: ALERT-20260212-00001
+Timestamp: 2026-02-12 18:45:23
+Severity: HIGH
+Confidence: 87.50%
+
+Description:
+Log Content: 2024-01-15 10:23:47 ERROR [DataNode] Exception in receiveBlock...
+
+Analysis:
+Issue Identification: Block reception failure in DataNode
+Root Cause: Network connectivity or corrupted block data
+Impact: Data replication may be affected
+
+Recommended Actions:
+  1. Check network connectivity between DataNode and NameNode
+  2. Verify block integrity using fsck
+  3. Review DataNode logs for additional errors
+  4. Monitor replication status
+
+Reasoning Chain:
+  Step 1: I need to analyze this log entry with severity ERROR...
+  Step 2: I have retrieved relevant knowledge about block corruption...
+  Step 3: I have sufficient confidence in my analysis...
+================================================================================
+```
+
+## Troubleshooting
+
+### Ollama Connection Error
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# Start Ollama
+ollama serve
+```
+
+### Memory Issues
+- Reduce batch size in `config.yaml`
+- Use quantized models (4-bit)
+- Process logs in smaller chunks
+
+### FAISS Index Error
+```bash
+# Rebuild knowledge base
+python main.py setup --rebuild-kb
+```
+
+## Citation
+
+If you use this system in your research, please cite:
+
+```
+Paudel, S. C. (2026). Design and Evaluation of an Agentic Retrieval-Augmented 
+Generation Framework for Real-Time System Log Analysis and Alerting. 
+Master's Dissertation, London Metropolitan University.
+```
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is developed for academic research purposes as part of a Master's dissertation.
+
+## Author
+
+**Sharad Chandra Paudel**
+- London Met ID: 23057169
+- College ID: NP01MS7S240007
+- Supervisor: Aadesh Tandukar
+
+## Acknowledgments
+
+- Drain3 for log parsing
+- FAISS for vector similarity search
+- Ollama for local LLM inference
+- LogHub for benchmark datasets
