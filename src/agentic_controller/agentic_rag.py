@@ -70,16 +70,43 @@ class AgenticController:
         self.enable_self_reflection = config.get('agentic.enable_self_reflection', True)
         self.confidence_threshold = config.get('agentic.confidence_threshold', 0.75)
         
-        logger.info(f"AgenticController initialized with {self.reasoning_strategy} strategy")
+        self.fast_mode = config.get('agentic.fast_mode', True)
+        self.early_stop_on_low_severity = config.get('agentic.early_stop_on_low_severity', True)
+        self.skip_info_logs = config.get('agentic.skip_info_logs', True)
+        self.skip_warning_logs = config.get('agentic.skip_warning_logs', True)
+        self.only_analyze_errors = config.get('agentic.only_analyze_errors', True)
+        self.max_steps_fast = config.get('agentic.max_steps_fast', 1)
+        self.enable_template_cache = config.get('agentic.enable_template_cache', True)
+        
+        self.template_cache = {} if self.enable_template_cache else None
+        
+        logger.info(f"AgenticController initialized with {self.reasoning_strategy} strategy (fast_mode={self.fast_mode})")
     
     def analyze_log(self, log_entry: ParsedLogEntry) -> AgenticAnalysisResult:
-        logger.info(f"Starting agentic analysis for log: {log_entry.raw_content[:100]}")
+        logger.debug(f"Starting agentic analysis for log: {log_entry.raw_content[:100]}")
+        
+        if self.skip_info_logs and log_entry.severity in ['INFO', 'DEBUG']:
+            return self._create_fast_result(log_entry, is_anomaly=False, severity='INFO')
+        
+        if self.skip_warning_logs and log_entry.severity in ['WARNING', 'WARN', 'LOW']:
+            return self._create_fast_result(log_entry, is_anomaly=False, severity='LOW')
+        
+        if self.only_analyze_errors and log_entry.severity not in ['ERROR', 'CRITICAL', 'FATAL', 'HIGH']:
+            return self._create_fast_result(log_entry, is_anomaly=False, severity=log_entry.severity)
+        
+        if self.enable_template_cache and log_entry.template:
+            cache_key = f"{log_entry.template}_{log_entry.severity}"
+            if cache_key in self.template_cache:
+                logger.debug(f"Using cached analysis for template: {log_entry.template[:50]}")
+                return self._create_cached_result(log_entry, self.template_cache[cache_key])
         
         reasoning_chain = []
         retrieved_documents = []
         current_context = self._build_initial_context(log_entry)
         
-        for step_num in range(1, self.max_reasoning_steps + 1):
+        max_steps = self.max_steps_fast if self.fast_mode else self.max_reasoning_steps
+        
+        for step_num in range(1, max_steps + 1):
             step = self._execute_reasoning_step(
                 step_num, 
                 log_entry, 
@@ -91,8 +118,13 @@ class AgenticController:
             reasoning_chain.append(step)
             
             if step.action == ActionType.FINISH:
-                logger.info(f"Analysis completed in {step_num} steps")
+                logger.debug(f"Analysis completed in {step_num} steps")
                 break
+            
+            if self.early_stop_on_low_severity and step_num >= 1:
+                if log_entry.severity in ['LOW', 'INFO'] and step.confidence > 0.6:
+                    logger.debug(f"Early stopping for low-severity log at step {step_num}")
+                    break
             
             current_context = self._update_context(current_context, step)
         
@@ -105,7 +137,7 @@ class AgenticController:
         is_anomaly = self._determine_anomaly(severity, confidence)
         recommendations = self._extract_recommendations(final_analysis)
         
-        return AgenticAnalysisResult(
+        result = AgenticAnalysisResult(
             log_entry=log_entry,
             is_anomaly=is_anomaly,
             severity=severity,
@@ -115,6 +147,17 @@ class AgenticController:
             confidence_score=confidence,
             recommendations=recommendations
         )
+        
+        if self.enable_template_cache and log_entry.template:
+            cache_key = f"{log_entry.template}_{log_entry.severity}"
+            self.template_cache[cache_key] = {
+                'severity': severity,
+                'is_anomaly': is_anomaly,
+                'final_analysis': final_analysis,
+                'confidence': confidence
+            }
+        
+        return result
     
     def _execute_reasoning_step(
         self, 
@@ -355,3 +398,27 @@ class AgenticController:
                     recommendations.append(line.lstrip('0123456789.-•) ').strip())
         
         return recommendations[:5]
+    
+    def _create_fast_result(self, log_entry: ParsedLogEntry, is_anomaly: bool, severity: str) -> AgenticAnalysisResult:
+        return AgenticAnalysisResult(
+            log_entry=log_entry,
+            is_anomaly=is_anomaly,
+            severity=severity,
+            reasoning_chain=[],
+            retrieved_documents=[],
+            final_analysis=f"Low-severity log ({severity}): No detailed analysis required.",
+            confidence_score=0.9,
+            recommendations=[]
+        )
+    
+    def _create_cached_result(self, log_entry: ParsedLogEntry, cached: Dict[str, Any]) -> AgenticAnalysisResult:
+        return AgenticAnalysisResult(
+            log_entry=log_entry,
+            is_anomaly=cached['is_anomaly'],
+            severity=cached['severity'],
+            reasoning_chain=[],
+            retrieved_documents=[],
+            final_analysis=cached['final_analysis'],
+            confidence_score=cached['confidence'],
+            recommendations=[]
+        )

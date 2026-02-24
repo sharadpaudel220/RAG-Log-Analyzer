@@ -1,0 +1,529 @@
+{
+  "session_id": "d3f0aa06-ca6f-4439-907e-21e6d54ba4eb",
+  "filename": "system_logs.txt",
+  "timestamp": "2026-02-24T19:43:52.449219",
+  "system_type": "agentic",
+  "total_logs": 100,
+  "anomalies_detected": 2,
+  "total_time": 66.85949110984802,
+  "anomalies": [
+    {
+      "log": {
+        "content": "so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269",
+        "message": "so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269"
+      },
+      "confidence": 0.6,
+      "alert": "Alert(alert_id='ALERT-20260224-00001', timestamp=datetime.datetime(2026, 2, 24, 19, 43, 22, 651384), severity='CRITICAL', title='CRITICAL: Connection Issue in so_gencnt', description='Log Content: so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow\\n\\nAnalysis:\\n1. Issue: The log indicates a SYN-SENT state for the process \"Windsurf Helper\" on port 5632, but there is no response (SYN-ACK) from the remote server. This could be a sign of a connection failure or a firewall blocking the connection.\\n2. Severity: MEDIUM - While this issue doesn\\'t immediately pose a critical threat, it may lead to service unavailability if not addressed.\\n3. Root cause: The root cause could be a network issue (e.g., firewall blocking the connection, network congestion), or a problem with the remote server.\\n4. Action needed: Investigate the network configuration for potential issues, check firewall rules to ensure that port 5632 is open, and verify the status of the remote server. If necessary, contact the server administrator or network provider for assistance.', affected_component='so_gencnt', log_entry=ParsedLogEntry(raw_content='so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269', template='so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269', template_id=10, parameters=[], timestamp=None, severity='ERROR', component='so_gencnt', source_file='data/uploads/system_logs.txt', line_number=20, metadata={}), reasoning_chain=[{'step_number': 1, 'thought': \"I need to analyze this log entry: 'so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/...' with severity ERROR. First, I should retrieve relevant knowledge.\", 'action': 'retrieve', 'action_input': {'query': 'so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269', 'severity': 'ERROR'}, 'observation': 'No relevant documents found in knowledge base.', 'confidence': 0.6}], source_attribution=[], recommendations=[], confidence_score=0.6, metadata={'template_id': 10, 'original_severity': 'ERROR'})"
+    },
+    {
+      "log": {
+        "content": "so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269",
+        "message": "so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269"
+      },
+      "confidence": 0.6,
+      "alert": "Alert(alert_id='ALERT-20260224-00002', timestamp=datetime.datetime(2026, 2, 24, 19, 43, 52, 426606), severity='HIGH', title='HIGH: Connection Issue in so_gencnt', description=\"Log Content: so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 f\\n\\nAnalysis:\\n1. Issue: The log indicates a SYN packet received but no response sent, which is known as a half-open connection or a SYN flood attack. This could potentially lead to resource exhaustion on the server.\\n2. Severity: HIGH - Although this single occurrence might not cause immediate service disruption, it's an indication of a potential denial-of-service (DoS) attack.\\n3. Root cause: The root cause could be a SYN flood attack or a misconfiguration in the server settings that causes the Windsurf Helper process to fail to respond to incoming SYN packets.\\n4. Action needed: Investigate further by analyzing other logs for similar occurrences, check server configuration, and consider implementing measures such as SYN cookies or using a firewall to protect against SYN flood attacks. Additionally, ensure that the Windsurf Helper process is functioning correctly and has sufficient resources to handle incoming connections.\", affected_component='so_gencnt', log_entry=ParsedLogEntry(raw_content='so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269', template='so_gencnt: 2473741 t_state: <*> process: Windsurf Helper :5632 SYN in/out: <*> bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269', template_id=10, parameters=['ESTABLISHED', '1/1'], timestamp=None, severity='ERROR', component='so_gencnt', source_file='data/uploads/system_logs.txt', line_number=26, metadata={}), reasoning_chain=[{'step_number': 1, 'thought': \"I need to analyze this log entry: 'so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out:...' with severity ERROR. First, I should retrieve relevant knowledge.\", 'action': 'retrieve', 'action_input': {'query': 'so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269', 'severity': 'ERROR'}, 'observation': 'No relevant documents found in knowledge base.', 'confidence': 0.6}], source_attribution=[], recommendations=[], confidence_score=0.6, metadata={'template_id': 10, 'original_severity': 'ERROR'})"
+    }
+  ],
+  "all_logs": [
+    {
+      "content": "Timestamp                       (process)[PID]",
+      "severity": "INFO",
+      "template": "Timestamp (process)[PID]"
+    },
+    {
+      "content": "2026-02-24 18:41:13.219040+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10608",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:13.219040+0545 localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10608"
+    },
+    {
+      "content": "2026-02-24 18:41:13.219051+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:13.219055+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:13.675549+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54687610",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:13.675549+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54687610"
+    },
+    {
+      "content": "2026-02-24 18:41:13.675582+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:1 outputPackets:1 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:13.675582+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:1 outputPackets:1 packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:13.840617+0545  localhost kernel[0]: (AppleInputDeviceSupport) [HID] [0x1000008d8][c599a][AppleHIDTransportProtocolHIDSPI::asyncTaskAction]: Async task : 2",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:13.840617+0545 localhost kernel[0]: (AppleInputDeviceSupport) [HID] [0x1000008d8][c599a][AppleHIDTransportProtocolHIDSPI::asyncTaskAction]: Async task : 2"
+    },
+    {
+      "content": "2026-02-24 18:41:14.219054+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10576",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:14.219065+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:14.219069+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:14.704192+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54688638",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:14.704222+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:2 outputPackets:1 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> outputPackets:1 packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:15.110278+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) IO80211PeerMonitor::checkForDPS()  Enter",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:15.110278+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) IO80211PeerMonitor::checkForDPS() Enter"
+    },
+    {
+      "content": "2026-02-24 18:41:15.112646+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BE : Count: 38 avgLatencyMs:1 maxLatencyMs:10",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:15.112646+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BE : Count: 38 avgLatencyMs:1 maxLatencyMs:10"
+    },
+    {
+      "content": "2026-02-24 18:41:15.112652+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BK : Count: 0 avgLatencyMs:0 maxLatencyMs:0",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.112656+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: VI : Count: 0 avgLatencyMs:0 maxLatencyMs:0",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.112659+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: VO : Count: 3 avgLatencyMs:1 maxLatencyMs:1",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.187526+0545  localhost kernel[0]: SK[4]: flow_entry_alloc               fe \"0 proc kernel_task(0)Windsurf Helper  nx_port 1 flow_uuid AF3DAAB4-EBC5-4B22-95A5-C84193723956 flags 0x14120<CONNECTED,QOS_MARKING,EXT_PORT,EXT_FLOWID> ipver=4,src=<IPv4-redacted>.59298,dst=<IPv4-redacted>.443,proto=0x06 mask=0x0000003f,hash=0xfff9774d tp_proto=0x06\"",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:15.187526+0545 localhost kernel[0]: SK[4]: flow_entry_alloc fe \"0 proc kernel_task(0)Windsurf Helper nx_port 1 flow_uuid AF3DAAB4-EBC5-4B22-95A5-C84193723956 flags 0x14120<CONNECTED,QOS_MARKING,EXT_PORT,EXT_FLOWID> ipver=4,src=<IPv4-redacted>.59298,dst=<IPv4-redacted>.443,proto=0x06 mask=0x0000003f,hash=0xfff9774d tp_proto=0x06\""
+    },
+    {
+      "content": "2026-02-24 18:41:15.187656+0545  localhost kernel[0]: tcp connect outgoing: [<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:15.187656+0545 localhost kernel[0]: tcp connect outgoing: [<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)"
+    },
+    {
+      "content": "so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269",
+      "severity": "ERROR",
+      "template": "so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269"
+    },
+    {
+      "content": "2026-02-24 18:41:15.219072+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10565",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.219085+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.219088+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.377466+0545  localhost kernel[0]: (IOSurface) SID: 0x0 task: <private> buffer: 0x0  buffer->fClientTask = 0x0 not found",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:15.377466+0545 localhost kernel[0]: (IOSurface) SID: 0x0 task: <private> buffer: 0x0 buffer->fClientTask = 0x0 not found"
+    },
+    {
+      "content": "2026-02-24 18:41:15.539079+0545  localhost kernel[0]: tcp connected: [<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:15.539079+0545 localhost kernel[0]: tcp connected: [<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)"
+    },
+    {
+      "content": "so_gencnt: 2473741 t_state: ESTABLISHED process: Windsurf Helper :5632 SYN in/out: 1/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269",
+      "severity": "ERROR",
+      "template": "so_gencnt: 2473741 t_state: <*> process: Windsurf Helper :5632 SYN in/out: <*> bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttvar: 250.0 ms base_rtt: 289 ms error: 0 so_error: 0 svc/tc: 0 flow: 0xb61f1269"
+    },
+    {
+      "content": "2026-02-24 18:41:15.743065+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54689676",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:15.743420+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:3 outputPackets:4 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:16.092006+0545  localhost kernel[0]: (Sandbox) 3 duplicate reports for Sandbox: assistantd(22135) deny(1) iokit-open-user-client AppleKeyStoreUserClient",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:16.092006+0545 localhost kernel[0]: (Sandbox) 3 duplicate reports for Sandbox: assistantd(22135) deny(1) iokit-open-user-client AppleKeyStoreUserClient"
+    },
+    {
+      "content": "2026-02-24 18:41:16.092015+0545  localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:16.092015+0545 localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app"
+    },
+    {
+      "content": "2026-02-24 18:41:16.156224+0545  localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app/Contents",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:16.193079+0545  localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app/Contents/Info.plist",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:16.220094+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10558",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:16.220105+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:16.220109+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:16.419668+0545  localhost kernel[0]: tcp_connection_summary (tcp_usrclosed:3220)[<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:16.419668+0545 localhost kernel[0]: tcp_connection_summary (tcp_usrclosed:3220)[<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)"
+    },
+    {
+      "content": "so_gencnt: 2473741 t_state: LAST_ACK process: Windsurf Helper :5632 Duration: 1.232 sec Conn_Time: 0.351 sec bytes in/out: 3608/1552 pkts in/out: 3/3 pkt rxmit: 0 ooo pkts: 0 dup bytes in: 0 ACKs delayed: 0 delayed ACKs sent: 0",
+      "severity": "INFO",
+      "template": "so_gencnt: 2473741 t_state: LAST_ACK process: Windsurf Helper :5632 Duration: 1.232 sec Conn_Time: 0.351 sec bytes in/out: 3608/1552 pkts in/out: 3/3 pkt rxmit: 0 ooo pkts: 0 dup bytes in: 0 ACKs delayed: 0 delayed ACKs sent: 0"
+    },
+    {
+      "content": "rtt: 357.406 ms rttvar: 110.187 ms base rtt: 289 ms so_error: 0 svc/tc: 0 flow: 0xb61f1269",
+      "severity": "INFO",
+      "template": "rtt: 357.406 ms rttvar: 110.187 ms base rtt: 289 ms so_error: 0 svc/tc: 0 flow: 0xb61f1269"
+    },
+    {
+      "content": "2026-02-24 18:41:16.419695+0545  localhost kernel[0]: tcp_connection_summary [<IPv4-redacted>:59298<-><IPv4-redacted>:443] interface: en0 (skipped: 209)",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: tcp_connection_summary <*> interface: en0 (skipped: 209)"
+    },
+    {
+      "content": "so_gencnt: 2473741 t_state: LAST_ACK process: Windsurf Helper :5632 flowctl: 0us (0x) SYN in/out: 1/1 FIN in/out: 1/0 RST in/out: 0/0 AccECN (client/server): Disabled/Disabled",
+      "severity": "INFO",
+      "template": "so_gencnt: 2473741 t_state: LAST_ACK process: Windsurf Helper :5632 flowctl: 0us (0x) SYN in/out: 1/1 FIN in/out: 1/0 RST in/out: 0/0 AccECN (client/server): Disabled/Disabled"
+    },
+    {
+      "content": "2026-02-24 18:41:16.617107+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) I [dk] <private>@28844: DTIM missed count: p2p(6), iovar(0), scan(14922), roam(0), homechan(3823), sleep(3064601), misc(0)",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:16.617107+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) I [dk] <private>@28844: DTIM missed count: p2p(6), iovar(0), scan(14922), roam(0), homechan(3823), sleep(3064601), misc(0)"
+    },
+    {
+      "content": "2026-02-24 18:41:16.773459+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54690706",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:16.774201+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:13 outputPackets:8 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:17.144200+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) 417611.632180 wlan0.E[687013] [wcl] checkTrafficCounters@2638:realTime before<1> -> after<1>,  realTimeNumPackets =<3> inactive before<0> -> after<0>,  infraNumPackets =<38> statsIntervalMultiplier=<5>",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:17.144200+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) 417611.632180 wlan0.E[687013] [wcl] checkTrafficCounters@2638:realTime before<1> -> after<1>, realTimeNumPackets =<3> inactive before<0> -> after<0>, infraNumPackets =<38> statsIntervalMultiplier=<5>"
+    },
+    {
+      "content": "2026-02-24 18:41:17.147089+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) 417611.635437 wlan0.E[687014] [wcl] computeAdvisoryScores@666:LQM-WiFi: WiFi Latency: TxLat-hist  [3(100 %) / 0(0 %) / 0(0 %) / 0(0 %)]\tRxLat-hist\t[0(0 %) / 0(0 %) / 0(0 %) / 0(0 %)]",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:17.147089+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) 417611.635437 wlan0.E[687014] [wcl] computeAdvisoryScores@666:LQM-WiFi: WiFi Latency: TxLat-hist [3(100 %) / 0(0 %) / 0(0 %) / 0(0 %)] RxLat-hist [0(0 %) / 0(0 %) / 0(0 %) / 0(0 %)]"
+    },
+    {
+      "content": "2026-02-24 18:41:17.323884+0545  localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:17.381677+0545  localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:17.381677+0545 localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    },
+    {
+      "content": "2026-02-24 18:41:17.632757+0545  localhost kernel[0]: (Sandbox) 1 duplicate report for Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:17.632757+0545 localhost kernel[0]: (Sandbox) 1 duplicate report for Sandbox: ContextStoreAgent(22317) allow file-read-data /Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    },
+    {
+      "content": "2026-02-24 18:41:17.632766+0545  localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow file-read-xattr /Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (Sandbox) Sandbox: ContextStoreAgent(22317) allow <*> /Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    },
+    {
+      "content": "2026-02-24 18:41:17.814215+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54691744",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:17.814425+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:2 outputPackets:2 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:18.219049+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10565",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:18.219067+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:18.219071+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:18.851517+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54692782",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:18.853331+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:1 outputPackets:1 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:19.219052+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10549",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:19.219064+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:19.219067+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:19.884613+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54693819",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:19.884648+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:1 outputPackets:0 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:20.112761+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) IO80211PeerMonitor::checkForDPS()  Enter",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) IO80211PeerMonitor::checkForDPS() Enter"
+    },
+    {
+      "content": "2026-02-24 18:41:20.115553+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BE : Count: 12 avgLatencyMs:3 maxLatencyMs:13",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:20.115566+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BK : Count: 0 avgLatencyMs:0 maxLatencyMs:0",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:20.115569+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: VI : Count: 0 avgLatencyMs:0 maxLatencyMs:0",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:20.115572+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: VO : Count: 3 avgLatencyMs:1 maxLatencyMs:2",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:20.919502+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54694850",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:20.920336+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:1 outputPackets:0 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:21.219054+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10541",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:21.219067+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:21.219070+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:21.779364+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) I [dk] <private>@28844: DTIM missed count: p2p(6), iovar(0), scan(14922), roam(0), homechan(3823), sleep(3064601), misc(0)",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) I [dk] <private>@28844: DTIM missed count: p2p(6), iovar(0), scan(14922), roam(0), homechan(3823), sleep(3064601), misc(0)"
+    },
+    {
+      "content": "2026-02-24 18:41:21.954377+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54695887",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:21.955080+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:6 outputPackets:2 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:22.182516+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) 417616.670496 wlan0.E[687015] [wcl] checkTrafficCounters@2638:realTime before<1> -> after<1>,  realTimeNumPackets =<3> inactive before<0> -> after<0>,  infraNumPackets =<16> statsIntervalMultiplier=<5>",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) <*> <*> [wcl] checkTrafficCounters@2638:realTime before<1> -> after<1>, realTimeNumPackets =<3> inactive before<0> -> after<0>, infraNumPackets <*> statsIntervalMultiplier=<5>"
+    },
+    {
+      "content": "2026-02-24 18:41:22.185294+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) 417616.673639 wlan0.E[687016] [wcl] computeAdvisoryScores@666:LQM-WiFi: WiFi Latency: TxLat-hist  [7(0 %) / 0(0 %) / 0(0 %) / 0(0 %)]\tRxLat-hist\t[0(0 %) / 0(0 %) / 0(0 %) / 0(0 %)]",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) <*> <*> [wcl] computeAdvisoryScores@666:LQM-WiFi: WiFi Latency: TxLat-hist <*> %) / 0(0 %) / 0(0 %) / 0(0 %)] RxLat-hist [0(0 %) / 0(0 %) / 0(0 %) / 0(0 %)]"
+    },
+    {
+      "content": "2026-02-24 18:41:22.219054+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10514",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:22.219067+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:22.219078+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:22.696853+0545  localhost kernel[0]: git[22438] triggered unnest of range 0x1fe000000->0x200000000 of DYLD shared region in VM map 0xd4574ecaa4bdca99. While not abnormal for debuggers, this increases system memory footprint until the target exits.",
+      "severity": "INFO",
+      "template": "2026-02-24 18:41:22.696853+0545 localhost kernel[0]: git[22438] triggered unnest of range 0x1fe000000->0x200000000 of DYLD shared region in VM map 0xd4574ecaa4bdca99. While not abnormal for debuggers, this increases system memory footprint until the target exits."
+    },
+    {
+      "content": "2026-02-24 18:41:22.696865+0545  localhost kernel[0]: git[22438] triggered unnest of range 0x200000000->0x202000000 of DYLD shared region in VM map 0xd4574ecaa4bdca99. While not abnormal for debuggers, this increases system memory footprint until the target exits.",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: git[22438] triggered unnest of range <*> of DYLD shared region in VM map 0xd4574ecaa4bdca99. While not abnormal for debuggers, this increases system memory footprint until the target exits."
+    },
+    {
+      "content": "2026-02-24 18:41:22.993687+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54696923",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:22.993828+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:2 outputPackets:1 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:23.219048+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10508",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:23.219060+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:23.219064+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:24.045269+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54697976",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:24.047820+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:0 outputPackets:0 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:24.219065+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 0, Thermal Budget 10530",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:24.219077+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8463505514082629983, Thermal Budget 2500",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:24.219080+0545  localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details 8317413421380756850, Thermal Budget 65000",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (ApplePassthroughPPM) ApplePPMPolicyCPMS::setDetailedThermalPowerBudget:setDetailedThermalPowerBudget: clientId 2, details <*> Thermal Budget <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:24.570153+0545  localhost kernel[0]: git[22439] triggered unnest of range 0x1fe000000->0x200000000 of DYLD shared region in VM map 0xe2c772f4607e1af5. While not abnormal for debuggers, this increases system memory footprint until the target exits.",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: <*> triggered unnest of range <*> of DYLD shared region in VM map <*> While not abnormal for debuggers, this increases system memory footprint until the target exits."
+    },
+    {
+      "content": "2026-02-24 18:41:24.570189+0545  localhost kernel[0]: git[22439] triggered unnest of range 0x200000000->0x202000000 of DYLD shared region in VM map 0xe2c772f4607e1af5. While not abnormal for debuggers, this increases system memory footprint until the target exits.",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: <*> triggered unnest of range <*> of DYLD shared region in VM map <*> While not abnormal for debuggers, this increases system memory footprint until the target exits."
+    },
+    {
+      "content": "2026-02-24 18:41:24.818580+0545  localhost kernel[0]: git-remote-http[22440] triggered unnest of range 0x1fe000000->0x200000000 of DYLD shared region in VM map 0x10edf97c76bd28ff. While not abnormal for debuggers, this increases system memory footprint until the target exits.",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: <*> triggered unnest of range <*> of DYLD shared region in VM map <*> While not abnormal for debuggers, this increases system memory footprint until the target exits."
+    },
+    {
+      "content": "2026-02-24 18:41:24.818602+0545  localhost kernel[0]: git-remote-http[22440] triggered unnest of range 0x200000000->0x202000000 of DYLD shared region in VM map 0x10edf97c76bd28ff. While not abnormal for debuggers, this increases system memory footprint until the target exits.",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: <*> triggered unnest of range <*> of DYLD shared region in VM map <*> While not abnormal for debuggers, this increases system memory footprint until the target exits."
+    },
+    {
+      "content": "2026-02-24 18:41:25.074303+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:54699008",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:25.074335+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:2 outputPackets:1 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with <*> <*> packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 18:41:25.109850+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) IO80211PeerMonitor::checkForDPS()  Enter",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) IO80211PeerMonitor::checkForDPS() Enter"
+    },
+    {
+      "content": "2026-02-24 18:41:25.110756+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BE : Count: 1 avgLatencyMs:3 maxLatencyMs:3",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    },
+    {
+      "content": "2026-02-24 18:41:25.110768+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: BK : Count: 0 avgLatencyMs:0 maxLatencyMs:0",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) LQM-WiFi: <*> : Count: <*> <*> <*>"
+    }
+  ]
+}

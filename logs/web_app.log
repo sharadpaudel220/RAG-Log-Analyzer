@@ -13,3 +13,183 @@
 2026-02-12 22:12:30 - __main__ - INFO - System components initialized successfully
 2026-02-12 22:17:01 - __main__ - INFO - Initializing system components...
 2026-02-12 22:17:05 - __main__ - INFO - System components initialized successfully
+2026-02-13 07:57:05 - __main__ - INFO - Initializing system components...
+2026-02-13 08:05:25 - __main__ - INFO - System components initialized successfully
+2026-02-13 08:49:01 - __main__ - INFO - Initializing system components...
+2026-02-13 08:49:06 - __main__ - INFO - System components initialized successfully
+2026-02-23 13:53:49 - __main__ - INFO - Initializing system components...
+2026-02-23 13:53:56 - __main__ - INFO - System components initialized successfully
+2026-02-24 16:44:06 - __main__ - INFO - Initializing system components...
+2026-02-24 16:44:12 - __main__ - INFO - System components initialized successfully
+2026-02-24 17:02:05 - __main__ - INFO - Initializing system components...
+2026-02-24 17:02:10 - __main__ - INFO - System components initialized successfully
+2026-02-24 17:05:30 - __main__ - ERROR - Error in chat: 'dict' object has no attribute 'content'
+2026-02-24 17:09:58 - __main__ - ERROR - AI provider test failed: API error: 429 - {
+    "error": {
+        "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/gu
+2026-02-24 17:12:31 - __main__ - ERROR - AI provider test failed: API error: 429 - {
+    "error": {
+        "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/gu
+2026-02-24 17:16:31 - __main__ - ERROR - Error analyzing log: 'dict' object has no attribute 'content'
+2026-02-24 17:18:47 - __main__ - ERROR - File analysis error: generate_alert() takes 2 positional arguments but 3 were given
+2026-02-24 17:19:14 - __main__ - ERROR - File analysis error: generate_alert() takes 2 positional arguments but 3 were given
+2026-02-24 17:20:45 - __main__ - ERROR - File analysis error: generate_alert() takes 2 positional arguments but 3 were given
+2026-02-24 17:32:53 - __main__ - INFO - Initializing system components...
+2026-02-24 17:32:58 - __main__ - INFO - System components initialized successfully
+2026-02-24 17:34:30 - __main__ - ERROR - File analysis error: 'ParsedLogEntry' object has no attribute 'content'
+2026-02-24 17:37:35 - __main__ - INFO - Initializing system components...
+2026-02-24 17:37:40 - __main__ - INFO - System components initialized successfully
+2026-02-24 17:38:32 - __main__ - ERROR - File analysis error: 'AgenticAnalysisResult' object has no attribute 'confidence'
+2026-02-24 17:45:38 - __main__ - ERROR - File analysis error: 'AgenticAnalysisResult' object has no attribute 'confidence'
+2026-02-24 17:57:25 - __main__ - ERROR - File analysis error: 'RuleBasedResult' object has no attribute 'explanation'
+2026-02-24 17:57:36 - __main__ - ERROR - File analysis error: 'RuleBasedResult' object has no attribute 'explanation'
+2026-02-24 17:58:39 - __main__ - ERROR - File analysis error: 'NonAgenticRAGResult' object has no attribute 'explanation'
+2026-02-24 17:59:08 - __main__ - ERROR - Error in chat: 'AgenticAnalysisResult' object has no attribute 'confidence'
+2026-02-24 18:25:38 - __main__ - INFO - Initializing system components...
+2026-02-24 18:25:44 - __main__ - INFO - System components initialized successfully
+2026-02-24 18:48:10 - __main__ - INFO - Initializing system components...
+2026-02-24 18:48:16 - __main__ - INFO - System components initialized successfully
+2026-02-24 19:04:36 - __main__ - INFO - Initializing system components...
+2026-02-24 19:04:41 - __main__ - INFO - System components initialized successfully
+2026-02-24 19:06:23 - __main__ - INFO - Initializing system components...
+2026-02-24 19:06:29 - __main__ - INFO - System components initialized successfully
+2026-02-24 19:11:48 - __main__ - ERROR - Error in chat: 'AgenticAnalysisResult' object has no attribute 'reasoning_steps'
+2026-02-24 19:38:25 - __main__ - INFO - Initializing system components...
+2026-02-24 19:38:31 - __main__ - INFO - System components initialized successfully
+2026-02-24 19:38:47 - __main__ - INFO - Starting agentic analysis of 4 logs
+2026-02-24 19:38:47 - __main__ - INFO - Progress: 4/4 logs analyzed (100%)
+2026-02-24 19:38:47 - __main__ - INFO - Saved analysis session: dc39d5ff-b00e-4f34-8767-b53a5b259968
+2026-02-24 19:42:30 - __main__ - INFO - Initializing system components...
+2026-02-24 19:42:36 - __main__ - INFO - System components initialized successfully
+2026-02-24 19:42:46 - __main__ - INFO - Starting agentic analysis of 100 logs
+2026-02-24 19:42:46 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 19:42:46 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-02-24 19:43:52 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-02-24 19:43:52 - __main__ - INFO - Saved analysis session: d3f0aa06-ca6f-4439-907e-21e6d54ba4eb
+2026-02-24 19:54:15 - __main__ - INFO - Initializing system components...
+2026-02-24 19:54:21 - __main__ - INFO - System components initialized successfully
+2026-02-24 19:55:45 - __main__ - INFO - Starting agentic analysis of 100 logs
+2026-02-24 19:55:45 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 19:55:45 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-02-24 19:56:43 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-02-24 19:56:43 - __main__ - INFO - Saved analysis session: 725d7cc1-e524-435e-b11b-2b745ce1c084
+2026-02-24 19:57:17 - __main__ - ERROR - Error in chat: 'AgenticAnalysisResult' object has no attribute 'reasoning_steps'
+2026-02-24 20:24:29 - __main__ - INFO - Initializing system components...
+2026-02-24 20:24:35 - __main__ - INFO - System components initialized successfully
+2026-02-24 20:26:32 - __main__ - INFO - Starting agentic analysis of 100 logs
+2026-02-24 20:26:32 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 20:26:32 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-02-24 20:27:33 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-02-24 20:27:33 - __main__ - INFO - Saved analysis session: 38ec86cf-31a1-4045-889d-e1f6e4a00b9a
+2026-02-24 21:19:32 - __main__ - INFO - Initializing system components...
+2026-02-24 21:19:32 - __main__ - INFO - Initializing database connection...
+2026-02-24 21:19:32 - __main__ - INFO - Database connection established
+2026-02-24 21:19:36 - __main__ - INFO - System components initialized successfully
+2026-02-24 21:19:55 - __main__ - ERROR - File analysis error: Instance <AnalysisSession at 0x1383a1970> is not bound to a Session; attribute refresh operation cannot proceed (Background on this error at: https://sqlalche.me/e/20/bhk3)
+2026-02-24 21:22:17 - __main__ - INFO - Initializing system components...
+2026-02-24 21:22:17 - __main__ - INFO - Initializing database connection...
+2026-02-24 21:22:17 - __main__ - INFO - Database connection established
+2026-02-24 21:22:23 - __main__ - INFO - System components initialized successfully
+2026-02-24 21:22:29 - __main__ - INFO - Starting agentic analysis of 100 logs for session 11b3c152-78c3-448e-a35d-2496c81f3ab8
+2026-02-24 21:22:29 - __main__ - ERROR - File analysis error: (psycopg2.errors.UndefinedColumn) column "meta" of relation "log_entries" does not exist
+LINE 1: ...p, severity, component, source_file, line_number, meta) VALU...
+                                                             ^
+
+[SQL: INSERT INTO log_entries (session_id, raw_content, template, template_id, parameters, timestamp, severity, component, source_file, line_number, meta) VALUES (%(session_id)s::UUID, %(raw_content)s, %(template)s, %(template_id)s, %(parameters)s::TEXT[], %(timestamp)s, %(severity)s, %(component)s, %(source_file)s, %(line_number)s, %(meta)s::JSONB) RETURNING log_entries.log_id, log_entries.created_at]
+[parameters: {'session_id': '11b3c152-78c3-448e-a35d-2496c81f3ab8', 'raw_content': 'Timestamp                       (process)[PID]', 'template': 'Timestamp (process)[PID]', 'template_id': 1, 'parameters': [], 'timestamp': None, 'severity': 'INFO', 'component': 'process', 'source_file': 'data/uploads/system_logs.txt', 'line_number': 1, 'meta': '{}'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-24 21:24:31 - __main__ - INFO - Initializing system components...
+2026-02-24 21:24:31 - __main__ - INFO - Initializing database connection...
+2026-02-24 21:24:31 - __main__ - INFO - Database connection established
+2026-02-24 21:24:36 - __main__ - INFO - System components initialized successfully
+2026-02-24 21:24:47 - __main__ - INFO - Starting agentic analysis of 100 logs for session fbbcf203-6ee2-44d7-bd79-ef1da2dcd1e0
+2026-02-24 21:24:47 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 21:24:47 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-02-24 21:25:48 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-02-24 21:25:48 - __main__ - ERROR - File analysis error: (psycopg2.errors.UndefinedColumn) record "new" has no field "updated_at"
+CONTEXT:  PL/pgSQL assignment "NEW.updated_at = CURRENT_TIMESTAMP"
+PL/pgSQL function update_updated_at_column() line 3 at assignment
+
+[SQL: UPDATE system_stats SET total_logs_analyzed=%(total_logs_analyzed)s, total_anomalies_detected=%(total_anomalies_detected)s, total_alerts_generated=%(total_alerts_generated)s, total_sessions=%(total_sessions)s, last_updated=now() WHERE system_stats.stat_id = %(system_stats_stat_id)s]
+[parameters: {'total_logs_analyzed': 100, 'total_anomalies_detected': 2, 'total_alerts_generated': 2, 'total_sessions': 1, 'system_stats_stat_id': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-24 21:27:38 - __main__ - INFO - Initializing system components...
+2026-02-24 21:27:38 - __main__ - INFO - Initializing database connection...
+2026-02-24 21:27:38 - __main__ - INFO - Database connection established
+2026-02-24 21:27:44 - __main__ - INFO - System components initialized successfully
+2026-02-24 21:28:33 - __main__ - INFO - Starting agentic analysis of 100 logs for session 978bce09-cc42-4f82-918d-69783b2521c7
+2026-02-24 21:28:33 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 21:28:33 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 21:29:09 - __main__ - ERROR - File analysis error: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "alerts_pkey"
+DETAIL:  Key (alert_id)=(ALERT-20260224-00001) already exists.
+
+[SQL: INSERT INTO alerts (alert_id, anomaly_id, session_id, severity, title, description, affected_component, recommendations, confidence_score, meta) VALUES (%(alert_id)s, %(anomaly_id)s, %(session_id)s::UUID, %(severity)s, %(title)s, %(description)s, %(affected_component)s, %(recommendations)s::TEXT[], %(confidence_score)s, %(meta)s::JSONB) RETURNING alerts.created_at]
+[parameters: {'alert_id': 'ALERT-20260224-00001', 'anomaly_id': 120, 'session_id': '978bce09-cc42-4f82-918d-69783b2521c7', 'severity': 'CRITICAL', 'title': 'CRITICAL: Connection Issue in so_gencnt', 'description': 'Log Content: so_gencnt: 2473741 t_state: SYN_SENT process: Windsurf Helper :5632 SYN in/out: 0/1 bytes in/out: 0/0 pkts in/out: 0/0 rtt: 0.0 ms rttva ... (929 characters truncated) ... ther assistance. Additionally, check the status of the remote server to ensure it\'s operational and responding to connections on the specified port.', 'affected_component': 'so_gencnt', 'recommendations': [], 'confidence_score': 0.6, 'meta': '{"template_id": 10, "original_severity": "ERROR"}'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-02-24 21:30:06 - __main__ - INFO - Starting agentic analysis of 100 logs for session 38776421-8a9b-4e73-a399-fed43677904e
+2026-02-24 21:30:06 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 21:30:06 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 21:30:43 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-02-24 21:31:14 - __main__ - ERROR - File analysis error: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "alerts_pkey"
+DETAIL:  Key (alert_id)=(ALERT-20260224-00002) already exists.
+
+[SQL: INSERT INTO alerts (alert_id, anomaly_id, session_id, severity, title, description, affected_component, recommendations, confidence_score, meta) VALUES (%(alert_id)s, %(anomaly_id)s, %(session_id)s::UUID, %(severity)s, %(title)s, %(description)s, %(affected_component)s, %(recommendations)s::TEXT[], %(confidence_score)s, %(meta)s::JSONB) RETURNING alerts.created_at]
+[parameters: {'alert_id': 'ALERT-20260224-00002', 'anomaly_id': 151, 'session_id': '38776421-8a9b-4e73-a399-fed43677904e', 'severity': 'CRITICAL', 'title': 'CRITICAL: Error Detected in so_gencnt', 'description': "Log Content: so_gencnt: 2473911 so_state: 0x0002 process: timed:356 bytes in/out: 0/0 pkts in/out: 0/0 error: 0 so_error: 0 svc/tc: 0 flow: 0x8ddbdfa ... (778 characters truncated) ... s. If it's determined that the socket was closed unexpectedly, further troubleshooting may be necessary to identify and resolve the underlying cause.", 'affected_component': 'so_gencnt', 'recommendations': [], 'confidence_score': 0.6, 'meta': '{"template_id": 14, "original_severity": "ERROR"}'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-02-24 21:33:15 - __main__ - INFO - Initializing system components...
+2026-02-24 21:33:15 - __main__ - INFO - Initializing database connection...
+2026-02-24 21:33:15 - __main__ - INFO - Database connection established
+2026-02-24 21:33:19 - __main__ - INFO - System components initialized successfully
+2026-02-24 21:33:28 - __main__ - INFO - Starting agentic analysis of 100 logs for session 29888a72-079b-4f5d-9b53-fa4ec4f59469
+2026-02-24 21:33:28 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-02-24 21:33:29 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-02-24 21:34:28 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-02-24 21:35:19 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-02-24 21:35:19 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-02-24 21:35:41 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-02-24 21:36:40 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-02-24 21:37:08 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-02-24 21:38:12 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-02-24 21:38:41 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-02-24 21:58:12 - __main__ - INFO - Initializing system components...
+2026-02-24 21:58:12 - __main__ - INFO - Initializing database connection...
+2026-02-24 21:58:12 - __main__ - INFO - Database connection established
+2026-02-24 21:58:20 - __main__ - INFO - System components initialized successfully
+2026-02-24 21:58:28 - __main__ - INFO - Analysis session 29888a72-079b-4f5d-9b53-fa4ec4f59469 deleted from database
+2026-02-24 21:58:32 - __main__ - INFO - Analysis session 38776421-8a9b-4e73-a399-fed43677904e deleted from database
+2026-02-24 21:58:48 - __main__ - INFO - Analysis session 978bce09-cc42-4f82-918d-69783b2521c7 deleted from database
+2026-02-24 22:01:26 - __main__ - INFO - All analysis sessions cleared from database
+2026-02-24 22:02:08 - __main__ - INFO - Starting agentic analysis of 50 logs for session fdd8cfb5-86db-400a-a8ce-ddad4e2eca03
+2026-02-24 22:02:08 - __main__ - INFO - Progress: 10/50 logs analyzed (20%)
+2026-02-24 22:02:08 - __main__ - INFO - Progress: 20/50 logs analyzed (40%)
+2026-02-24 22:03:10 - __main__ - INFO - Progress: 30/50 logs analyzed (60%)
+2026-02-24 22:03:11 - __main__ - INFO - Progress: 40/50 logs analyzed (80%)
+2026-02-24 22:03:43 - __main__ - INFO - Progress: 50/50 logs analyzed (100%)

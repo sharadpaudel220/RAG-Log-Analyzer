@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agentic RAG Log Analyzer - Log Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_inline.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div id="toastContainer" class="toast-container"></div>
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -23,6 +25,10 @@
                 <a href="/log-analyzer" class="nav-item active">
                     <i class="fas fa-search"></i>
                     <span>Log Analyzer</span>
+                </a>
+                <a href="/analysis-history" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Analysis History</span>
                 </a>
                 <a href="/api-config" class="nav-item">
                     <i class="fas fa-cog"></i>
@@ -71,9 +77,9 @@
                 </div>
                 <div class="upload-container">
                     <div class="upload-area" id="uploadArea">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h4>Drag & Drop Log File Here</h4>
-                        <p>or click to browse</p>
+                        <i class="fas fa-file-upload"></i>
+                        <h4>Upload Log File</h4>
+                        <p>Select a .log, .txt, .json, or .csv file</p>
                         <input type="file" id="fileInput" accept=".log,.txt,.json,.csv" style="display: none;">
                         <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
                             <i class="fas fa-folder-open"></i> Browse Files
@@ -88,32 +94,6 @@
                             </div>
                             <button class="btn btn-sm btn-danger" onclick="removeFile()">
                                 <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Manual Log Entry Section -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-keyboard"></i> Manual Log Entry</h3>
-                </div>
-                <div class="analyzer-container">
-                    <div class="analyzer-input">
-                        <label for="logInput">Enter Log Entry:</label>
-                        <textarea id="logInput" rows="6" placeholder="Paste your log entry here...
-Example: 2024-01-15 10:23:47 ERROR [DataNode] Exception in receiveBlock for block blk_987654321"></textarea>
-                        
-                        <div class="analyzer-controls">
-                            <select id="systemSelect" class="form-select">
-                                <option value="agentic">Agentic RAG (Recommended)</option>
-                                <option value="non_agentic">Non-Agentic RAG</option>
-                                <option value="rule_based">Rule-Based</option>
-                                <option value="isolation_forest">Isolation Forest</option>
-                            </select>
-                            <button class="btn btn-primary" onclick="analyzeManualLog()">
-                                <i class="fas fa-play"></i> Analyze Single Log
                             </button>
                         </div>
                     </div>
@@ -200,8 +180,51 @@ Example: 2024-01-15 10:23:47 ERROR [DataNode] Exception in receiveBlock for bloc
                 <div class="anomaly-list" id="anomalyList">
                     <!-- Will be populated dynamically -->
                 </div>
+
+                <!-- Inline Chat Interface -->
+                <div class="section" id="inlineChatSection" style="display: none; margin-top: 1.5rem;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-comments"></i> Ask Follow-up Questions</h3>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <!-- Chat messages will appear here -->
+                        </div>
+                        <div class="chat-input-container">
+                            <textarea
+                                id="chatInput"
+                                placeholder="Ask a question about this analysis..."
+                                rows="2"
+                                onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendChatMessage(); }"
+                            ></textarea>
+                            <button class="btn btn-primary" onclick="sendChatMessage()">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
+    </div>
+
+    <!-- Sessions History Modal -->
+    <div class="modal" id="sessionsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> Analysis History</h3>
+                <button class="modal-close" onclick="closeSessionsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sessions-actions">
+                    <button class="btn btn-sm btn-danger" onclick="clearAllSessions()">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+                <div id="sessionsList" class="sessions-list">
+                    <!-- Sessions will be loaded here -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/log_analyzer.js') }}"></script>

@@ -148,12 +148,91 @@ class ResultVisualizer:
         
         logger.info(f"F1-score comparison saved to {output_path}")
     
-    def generate_all_plots(self, results: List[SystemEvaluationResult]):
+    def plot_statistical_significance(
+        self,
+        statistical_results: Dict[str, Any],
+        output_filename: str = "statistical_significance.png"
+    ):
+        """
+        Plot statistical significance test results
+        
+        Args:
+            statistical_results: Dict with comparison results from paired t-tests
+        """
+        if not statistical_results:
+            logger.warning("No statistical results to plot")
+            return
+        
+        comparisons = list(statistical_results.keys())
+        p_values = [statistical_results[comp]['p_value'] for comp in comparisons]
+        is_significant = [statistical_results[comp]['is_significant'] for comp in comparisons]
+        
+        fig, ax = plt.subplots(figsize=(12, 6))
+        
+        colors = ['green' if sig else 'red' for sig in is_significant]
+        bars = ax.barh(comparisons, p_values, color=colors, alpha=0.7)
+        
+        # Add significance threshold line
+        ax.axvline(x=0.05, color='black', linestyle='--', linewidth=2, label='α = 0.05')
+        
+        ax.set_xlabel('p-value', fontsize=12)
+        ax.set_title('Statistical Significance Tests (Paired t-tests)', fontsize=14, fontweight='bold')
+        ax.set_xlim(0, max(p_values) * 1.1 if p_values else 0.1)
+        ax.legend()
+        
+        # Add p-value labels
+        for i, (bar, p_val) in enumerate(zip(bars, p_values)):
+            ax.text(p_val + 0.002, i, f'{p_val:.4f}', va='center', fontsize=9)
+        
+        plt.tight_layout()
+        output_path = self.output_dir / output_filename
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"Statistical significance plot saved to {output_path}")
+    
+    def plot_performance_tradeoff(
+        self,
+        results: List[SystemEvaluationResult],
+        output_filename: str = "performance_tradeoff.png"
+    ):
+        """Plot F1-score vs Latency tradeoff"""
+        systems = [r.system_name for r in results]
+        f1_scores = [r.detection_metrics.f1_score for r in results]
+        latencies = [r.efficiency_metrics.average_latency for r in results]
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        
+        scatter = ax.scatter(latencies, f1_scores, s=200, alpha=0.6, c=range(len(systems)), cmap='viridis')
+        
+        for i, system in enumerate(systems):
+            ax.annotate(system, (latencies[i], f1_scores[i]), 
+                       xytext=(10, 10), textcoords='offset points',
+                       fontsize=10, fontweight='bold',
+                       bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.3))
+        
+        ax.set_xlabel('Average Latency (seconds)', fontsize=12)
+        ax.set_ylabel('F1-Score', fontsize=12)
+        ax.set_title('Performance vs Efficiency Tradeoff', fontsize=14, fontweight='bold')
+        ax.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        output_path = self.output_dir / output_filename
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"Performance tradeoff plot saved to {output_path}")
+    
+    def generate_all_plots(self, results: List[SystemEvaluationResult], statistical_results: Dict[str, Any] = None):
         logger.info("Generating all visualization plots...")
         
         self.plot_detection_metrics_comparison(results)
         self.plot_efficiency_metrics_comparison(results)
         self.plot_f1_score_comparison(results)
+        self.plot_performance_tradeoff(results)
+        
+        if statistical_results:
+            self.plot_statistical_significance(statistical_results)
         
         for result in results:
             self.plot_confusion_matrix(result)

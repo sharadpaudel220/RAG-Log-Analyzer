@@ -35,14 +35,51 @@ class LLMEngine:
         self.max_tokens = config.get('llm.max_tokens', 2048)
         self.timeout = config.get('llm.timeout', 120)
         self.base_url = config.get('llm.base_url', 'http://localhost:11434')
+
+        self.openai_api_key = config.get_env('OPENAI_API_KEY') or config.get('llm.openai.api_key', '')
+        self.openai_base_url = config.get('llm.openai.base_url', 'https://api.openai.com')
+
+        self.anthropic_api_key = config.get_env('ANTHROPIC_API_KEY') or config.get('llm.anthropic.api_key', '')
+        self.anthropic_base_url = config.get('llm.anthropic.base_url', 'https://api.anthropic.com')
+        self.anthropic_version = config.get('llm.anthropic.version', '2023-06-01')
+
+        self.gemini_api_key = config.get_env('GEMINI_API_KEY') or config.get('llm.gemini.api_key', '')
+        self.gemini_base_url = config.get('llm.gemini.base_url', 'https://generativelanguage.googleapis.com')
         
         logger.info(f"LLMEngine initialized with {self.provider} - {self.model}")
     
     def generate(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
-        if self.provider == 'ollama':
-            return self._generate_ollama(prompt, system_prompt, **kwargs)
-        else:
+        provider = (self.provider or '').lower().strip()
+        provider_aliases = {
+            'chatgpt': 'openai',
+            'claude': 'anthropic',
+            'google': 'gemini'
+        }
+        provider = provider_aliases.get(provider, provider)
+
+        try:
+            if provider == 'ollama':
+                return self._generate_ollama(prompt, system_prompt, **kwargs)
+            if provider == 'openai':
+                return self._generate_openai(prompt, system_prompt, **kwargs)
+            if provider == 'anthropic':
+                return self._generate_anthropic(prompt, system_prompt, **kwargs)
+            if provider == 'gemini':
+                return self._generate_gemini(prompt, system_prompt, **kwargs)
             raise ValueError(f"Unsupported LLM provider: {self.provider}")
+        except ValueError as e:
+            logger.error(str(e))
+            return LLMResponse(content=f"Error: {str(e)}", model=self.model)
+
+    def _ensure_api_key(self, provider_name: str, api_key: str) -> None:
+        if api_key:
+            return
+        env_var_name = {
+            'openai': 'OPENAI_API_KEY',
+            'anthropic': 'ANTHROPIC_API_KEY',
+            'gemini': 'GEMINI_API_KEY'
+        }.get(provider_name, 'API_KEY')
+        raise ValueError(f"Missing API key for provider '{provider_name}'. Set {env_var_name} or configure llm.{provider_name}.api_key in config.yaml")
     
     def _generate_ollama(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
         url = f"{self.base_url}/api/generate"
@@ -80,31 +117,165 @@ class LLMEngine:
                 content=f"Error: Unable to generate response - {str(e)}",
                 model=self.model
             )
+
+    def _generate_openai(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
+        self._ensure_api_key('openai', self.openai_api_key)
+        url = f"{self.openai_base_url.rstrip('/')}/v1/chat/completions"
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": kwargs.get('temperature', self.temperature),
+            "max_tokens": kwargs.get('max_tokens', self.max_tokens)
+        }
+
+        headers = {
+            "Authorization": f"Bearer {self.openai_api_key}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            result = response.json()
+
+            choice = (result.get('choices') or [{}])[0]
+            message = choice.get('message') or {}
+            content = message.get('content', '')
+
+            usage = result.get('usage') or {}
+
+            return LLMResponse(
+                content=content,
+                model=result.get('model', self.model),
+                prompt_tokens=usage.get('prompt_tokens', 0),
+                completion_tokens=usage.get('completion_tokens', 0),
+                total_tokens=usage.get('total_tokens', 0),
+                finish_reason=choice.get('finish_reason', 'stop')
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error calling OpenAI API: {e}")
+            return LLMResponse(
+                content=f"Error: Unable to generate response - {str(e)}",
+                model=self.model
+            )
+
+    def _generate_anthropic(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
+        self._ensure_api_key('anthropic', self.anthropic_api_key)
+        url = f"{self.anthropic_base_url.rstrip('/')}/v1/messages"
+
+        payload: Dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": kwargs.get('max_tokens', self.max_tokens),
+            "temperature": kwargs.get('temperature', self.temperature),
+            "messages": [{"role": "user", "content": prompt}]
+        }
+        if system_prompt:
+            payload["system"] = system_prompt
+
+        headers = {
+            "x-api-key": self.anthropic_api_key,
+            "anthropic-version": self.anthropic_version,
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            result = response.json()
+
+            content_blocks = result.get('content') or []
+            text_parts = []
+            for block in content_blocks:
+                if isinstance(block, dict) and block.get('type') == 'text':
+                    text_parts.append(block.get('text', ''))
+            content = "".join(text_parts)
+
+            usage = result.get('usage') or {}
+
+            return LLMResponse(
+                content=content,
+                model=result.get('model', self.model),
+                prompt_tokens=usage.get('input_tokens', 0),
+                completion_tokens=usage.get('output_tokens', 0),
+                total_tokens=usage.get('input_tokens', 0) + usage.get('output_tokens', 0),
+                finish_reason=result.get('stop_reason', 'stop')
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error calling Anthropic API: {e}")
+            return LLMResponse(
+                content=f"Error: Unable to generate response - {str(e)}",
+                model=self.model
+            )
+
+    def _generate_gemini(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
+        self._ensure_api_key('gemini', self.gemini_api_key)
+
+        model_name = self.model
+        if model_name.startswith('models/'):
+            model_name = model_name[len('models/'):]
+        url = f"{self.gemini_base_url.rstrip('/')}/v1beta/models/{model_name}:generateContent"
+
+        user_text = prompt if not system_prompt else f"{system_prompt}\n\n{prompt}"
+
+        payload: Dict[str, Any] = {
+            "contents": [
+                {"role": "user", "parts": [{"text": user_text}]}
+            ],
+            "generationConfig": {
+                "temperature": kwargs.get('temperature', self.temperature),
+                "maxOutputTokens": kwargs.get('max_tokens', self.max_tokens)
+            }
+        }
+
+        try:
+            response = requests.post(url, params={"key": self.gemini_api_key}, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            result = response.json()
+
+            candidates = result.get('candidates') or []
+            first = candidates[0] if candidates else {}
+            content_obj = first.get('content') or {}
+            parts = content_obj.get('parts') or []
+            text_parts = []
+            for part in parts:
+                if isinstance(part, dict):
+                    text_parts.append(part.get('text', ''))
+            content = "".join(text_parts)
+
+            return LLMResponse(
+                content=content,
+                model=self.model,
+                finish_reason=first.get('finishReason', 'stop')
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error calling Gemini API: {e}")
+            return LLMResponse(
+                content=f"Error: Unable to generate response - {str(e)}",
+                model=self.model
+            )
     
     def analyze_log_anomaly(self, log_content: str, context: str, template: str) -> LLMResponse:
-        system_prompt = """You are an expert system administrator and log analysis specialist. 
-Your task is to analyze log entries and identify potential issues, their root causes, and provide actionable recommendations.
-Be concise, technical, and focus on actionable insights."""
+        system_prompt = "You are a log analysis expert. Analyze logs quickly and concisely."
         
-        prompt = f"""Analyze the following log entry for anomalies or issues:
+        prompt = f"""Analyze this log for issues:
 
-Log Entry:
-{log_content}
+Log: {log_content}
 
-Log Template:
-{template}
+Context: {context if context else 'None'}
 
-Retrieved Knowledge Context:
-{context}
+Provide:
+1. Issue (if any)
+2. Severity (CRITICAL/HIGH/MEDIUM/LOW)
+3. Root cause
+4. Action needed
 
-Please provide:
-1. Issue Identification: What is the problem?
-2. Severity Assessment: How critical is this issue? (CRITICAL/HIGH/MEDIUM/LOW)
-3. Root Cause Analysis: What likely caused this issue?
-4. Impact Assessment: What systems or services are affected?
-5. Recommended Actions: What steps should be taken to resolve this?
-
-Provide your analysis in a structured format."""
+Be brief and technical."""
         
         return self.generate(prompt, system_prompt)
     
@@ -154,6 +325,8 @@ Return ONLY a valid JSON object matching the schema. Do not include any explanat
     
     def check_health(self) -> bool:
         try:
+            if self.provider != 'ollama':
+                return True
             url = f"{self.base_url}/api/tags"
             response = requests.get(url, timeout=5)
             return response.status_code == 200
@@ -163,10 +336,12 @@ Return ONLY a valid JSON object matching the schema. Do not include any explanat
     
     def list_models(self) -> List[str]:
         try:
+            if self.provider != 'ollama':
+                return []
             url = f"{self.base_url}/api/tags"
             response = requests.get(url, timeout=5)
             response.raise_for_status()
-            
+
             data = response.json()
             return [model['name'] for model in data.get('models', [])]
         except Exception as e:

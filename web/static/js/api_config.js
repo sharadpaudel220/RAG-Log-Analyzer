@@ -1,12 +1,13 @@
 // API Configuration JavaScript
 
 let apiConnections = [];
-let fetchedLogs = [];
+let aiProviders = {};
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     checkHealth();
     loadAPIConnections();
+    loadAIProviders();
     setInterval(checkHealth, 30000);
 });
 
@@ -139,47 +140,289 @@ function formatAPIType(type) {
     return names[type] || type;
 }
 
-// Add API connection
-function addAPIConnection() {
-    document.getElementById('addAPIModal').style.display = 'flex';
+// ==================== AI Provider Configuration ====================
+
+// Load AI provider configurations
+async function loadAIProviders() {
+    try {
+        const response = await fetch('/api/ai-providers');
+        const data = await response.json();
+        
+        if (data.success) {
+            aiProviders = data.providers || {};
+            updateAIProviderStatus();
+        }
+    } catch (error) {
+        console.error('Failed to load AI providers:', error);
+    }
 }
 
-// Close API modal
-function closeAPIModal() {
-    document.getElementById('addAPIModal').style.display = 'none';
-    document.getElementById('addAPIForm').reset();
+// Update AI provider status indicators
+function updateAIProviderStatus() {
+    ['openai', 'anthropic', 'gemini'].forEach(provider => {
+        const statusEl = document.getElementById(`${provider}-status`);
+        if (aiProviders[provider] && aiProviders[provider].configured) {
+            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Configured';
+            statusEl.style.color = 'var(--success-color)';
+        } else {
+            statusEl.innerHTML = '<i class="fas fa-circle"></i> Not Configured';
+            statusEl.style.color = 'var(--text-secondary)';
+        }
+    });
 }
 
-// Update API fields based on type
-function updateAPIFields() {
-    const apiType = document.getElementById('apiType').value;
-    const authFields = document.getElementById('authFields');
+// Configure AI provider
+function configureAIProvider(provider) {
+    const modal = document.getElementById('configureAIModal');
+    const titleEl = document.getElementById('aiModalTitle');
+    const providerInput = document.getElementById('aiProvider');
+    const modelInput = document.getElementById('aiModel');
+    const modelHint = document.getElementById('aiModelHint');
+    const baseURLInput = document.getElementById('aiBaseURL');
+    const apiKeyInput = document.getElementById('aiAPIKey');
+    const setAsDefaultCheckbox = document.getElementById('aiSetAsDefault');
     
-    // Add type-specific fields here if needed
-    authFields.innerHTML = '';
+    // Set provider-specific defaults
+    const providerConfig = {
+        'openai': {
+            title: 'Configure OpenAI (ChatGPT)',
+            defaultModel: 'gpt-4o-mini',
+            modelHint: 'Examples: gpt-4o, gpt-4o-mini, gpt-3.5-turbo',
+            defaultBaseURL: 'https://api.openai.com'
+        },
+        'anthropic': {
+            title: 'Configure Anthropic (Claude)',
+            defaultModel: 'claude-3-5-sonnet-20241022',
+            modelHint: 'Examples: claude-3-5-sonnet-20241022, claude-3-opus-20240229',
+            defaultBaseURL: 'https://api.anthropic.com'
+        },
+        'gemini': {
+            title: 'Configure Google Gemini',
+            defaultModel: 'gemini-1.5-flash',
+            modelHint: 'Examples: gemini-1.5-pro, gemini-1.5-flash',
+            defaultBaseURL: 'https://generativelanguage.googleapis.com'
+        }
+    };
+    
+    const config = providerConfig[provider];
+    titleEl.textContent = config.title;
+    providerInput.value = provider;
+    modelHint.textContent = config.modelHint;
+    
+    // Load existing configuration if available
+    if (aiProviders[provider]) {
+        apiKeyInput.value = '••••••••••••••••'; // Masked
+        modelInput.value = aiProviders[provider].model || config.defaultModel;
+        baseURLInput.value = aiProviders[provider].base_url || '';
+        setAsDefaultCheckbox.checked = aiProviders[provider].is_active || false;
+    } else {
+        apiKeyInput.value = '';
+        modelInput.value = config.defaultModel;
+        baseURLInput.value = '';
+        setAsDefaultCheckbox.checked = false;
+    }
+    
+    modal.style.display = 'flex';
 }
 
-// Test API connection
-async function testAPIConnection() {
-    const testResult = document.getElementById('testResult');
+// Close AI provider modal
+function closeAIModal() {
+    document.getElementById('configureAIModal').style.display = 'none';
+    document.getElementById('aiProviderForm').reset();
+    document.getElementById('aiTestResult').innerHTML = '';
+}
+
+// Test AI connection
+async function testAIConnection() {
+    const provider = document.getElementById('aiProvider').value;
+    const apiKey = document.getElementById('aiAPIKey').value;
+    const model = document.getElementById('aiModel').value;
+    const baseURL = document.getElementById('aiBaseURL').value;
+    const testResult = document.getElementById('aiTestResult');
+    
+    if (!apiKey || apiKey === '••••••••••••••••') {
+        testResult.innerHTML = '<span style="color: var(--error-color);">Please enter an API key</span>';
+        return;
+    }
+    
     testResult.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
     
-    // Simulate test
+    try {
+        const response = await fetch('/api/ai-providers/test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                provider,
+                api_key: apiKey,
+                model,
+                base_url: baseURL
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            testResult.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-check-circle"></i> Connection successful!</span>';
+        } else {
+            testResult.innerHTML = `<span style="color: var(--error-color);"><i class="fas fa-times-circle"></i> ${data.error}</span>`;
+        }
+    } catch (error) {
+        testResult.innerHTML = `<span style="color: var(--error-color);"><i class="fas fa-times-circle"></i> ${error.message}</span>`;
+    }
+}
+
+// Save AI provider configuration
+async function saveAIProvider() {
+    const provider = document.getElementById('aiProvider').value;
+    const apiKey = document.getElementById('aiAPIKey').value;
+    const model = document.getElementById('aiModel').value;
+    const baseURL = document.getElementById('aiBaseURL').value;
+    const setAsDefault = document.getElementById('aiSetAsDefault').checked;
+    
+    if (!apiKey || apiKey === '••••••••••••••••') {
+        alert('Please enter an API key');
+        return;
+    }
+    
+    if (!model) {
+        alert('Please enter a model name');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/ai-providers', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                provider,
+                api_key: apiKey,
+                model,
+                base_url: baseURL,
+                set_as_active: setAsDefault
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            closeAIModal();
+            loadAIProviders();
+            alert('AI provider configured successfully!');
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error saving configuration: ' + error.message);
+    }
+}
+
+// ==================== Log API Configuration ====================
+
+// Configure log API
+function configureLogAPI(apiType) {
+    const modal = document.getElementById('configureLogAPIModal');
+    const titleEl = document.getElementById('logAPIModalTitle');
+    const typeInput = document.getElementById('logAPIType');
+    
+    const apiNames = {
+        'syslog': 'Syslog API',
+        'elasticsearch': 'Elasticsearch',
+        'splunk': 'Splunk',
+        'rest': 'REST API',
+        'cloudwatch': 'AWS CloudWatch',
+        'azure': 'Azure Monitor'
+    };
+    
+    titleEl.textContent = `Configure ${apiNames[apiType] || apiType}`;
+    typeInput.value = apiType;
+    
+    modal.style.display = 'flex';
+}
+
+// Close log API modal
+function closeLogAPIModal() {
+    document.getElementById('configureLogAPIModal').style.display = 'none';
+    document.getElementById('logAPIForm').reset();
+    document.getElementById('logAPITestResult').innerHTML = '';
+}
+
+// Update log API auth fields
+function updateLogAPIAuthFields() {
+    const authType = document.getElementById('logAPIAuthType').value;
+    const authFields = document.getElementById('logAPIAuthFields');
+    
+    let html = '';
+    
+    if (authType === 'basic') {
+        html = `
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="logAPIUsername" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="logAPIPassword" required>
+            </div>
+        `;
+    } else if (authType === 'bearer' || authType === 'apikey') {
+        html = `
+            <div class="form-group">
+                <label>${authType === 'bearer' ? 'Bearer Token' : 'API Key'}</label>
+                <input type="password" id="logAPIToken" required>
+            </div>
+        `;
+    } else if (authType === 'oauth') {
+        html = `
+            <div class="form-group">
+                <label>Client ID</label>
+                <input type="text" id="logAPIClientId" required>
+            </div>
+            <div class="form-group">
+                <label>Client Secret</label>
+                <input type="password" id="logAPIClientSecret" required>
+            </div>
+            <div class="form-group">
+                <label>Token URL</label>
+                <input type="text" id="logAPITokenURL" required>
+            </div>
+        `;
+    }
+    
+    authFields.innerHTML = html;
+}
+
+// Test log API connection
+async function testLogAPIConnection() {
+    const testResult = document.getElementById('logAPITestResult');
+    testResult.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    
     setTimeout(() => {
         testResult.innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-check-circle"></i> Connection successful!</span>';
     }, 2000);
 }
 
-// Save API connection
-async function saveAPIConnection() {
-    const name = document.getElementById('apiName').value;
-    const type = document.getElementById('apiType').value;
-    const endpoint = document.getElementById('apiEndpoint').value;
-    const authType = document.getElementById('authType').value;
+// Save log API connection
+async function saveLogAPIConnection() {
+    const name = document.getElementById('logAPIName').value;
+    const type = document.getElementById('logAPIType').value;
+    const endpoint = document.getElementById('logAPIEndpoint').value;
+    const authType = document.getElementById('logAPIAuthType').value;
     
     if (!name || !type || !endpoint) {
         alert('Please fill in all required fields');
         return;
+    }
+    
+    const authData = {};
+    if (authType === 'basic') {
+        authData.username = document.getElementById('logAPIUsername')?.value;
+        authData.password = document.getElementById('logAPIPassword')?.value;
+    } else if (authType === 'bearer' || authType === 'apikey') {
+        authData.token = document.getElementById('logAPIToken')?.value;
+    } else if (authType === 'oauth') {
+        authData.client_id = document.getElementById('logAPIClientId')?.value;
+        authData.client_secret = document.getElementById('logAPIClientSecret')?.value;
+        authData.token_url = document.getElementById('logAPITokenURL')?.value;
     }
     
     try {
@@ -190,15 +433,17 @@ async function saveAPIConnection() {
                 name,
                 type,
                 endpoint,
-                auth_type: authType
+                auth_type: authType,
+                auth_data: authData
             })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            closeAPIModal();
+            closeLogAPIModal();
             loadAPIConnections();
+            alert('API connection saved successfully!');
         } else {
             alert('Error: ' + data.error);
         }
@@ -247,99 +492,7 @@ async function deleteConnection(id) {
     }
 }
 
-// Fetch logs
-async function fetchLogs() {
-    const connectionId = document.getElementById('apiConnectionSelect').value;
-    const startTime = document.getElementById('startTime').value;
-    const endTime = document.getElementById('endTime').value;
-    const query = document.getElementById('queryFilter').value;
-    const maxFetch = document.getElementById('maxFetch').value;
-    
-    if (!connectionId) {
-        alert('Please select an API connection');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/fetch-logs', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                connection_id: connectionId,
-                start_time: startTime,
-                end_time: endTime,
-                query: query,
-                max_logs: parseInt(maxFetch)
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            fetchedLogs = data.logs || [];
-            displayFetchedLogs();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    } catch (error) {
-        alert('Error fetching logs: ' + error.message);
-    }
-}
-
-// Display fetched logs
-function displayFetchedLogs() {
-    const section = document.getElementById('fetchedLogsSection');
-    const preview = document.getElementById('logsPreview');
-    
-    if (fetchedLogs.length === 0) {
-        preview.innerHTML = '<p>No logs fetched</p>';
-        return;
-    }
-    
-    let html = `<p><strong>Fetched ${fetchedLogs.length} logs</strong></p>`;
-    html += '<div class="logs-table">';
-    html += '<table><thead><tr><th>Timestamp</th><th>Severity</th><th>Message</th></tr></thead><tbody>';
-    
-    fetchedLogs.slice(0, 100).forEach(log => {
-        html += `
-            <tr>
-                <td>${log.timestamp || 'N/A'}</td>
-                <td><span class="badge ${(log.severity || 'info').toLowerCase()}">${log.severity || 'INFO'}</span></td>
-                <td>${log.message || log.content}</td>
-            </tr>
-        `;
-    });
-    
-    html += '</tbody></table></div>';
-    
-    if (fetchedLogs.length > 100) {
-        html += `<p><em>Showing first 100 of ${fetchedLogs.length} logs</em></p>`;
-    }
-    
-    preview.innerHTML = html;
-    section.style.display = 'block';
-}
-
-// Analyze fetched logs
-async function analyzeFetchedLogs() {
-    if (fetchedLogs.length === 0) {
-        alert('No logs to analyze');
-        return;
-    }
-    
-    // Redirect to log analyzer with fetched logs
-    sessionStorage.setItem('fetchedLogs', JSON.stringify(fetchedLogs));
-    window.location.href = '/log-analyzer?source=api';
-}
-
-// Export fetched logs
-function exportFetchedLogs() {
-    if (fetchedLogs.length === 0) return;
-    
-    const blob = new Blob([JSON.stringify(fetchedLogs, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fetched_logs_${Date.now()}.json`;
-    a.click();
+// Add API connection (legacy - kept for backward compatibility)
+function addAPIConnection() {
+    configureLogAPI('rest');
 }

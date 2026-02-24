@@ -26,27 +26,73 @@ def download_hdfs_dataset():
     data_dir = Path("data/datasets/hdfs")
     data_dir.mkdir(parents=True, exist_ok=True)
     
-    print("HDFS Dataset Download Instructions:")
+    print("\n" + "=" * 80)
+    print("Downloading HDFS Dataset from LogHub")
     print("=" * 80)
-    print("The HDFS dataset can be downloaded from:")
-    print("https://github.com/logpai/loghub")
-    print("\nPlease download HDFS logs and place them in:")
-    print(f"  {data_dir.absolute()}")
-    print("\nExpected file: HDFS.log or HDFS_2k.log")
-    print("=" * 80)
+    
+    # HDFS_2k for quick testing
+    hdfs_2k_url = "https://raw.githubusercontent.com/logpai/loghub/master/HDFS/HDFS_2k.log"
+    hdfs_2k_labels_url = "https://raw.githubusercontent.com/logpai/loghub/master/HDFS/HDFS_2k.log_structured.csv"
+    
+    hdfs_2k_file = data_dir / "HDFS_2k.log"
+    hdfs_2k_labels = data_dir / "HDFS_2k_labels.csv"
+    
+    try:
+        if not hdfs_2k_file.exists():
+            download_file(hdfs_2k_url, hdfs_2k_file)
+        else:
+            print(f"HDFS_2k.log already exists at {hdfs_2k_file}")
+        
+        if not hdfs_2k_labels.exists():
+            download_file(hdfs_2k_labels_url, hdfs_2k_labels)
+        else:
+            print(f"HDFS_2k labels already exist at {hdfs_2k_labels}")
+        
+        print("✓ HDFS_2k dataset downloaded successfully")
+    except Exception as e:
+        print(f"✗ Error downloading HDFS dataset: {e}")
+        print("You can manually download from: https://github.com/logpai/loghub")
+    
+    # Full HDFS dataset (larger, for comprehensive evaluation)
+    print("\nNote: Full HDFS.log (11M entries) can be downloaded from:")
+    print("  https://zenodo.org/record/3227177")
+    print(f"  Place in: {data_dir.absolute()}")
 
 def download_bgl_dataset():
     data_dir = Path("data/datasets/bgl")
     data_dir.mkdir(parents=True, exist_ok=True)
     
-    print("BGL Dataset Download Instructions:")
+    print("\n" + "=" * 80)
+    print("Downloading BGL Dataset from LogHub")
     print("=" * 80)
-    print("The BGL dataset can be downloaded from:")
-    print("https://github.com/logpai/loghub")
-    print("\nPlease download BGL logs and place them in:")
-    print(f"  {data_dir.absolute()}")
-    print("\nExpected file: BGL.log or BGL_2k.log")
-    print("=" * 80)
+    
+    # BGL_2k for quick testing
+    bgl_2k_url = "https://raw.githubusercontent.com/logpai/loghub/master/BGL/BGL_2k.log"
+    bgl_2k_labels_url = "https://raw.githubusercontent.com/logpai/loghub/master/BGL/BGL_2k.log_structured.csv"
+    
+    bgl_2k_file = data_dir / "BGL_2k.log"
+    bgl_2k_labels = data_dir / "BGL_2k_labels.csv"
+    
+    try:
+        if not bgl_2k_file.exists():
+            download_file(bgl_2k_url, bgl_2k_file)
+        else:
+            print(f"BGL_2k.log already exists at {bgl_2k_file}")
+        
+        if not bgl_2k_labels.exists():
+            download_file(bgl_2k_labels_url, bgl_2k_labels)
+        else:
+            print(f"BGL_2k labels already exist at {bgl_2k_labels}")
+        
+        print("✓ BGL_2k dataset downloaded successfully")
+    except Exception as e:
+        print(f"✗ Error downloading BGL dataset: {e}")
+        print("You can manually download from: https://github.com/logpai/loghub")
+    
+    # Full BGL dataset (larger, for comprehensive evaluation)
+    print("\nNote: Full BGL.log (4.7M entries) can be downloaded from:")
+    print("  https://zenodo.org/record/3227177")
+    print(f"  Place in: {data_dir.absolute()}")
 
 def create_sample_logs():
     sample_dir = Path("data/datasets/sample")

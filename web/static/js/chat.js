@@ -1,10 +1,51 @@
 // Chat Interface JavaScript
 
+let conversationHistory = [];
+let analysisContext = null;
+let prefillQuestion = null;
+let currentSessionId = null;
+let sessionData = null;
+
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     checkHealth();
+    hydrateFromAnalysisContext();
     setInterval(checkHealth, 30000);
+    
+    analysisContext = sessionStorage.getItem('analysisChatContext');
+    prefillQuestion = sessionStorage.getItem('analysisChatPrefill');
+    currentSessionId = sessionStorage.getItem('analysisSessionId');
+    
+    if (currentSessionId) {
+        await loadAnalysisSession(currentSessionId);
+    } else if (analysisContext) {
+        addMessage('assistant', 'I have your file analysis context loaded. Ask anything you want about the results.');
+    }
+    
+    if (prefillQuestion) {
+        const input = document.getElementById('chatInput');
+        if (input) {
+            input.value = prefillQuestion;
+            input.focus();
+            sessionStorage.removeItem('analysisChatPrefill');
+        }
+    }
 });
+
+async function loadAnalysisSession(sessionId) {
+    try {
+        const response = await fetch(`/api/analysis-sessions/${sessionId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            sessionData = data.session;
+            const msg = `Loaded analysis session: ${sessionData.filename} (${sessionData.total_logs} logs, ${sessionData.anomalies_detected} anomalies detected)`;
+            addMessage('assistant', msg);
+        }
+    } catch (error) {
+        console.error('Error loading session:', error);
+    }
+}
 
 // Check system health
 async function checkHealth() {
@@ -37,6 +78,9 @@ async function sendMessage() {
     
     if (!message) return;
     
+    const analysisContext = sessionStorage.getItem('analysisChatContext');
+    const includeContext = !!analysisContext;
+
     // Add user message to chat
     addMessage('user', message);
     input.value = '';
@@ -45,12 +89,16 @@ async function sendMessage() {
     const typingId = addTypingIndicator();
     
     try {
+        const payloadMessage = includeContext
+            ? `Context from uploaded log analysis:\n${analysisContext}\n\nUser question:\n${message}`
+            : message;
+
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message: payloadMessage })
         });
         
         const data = await response.json();
@@ -62,6 +110,11 @@ async function sendMessage() {
             addMessage('assistant', data.response, data.is_anomaly);
         } else {
             addMessage('assistant', `Error: ${data.error}`, false);
+        }
+
+        if (includeContext) {
+            sessionStorage.removeItem('analysisChatContext');
+            sessionStorage.removeItem('analysisChatPrefill');
         }
     } catch (error) {
         removeTypingIndicator(typingId);

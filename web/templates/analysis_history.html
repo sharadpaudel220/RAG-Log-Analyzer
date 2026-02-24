@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History - Log Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .history-container {
+            padding: 20px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .history-header h1 {
+            color: #fff;
+            margin: 0;
+        }
+
+        .clear-all-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .clear-all-btn:hover {
+            background: #c82333;
+        }
+
+        .session-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .session-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .session-meta {
+            display: flex;
+            gap: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .session-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .expand-icon {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .session-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .session-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .session-card.expanded .session-details {
+            max-height: 2000px;
+        }
+
+        .session-content {
+            padding: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h3 {
+            color: #8b5cf6;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .anomaly-item {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 3px solid #dc3545;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .anomaly-item.critical {
+            border-left-color: #dc3545;
+            background: rgba(220, 53, 69, 0.15);
+        }
+
+        .anomaly-item.high {
+            border-left-color: #fd7e14;
+            background: rgba(253, 126, 20, 0.1);
+        }
+
+        .anomaly-item.medium {
+            border-left-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .anomaly-severity {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .severity-critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .severity-high {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .severity-medium {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .anomaly-title {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .anomaly-log {
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .no-sessions {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-sessions h2 {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .badge-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            min-width: 320px;
+            max-width: 420px;
+            background: rgba(30, 41, 59, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast i:first-child {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .toast span {
+            flex: 1;
+            color: #fff;
+            font-size: 0.875rem;
+        }
+
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast-success i:first-child {
+            color: #10b981;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-error i:first-child {
+            color: #ef4444;
+        }
+
+        .toast-warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .toast-warning i:first-child {
+            color: #f59e0b;
+        }
+
+        .toast-info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .toast-info i:first-child {
+            color: #3b82f6;
+        }
+
+        .toast-confirm {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toast-content i {
+            color: #f59e0b;
+            font-size: 1.25rem;
+        }
+
+        .toast-content span {
+            color: #fff;
+            font-size: 0.875rem;
+        }
+
+        .toast-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .toast-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .toast-btn-cancel {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toast-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .toast-btn-confirm {
+            background: #ef4444;
+            color: white;
+        }
+
+        .toast-btn-confirm:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <h1>Agentic RAG</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/log-analyzer" class="nav-item">
+                    <i class="fas fa-search"></i>
+                    <span>Log Analyzer</span>
+                </a>
+                <a href="/analysis-history" class="nav-item active">
+                    <i class="fas fa-history"></i>
+                    <span>Analysis History</span>
+                </a>
+                <a href="/api-config" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
+                </a>
+                <a href="/sources" class="nav-item">
+                    <i class="fas fa-plug"></i>
+                    <span>Log Sources</span>
+                </a>
+                <a href="/chat" class="nav-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/evaluation" class="nav-item">
+                    <i class="fas fa-flask"></i>
+                    <span>Evaluation</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Checking...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="history-container">
+                <div class="history-header">
+                    <h1>Analysis History</h1>
+                    <button class="clear-all-btn" onclick="clearAllSessions()" id="clearAllBtn">
+                        Clear All Sessions
+                    </button>
+                </div>
+
+                <div id="sessionsContainer">
+                    <div class="loading">Loading analysis sessions...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let sessions = [];
+
+        async function loadSessions() {
+            try {
+                const response = await fetch('/api/analysis-sessions');
+                const data = await response.json();
+                
+                if (data.success) {
+                    sessions = data.sessions;
+                    renderSessions();
+                } else {
+                    document.getElementById('sessionsContainer').innerHTML = 
+                        '<div class="no-sessions"><h2>Error loading sessions</h2></div>';
+                }
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+                document.getElementById('sessionsContainer').innerHTML = 
+                    '<div class="no-sessions"><h2>Error loading sessions</h2></div>';
+            }
+        }
+
+        function renderSessions() {
+            const container = document.getElementById('sessionsContainer');
+            
+            if (sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="no-sessions">
+                        <h2>No Analysis Sessions Yet</h2>
+                        <p>Upload and analyze log files to see them here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => `
+                <div class="session-card" id="session-${session.session_id}">
+                    <div class="session-header" onclick="toggleSession('${session.session_id}')">
+                        <div class="session-info">
+                            <div class="session-title">📄 ${session.filename}</div>
+                            <div class="session-meta">
+                                <span>🕒 ${new Date(session.timestamp).toLocaleString()}</span>
+                                <span>📊 ${session.total_logs} logs</span>
+                                <span>⚠️ ${session.anomalies_detected} anomalies</span>
+                                <span class="badge ${session.status === 'completed' ? 'badge-success' : 'badge-warning'}">
+                                    ${session.status}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="session-actions">
+                            <button class="delete-btn" onclick="deleteSession(event, '${session.session_id}')">
+                                Delete
+                            </button>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-content" id="content-${session.session_id}">
+                            <div class="loading">Loading session details...</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function toggleSession(sessionId) {
+            const card = document.getElementById(`session-${sessionId}`);
+            const content = document.getElementById(`content-${sessionId}`);
+            
+            if (card.classList.contains('expanded')) {
+                card.classList.remove('expanded');
+            } else {
+                card.classList.add('expanded');
+                
+                if (content.innerHTML.includes('Loading')) {
+                    await loadSessionDetails(sessionId);
+                }
+            }
+        }
+
+        async function loadSessionDetails(sessionId) {
+            const content = document.getElementById(`content-${sessionId}`);
+            
+            try {
+                const response = await fetch(`/api/analysis-sessions/${sessionId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const session = data.session;
+                    const anomalies = session.anomalies || [];
+                    
+                    content.innerHTML = `
+                        <div class="detail-section">
+                            <h3>Session Information</h3>
+                            <div style="color: rgba(255, 255, 255, 0.7);">
+                                <p><strong>System Type:</strong> ${session.system_type}</p>
+                                <p><strong>Analysis Time:</strong> ${session.analysis_time ? session.analysis_time.toFixed(2) + 's' : 'N/A'}</p>
+                            </div>
+                        </div>
+                        
+                        ${anomalies.length > 0 ? `
+                            <div class="detail-section">
+                                <h3>Detected Anomalies (${anomalies.length})</h3>
+                                ${anomalies.map(anomaly => {
+                                    const alert = anomaly.alert || {};
+                                    const severity = (alert.severity || 'MEDIUM').toLowerCase();
+                                    return `
+                                        <div class="anomaly-item ${severity}">
+                                            <span class="anomaly-severity severity-${severity}">
+                                                ${alert.severity || 'UNKNOWN'}
+                                            </span>
+                                            <div class="anomaly-title">${alert.title || 'Anomaly Detected'}</div>
+                                            <div class="anomaly-log">${anomaly.log?.content || 'No log content'}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : '<p style="color: rgba(255, 255, 255, 0.6);">No anomalies detected in this session.</p>'}
+                    `;
+                } else {
+                    content.innerHTML = '<p style="color: #dc3545;">Error loading session details</p>';
+                }
+            } catch (error) {
+                console.error('Error loading session details:', error);
+                content.innerHTML = '<p style="color: #dc3545;">Error loading session details</p>';
+            }
+        }
+
+        // Toast notification functions
+        function showToast(message, type = 'info', duration = 3000) {
+            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = {
+                'success': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'warning': 'fa-exclamation-triangle',
+                'info': 'fa-info-circle'
+            }[type] || 'fa-info-circle';
+            
+            toast.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        function showDeleteConfirmation(sessionId) {
+            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+            
+            const confirmToast = document.createElement('div');
+            confirmToast.className = 'toast toast-confirm';
+            confirmToast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Delete this analysis session?</span>
+                </div>
+                <div class="toast-actions">
+                    <button class="toast-btn toast-btn-cancel" onclick="this.closest('.toast').remove()">Cancel</button>
+                    <button class="toast-btn toast-btn-confirm" onclick="confirmDeleteSession('${sessionId}', this)">Delete</button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(confirmToast);
+        }
+
+        function showClearAllConfirmation() {
+            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+            
+            const confirmToast = document.createElement('div');
+            confirmToast.className = 'toast toast-confirm';
+            confirmToast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Delete ALL analysis sessions? This cannot be undone.</span>
+                </div>
+                <div class="toast-actions">
+                    <button class="toast-btn toast-btn-cancel" onclick="this.closest('.toast').remove()">Cancel</button>
+                    <button class="toast-btn toast-btn-confirm" onclick="confirmClearAll(this)">Delete All</button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(confirmToast);
+        }
+
+        async function confirmDeleteSession(sessionId, button) {
+            const toast = button.closest('.toast');
+            toast.remove();
+            
+            try {
+                const response = await fetch(`/api/analysis-sessions/${sessionId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Analysis session deleted successfully', 'success');
+                    sessions = sessions.filter(s => s.session_id !== sessionId);
+                    renderSessions();
+                } else {
+                    showToast('Error deleting session: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting session:', error);
+                showToast('Error deleting session', 'error');
+            }
+        }
+
+        async function confirmClearAll(button) {
+            const toast = button.closest('.toast');
+            toast.remove();
+            
+            try {
+                const response = await fetch('/api/analysis-sessions', {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('All analysis sessions deleted successfully', 'success');
+                    sessions = [];
+                    renderSessions();
+                } else {
+                    showToast('Error clearing sessions: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error clearing sessions:', error);
+                showToast('Error clearing sessions', 'error');
+            }
+        }
+
+        async function deleteSession(event, sessionId) {
+            event.stopPropagation();
+            showDeleteConfirmation(sessionId);
+        }
+
+        async function clearAllSessions() {
+            showClearAllConfirmation();
+        }
+
+        loadSessions();
+    </script>
+</body>
+</html>

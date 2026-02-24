@@ -8,9 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStats();
     loadAlerts();
     loadSystemStatus();
+    loadRecentSessions();
     setInterval(checkHealth, 30000); // Check health every 30 seconds
     setInterval(loadStats, 10000); // Update stats every 10 seconds
     setInterval(loadSystemStatus, 30000); // Update system status every 30 seconds
+    setInterval(loadRecentSessions, 30000); // Update sessions every 30 seconds
 });
 
 // Check system health
@@ -138,9 +140,164 @@ async function loadAlerts() {
     }
 }
 
+// Load recent analysis sessions
+async function loadRecentSessions() {
+    try {
+        const response = await fetch('/api/analysis-sessions');
+        const data = await response.json();
+        
+        const historyContainer = document.getElementById('historyContainer');
+        
+        if (data.success && data.sessions && data.sessions.length > 0) {
+            const recentSessions = data.sessions.slice(0, 5); // Show only 5 most recent
+            let html = '<div class="sessions-list">';
+            
+            recentSessions.forEach(session => {
+                const time = new Date(session.timestamp).toLocaleString();
+                const statusClass = session.status === 'completed' ? 'success' : 'warning';
+                
+                html += `
+                    <div class="session-item" onclick="navigateToHistory()">
+                        <div class="session-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="session-info">
+                            <div class="session-name">${session.filename}</div>
+                            <div class="session-meta">
+                                <span><i class="fas fa-clock"></i> ${time}</span>
+                                <span><i class="fas fa-list"></i> ${session.total_logs} logs</span>
+                                <span class="anomaly-badge ${session.anomalies_detected > 0 ? 'has-anomalies' : ''}">
+                                    <i class="fas fa-exclamation-triangle"></i> ${session.anomalies_detected} anomalies
+                                </span>
+                            </div>
+                        </div>
+                        <div class="session-status">
+                            <span class="status-badge ${statusClass}">${session.status}</span>
+                            <button class="delete-btn-small" onclick="deleteSessionFromDashboard(event, '${session.session_id}')" title="Delete session">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            historyContainer.innerHTML = html;
+        } else {
+            historyContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-clock"></i>
+                    <p>No analysis sessions yet. Upload and analyze logs to get started!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to load recent sessions:', error);
+        document.getElementById('historyContainer').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading sessions</p>
+            </div>
+        `;
+    }
+}
+
+// Navigate to analysis history
+function navigateToHistory() {
+    window.location.href = '/analysis-history';
+}
+
+// Toast notification system
+function showToast(message, type = 'info', duration = 3000) {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    }[type] || 'fa-info-circle';
+    
+    toast.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+function showDeleteConfirmation(sessionId) {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    
+    const confirmToast = document.createElement('div');
+    confirmToast.className = 'toast toast-confirm';
+    confirmToast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Delete this analysis session?</span>
+        </div>
+        <div class="toast-actions">
+            <button class="toast-btn toast-btn-cancel" onclick="this.closest('.toast').remove()">Cancel</button>
+            <button class="toast-btn toast-btn-confirm" onclick="confirmDelete('${sessionId}', this)">Delete</button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(confirmToast);
+}
+
+async function confirmDelete(sessionId, button) {
+    const toast = button.closest('.toast');
+    toast.remove();
+    
+    try {
+        const response = await fetch(`/api/analysis-sessions/${sessionId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Analysis session deleted successfully', 'success');
+            loadRecentSessions();
+            loadStats();
+        } else {
+            showToast('Error deleting session: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting session:', error);
+        showToast('Error deleting session', 'error');
+    }
+}
+
+// Delete session from dashboard
+async function deleteSessionFromDashboard(event, sessionId) {
+    event.stopPropagation();
+    showDeleteConfirmation(sessionId);
+}
+
 // Refresh data
 function refreshData() {
     loadStats();
     loadAlerts();
     loadSystemStatus();
+    loadRecentSessions();
 }

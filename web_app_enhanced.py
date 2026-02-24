@@ -6,15 +6,18 @@ With multi-source log ingestion capabilities
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
+import os
+import time
 import json
-from pathlib import Path
 from datetime import datetime
 import threading
-import time
+import uuid
 from werkzeug.utils import secure_filename
-import os
+from pathlib import Path
+from dotenv import load_dotenv
 
-from src.input_layer.log_ingestion import LogIngestion
+from src.utils.logger import get_logger
+from src.input_layer.log_ingestion import RawLogEntry, LogIngestion
 from src.preprocessing.log_preprocessor import LogPreprocessor
 from src.knowledge_base.knowledge_manager import KnowledgeBaseManager
 from src.retrieval.retrieval_system import RetrievalSystem
@@ -28,12 +31,42 @@ from src.evaluation.evaluator import SystemEvaluator
 from src.connectors.log_sources import (
     LogSourceManager, LogSource, LogSourceType, IngestionMethod, LogFormatter
 )
+from src.database.config import db_config
+from src.database.services import db_service
 from src.utils.logger import get_logger
+
+load_dotenv()
 
 logger = get_logger(__name__, log_file="logs/web_app.log")
 
+
+def _get_result_confidence(result) -> float:
+    return float(getattr(result, 'confidence', getattr(result, 'confidence_score', 0.0)) or 0.0)
+
+
+def _to_raw_log_entry(maybe_log) -> RawLogEntry:
+    if isinstance(maybe_log, RawLogEntry):
+        return maybe_log
+    if isinstance(maybe_log, dict):
+        content = maybe_log.get('content') or maybe_log.get('message') or str(maybe_log)
+        return RawLogEntry(content=str(content), timestamp=datetime.now(), metadata=maybe_log)
+    return RawLogEntry(content=str(maybe_log), timestamp=datetime.now())
+
+
+def _save_analysis_session(session_id: str, data: dict):
+    pass
+
+def _load_analysis_session(session_id: str) -> dict:
+    return db_service.get_session_with_details(session_id)
+
+def _list_analysis_sessions() -> list:
+    return db_service.list_sessions()
+
 app = Flask(__name__, static_folder='web/static', template_folder='web/templates')
 CORS(app)
+
+ANALYSIS_SESSIONS_DIR = 'data/analysis_sessions'
+Path(ANALYSIS_SESSIONS_DIR).mkdir(parents=True, exist_ok=True)
 
 # Configure upload folder
 UPLOAD_FOLDER = 'data/uploads'
@@ -71,8 +104,17 @@ def allowed_file(filename):
 
 def initialize_system():
     """Initialize all system components"""
-    try:
-        logger.info("Initializing system components...")
+    if system_components['initialized']:
+        return
+    
+    logger.info("Initializing system components...")
+    
+    # Initialize database
+    logger.info("Initializing database connection...")
+    if not db_config.initialize():
+        logger.error("Failed to initialize database connection")
+    else:
+        logger.info("Database connection established")
         
         system_components['ingestion'] = LogIngestion()
         system_components['preprocessor'] = LogPreprocessor()
@@ -103,9 +145,6 @@ def initialize_system():
         system_components['initialized'] = True
         logger.info("System components initialized successfully")
         return True
-    except Exception as e:
-        logger.error(f"Error initializing system: {e}")
-        return False
 
 def _setup_default_sources():
     """Setup default log sources"""
@@ -159,6 +198,11 @@ def log_analyzer():
     """Log analyzer page"""
     return render_template('log_analyzer.html')
 
+@app.route('/analysis-history')
+def analysis_history():
+    """Analysis history page"""
+    return render_template('analysis_history.html')
+
 @app.route('/api-config')
 def api_config():
     """API configuration page"""
@@ -200,15 +244,16 @@ def health_check():
     }
     return jsonify(health_status)
 
-@app.route('/api/stats')
+@app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get system statistics"""
-    if not system_components['initialized']:
-        initialize_system()
-    
-    stats = system_components['system_stats'].copy()
-    stats['knowledge_base_size'] = len(system_components['knowledge_manager'].documents) if system_components['knowledge_manager'] else 0
-    stats['recent_alerts_count'] = len(system_components['recent_alerts'])
+    try:
+        db_stats = db_service.get_system_stats()
+        system_components['system_stats'].update(db_stats)
+        return jsonify(system_components['system_stats'])
+    except Exception as e:
+        logger.error(f"Error getting stats: {e}")
+        return jsonify(system_components['system_stats'])
     stats['active_sources'] = len([s for s in system_components['source_manager'].list_sources() if s.enabled])
     stats['total_sources'] = len(system_components['source_manager'].sources)
     
@@ -348,7 +393,9 @@ def ingest_logs():
             formatted_log = LogFormatter.format_log(raw_log, source.source_type)
             
             # Preprocess
-            parsed_logs = system_components['preprocessor'].preprocess([formatted_log])
+            parsed_logs = system_components['preprocessor'].preprocess([
+                _to_raw_log_entry(formatted_log)
+            ])
             if not parsed_logs:
                 continue
             
@@ -358,10 +405,10 @@ def ingest_logs():
             result = system_components['agentic_controller'].analyze_log(parsed_log)
             
             if result.is_anomaly:
-                alert = system_components['alert_generator'].generate_alert(result, parsed_log)
+                alert = system_components['alert_generator'].generate_alert(result)
                 anomalies.append({
                     'log': formatted_log,
-                    'confidence': result.confidence,
+                    'confidence': _get_result_confidence(result),
                     'alert': alert
                 })
                 
@@ -416,7 +463,9 @@ def webhook_receiver(source_id):
         
         # Format and process log
         formatted_log = LogFormatter.format_log(data, source.source_type)
-        parsed_logs = system_components['preprocessor'].preprocess([formatted_log])
+        parsed_logs = system_components['preprocessor'].preprocess([
+            _to_raw_log_entry(formatted_log)
+        ])
         
         if parsed_logs:
             result = system_components['agentic_controller'].analyze_log(parsed_logs[0])
@@ -426,7 +475,7 @@ def webhook_receiver(source_id):
             return jsonify({
                 'success': True,
                 'is_anomaly': result.is_anomaly,
-                'confidence': result.confidence
+                'confidence': _get_result_confidence(result)
             })
         
         return jsonify({'error': 'Failed to process log'}), 500
@@ -511,6 +560,13 @@ def analyze_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
+        # Read file content for database storage
+        with open(filepath, 'r') as f:
+            file_content = f.read()
+        
+        # Create database session (returns session_id as string)
+        session_id = db_service.create_analysis_session(filename, system_type, file_content)
+        
         # Process file
         start_time = time.time()
         raw_logs = system_components['ingestion'].ingest_file(filepath)[:max_logs]
@@ -519,8 +575,17 @@ def analyze_file():
         # Analyze logs
         anomalies = []
         anomaly_count = 0
+        total_logs = len(parsed_logs)
         
-        for parsed_log in parsed_logs:
+        logger.info(f"Starting {system_type} analysis of {total_logs} logs for session {session_id}")
+        
+        for idx, parsed_log in enumerate(parsed_logs, 1):
+            if idx % 10 == 0 or idx == total_logs:
+                logger.info(f"Progress: {idx}/{total_logs} logs analyzed ({int(idx/total_logs*100)}%)")
+            
+            # Save log entry to database
+            log_id = db_service.save_log_entry(session_id, parsed_log.to_dict())
+            
             if system_type == 'agentic':
                 result = system_components['agentic_controller'].analyze_log(parsed_log)
             elif system_type == 'rule_based':
@@ -532,36 +597,184 @@ def analyze_file():
             else:
                 result = system_components['agentic_controller'].analyze_log(parsed_log)
             
+            # Save anomaly to database
+            anomaly_data = result.to_dict()
+            anomaly_id = db_service.save_anomaly(session_id, log_id, anomaly_data)
+            
             if result.is_anomaly:
                 anomaly_count += 1
-                alert = system_components['alert_generator'].generate_alert(result, parsed_log) if system_type == 'agentic' else {
-                    'severity': 'HIGH',
-                    'description': result.explanation,
-                    'explanation': result.explanation
-                }
+                
+                # Generate and save alert
+                if system_type == 'agentic':
+                    alert = system_components['alert_generator'].generate_alert(result)
+                    db_service.save_alert(session_id, anomaly_id, alert.to_dict())
+                    alert_dict = alert.to_dict()
+                else:
+                    alert_dict = {
+                        'severity': 'HIGH',
+                        'description': getattr(result, 'explanation', 'Anomaly detected'),
+                        'explanation': getattr(result, 'explanation', 'Anomaly detected')
+                    }
+                
                 anomalies.append({
-                    'log': {'content': parsed_log.content, 'message': parsed_log.content},
-                    'confidence': result.confidence,
-                    'alert': alert
+                    'log': {'content': parsed_log.raw_content, 'message': parsed_log.raw_content},
+                    'confidence': _get_result_confidence(result),
+                    'alert': alert_dict
                 })
         
         total_time = time.time() - start_time
         
-        # Update stats
-        system_components['system_stats']['total_logs_analyzed'] += len(parsed_logs)
+        # Update session stats in database
+        db_service.update_session_stats(session_id, total_logs, anomaly_count, total_time)
+        
+        # Update system stats
+        db_service.update_system_stats(
+            logs_analyzed=total_logs,
+            anomalies=anomaly_count,
+            alerts=anomaly_count if system_type == 'agentic' else 0,
+            sessions=1
+        )
+        system_components['system_stats']['total_logs_analyzed'] += total_logs
         system_components['system_stats']['anomalies_detected'] += anomaly_count
         
         return jsonify({
             'success': True,
+            'session_id': session_id,
             'filename': filename,
             'total_logs': len(parsed_logs),
             'anomalies_detected': anomaly_count,
             'total_time': total_time,
-            'anomalies': anomalies[:50]  # Return first 50 anomalies
+            'anomalies': anomalies
         })
         
     except Exception as e:
         logger.error(f"File analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Analysis Session endpoints
+@app.route('/api/analysis-sessions', methods=['GET'])
+def get_analysis_sessions():
+    """Get list of all analysis sessions"""
+    try:
+        sessions = _list_analysis_sessions()
+        return jsonify({'success': True, 'sessions': sessions})
+    except Exception as e:
+        logger.error(f"Error listing sessions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analysis-sessions/<session_id>', methods=['GET'])
+def get_analysis_session(session_id):
+    """Get specific analysis session data"""
+    try:
+        session_data = _load_analysis_session(session_id)
+        if session_data:
+            return jsonify({'success': True, 'session': session_data})
+        else:
+            return jsonify({'error': 'Session not found'}), 404
+    except Exception as e:
+        logger.error(f"Error loading session: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analysis-sessions/<session_id>', methods=['DELETE'])
+def delete_session(session_id):
+    """Delete a specific analysis session"""
+    try:
+        db_service.delete_session(session_id)
+        logger.info(f"Analysis session {session_id} deleted from database")
+        return jsonify({'success': True, 'message': 'Session deleted'})
+    except Exception as e:
+        logger.error(f"Error deleting session: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analysis-sessions', methods=['DELETE'])
+def clear_all_sessions():
+    """Clear all analysis sessions"""
+    try:
+        db_service.delete_all_sessions()
+        logger.info("All analysis sessions cleared from database")
+        return jsonify({'success': True, 'message': 'All sessions cleared'})
+    except Exception as e:
+        logger.error(f"Error clearing sessions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chat', methods=['POST'])
+def chat_with_analysis():
+    """Chat endpoint for asking questions about analysis"""
+    if not system_components['initialized']:
+        initialize_system()
+    
+    try:
+        data = request.json
+        message = data.get('message', '')
+        context = data.get('context', '')
+        session_id = data.get('session_id')
+        history = data.get('history', [])
+        
+        if not message:
+            return jsonify({'error': 'No message provided'}), 400
+        
+        # Save user message to database
+        if session_id:
+            db_service.save_chat_message(session_id, 'user', message, {'context': context})
+        
+        session_context = ''
+        critical_logs_context = ''
+        if session_id:
+            session_data = _load_analysis_session(session_id)
+            if session_data:
+                session_context = f"""Analysis Session Context:
+Filename: {session_data.get('filename')}
+Total Logs: {session_data.get('total_logs')}
+Anomalies Detected: {session_data.get('anomalies_detected')}
+System Type: {session_data.get('system_type')}
+"""
+                # Get all critical/high severity anomalies from this session
+                anomalies = session_data.get('anomalies', [])
+                critical_anomalies = [a for a in anomalies if a.get('alert', {}).get('severity') in ['CRITICAL', 'HIGH']]
+                
+                if critical_anomalies:
+                    critical_logs_context = "\n\nCritical Logs Found in This Session:\n"
+                    for i, anom in enumerate(critical_anomalies[:10], 1):
+                        alert = anom.get('alert', {})
+                        critical_logs_context += f"\n{i}. Severity: {alert.get('severity', 'UNKNOWN')}\n"
+                        critical_logs_context += f"   Title: {alert.get('title', 'N/A')}\n"
+                        critical_logs_context += f"   Log: {anom.get('log', {}).get('content', '')[:200]}...\n"
+        
+        full_context = f"""{session_context}{critical_logs_context}
+{context}
+
+User Question: {message}"""
+        
+        system_prompt = """You are a specialized log analysis assistant. Your ONLY purpose is to help analyze system logs, anomalies, errors, and provide technical recommendations.
+
+You MUST:
+- Only answer questions related to log analysis, system errors, anomalies, and technical troubleshooting
+- Provide specific, technical answers based on the analysis context provided
+- Reference specific logs and anomalies when answering
+
+You MUST NOT:
+- Answer questions unrelated to log analysis (poems, general knowledge, casual conversation, etc.)
+- If asked an off-topic question, respond: "I am designed specifically for log analysis and troubleshooting. Please ask questions related to the analyzed logs, anomalies, or system errors."
+
+Be concise, technical, and helpful for log analysis questions only."""
+        
+        llm_response = system_components['llm_engine'].generate(
+            prompt=full_context,
+            system_prompt=system_prompt,
+            temperature=0.7
+        )
+        
+        # Save assistant response to database
+        if session_id:
+            db_service.save_chat_message(session_id, 'assistant', llm_response.content)
+        
+        return jsonify({
+            'success': True,
+            'response': llm_response.content
+        })
+        
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
         return jsonify({'error': str(e)}), 500
 
 # API Configuration endpoints
@@ -602,7 +815,164 @@ def fetch_logs_from_api():
     ]
     return jsonify({'success': True, 'logs': logs})
 
-# ==================== Original Endpoints ====================
+# ==================== AI Provider Configuration API ====================
+
+@app.route('/api/ai-providers', methods=['GET'])
+def get_ai_providers():
+    """Get all configured AI providers"""
+    try:
+        from src.utils.config_loader import config
+        
+        providers = {}
+        for provider_name in ['openai', 'anthropic', 'gemini']:
+            api_key = config.get_env(f'{provider_name.upper()}_API_KEY') or config.get(f'llm.{provider_name}.api_key', '')
+            model = config.get('llm.model', '') if config.get('llm.provider', '') == provider_name else ''
+            base_url = config.get(f'llm.{provider_name}.base_url', '')
+            is_active = config.get('llm.provider', '') == provider_name
+            
+            providers[provider_name] = {
+                'configured': bool(api_key),
+                'model': model,
+                'base_url': base_url,
+                'is_active': is_active
+            }
+        
+        return jsonify({'success': True, 'providers': providers})
+    except Exception as e:
+        logger.error(f"Error getting AI providers: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai-providers', methods=['POST'])
+def save_ai_provider():
+    """Save AI provider configuration"""
+    try:
+        data = request.json
+        provider = data.get('provider')
+        api_key = data.get('api_key')
+        model = data.get('model')
+        base_url = data.get('base_url', '')
+        set_as_active = data.get('set_as_active', False)
+        
+        if not provider or not api_key or not model:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        if provider not in ['openai', 'anthropic', 'gemini']:
+            return jsonify({'success': False, 'error': 'Invalid provider'}), 400
+        
+        # Save to environment variables (runtime only - recommend using .env file)
+        import os
+        env_var_name = f'{provider.upper()}_API_KEY'
+        os.environ[env_var_name] = api_key
+        
+        # Update config.yaml
+        import yaml
+        from pathlib import Path
+        config_path = Path(__file__).parent / 'config' / 'config.yaml'
+        
+        with open(config_path, 'r') as f:
+            config_data = yaml.safe_load(f)
+        
+        # Update provider-specific settings
+        if 'llm' not in config_data:
+            config_data['llm'] = {}
+        if provider not in config_data['llm']:
+            config_data['llm'][provider] = {}
+        
+        config_data['llm'][provider]['api_key'] = ''  # Don't store in config file
+        if base_url:
+            config_data['llm'][provider]['base_url'] = base_url
+        
+        # Set as active provider if requested
+        if set_as_active:
+            config_data['llm']['provider'] = provider
+            config_data['llm']['model'] = model
+            
+            # Reinitialize LLM engine with new provider
+            if system_components['initialized']:
+                from src.llm_engine.llm_interface import LLMEngine
+                system_components['llm_engine'] = LLMEngine()
+                logger.info(f"LLM engine reinitialized with provider: {provider}")
+        
+        with open(config_path, 'w') as f:
+            yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+        
+        return jsonify({'success': True, 'message': 'AI provider configured successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error saving AI provider: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai-providers/test', methods=['POST'])
+def test_ai_provider():
+    """Test AI provider connection"""
+    try:
+        data = request.json
+        provider = data.get('provider')
+        api_key = data.get('api_key')
+        model = data.get('model')
+        base_url = data.get('base_url', '')
+        
+        if not provider or not api_key or not model:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        # Create a temporary LLM engine instance for testing
+        import os
+        import requests
+        
+        # Test with a simple prompt
+        test_prompt = "Say 'OK' if you can read this."
+        
+        if provider == 'openai':
+            url = f"{base_url or 'https://api.openai.com'}/v1/chat/completions".replace('//', '/').replace('http:/', 'http://').replace('https:/', 'https://')
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            }
+            payload = {
+                'model': model,
+                'messages': [{'role': 'user', 'content': test_prompt}],
+                'max_tokens': 10
+            }
+        elif provider == 'anthropic':
+            url = f"{base_url or 'https://api.anthropic.com'}/v1/messages".replace('//', '/').replace('http:/', 'http://').replace('https:/', 'https://')
+            headers = {
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json'
+            }
+            payload = {
+                'model': model,
+                'messages': [{'role': 'user', 'content': test_prompt}],
+                'max_tokens': 10
+            }
+        elif provider == 'gemini':
+            model_name = model.replace('models/', '')
+            url = f"{base_url or 'https://generativelanguage.googleapis.com'}/v1beta/models/{model_name}:generateContent".replace('//', '/').replace('http:/', 'http://').replace('https:/', 'https://')
+            payload = {
+                'contents': [{'role': 'user', 'parts': [{'text': test_prompt}]}],
+                'generationConfig': {'maxOutputTokens': 10}
+            }
+            response = requests.post(url, params={'key': api_key}, json=payload, timeout=10)
+        else:
+            return jsonify({'success': False, 'error': 'Invalid provider'}), 400
+        
+        # Make the test request
+        if provider != 'gemini':
+            response = requests.post(url, headers=headers, json=payload, timeout=10)
+        
+        response.raise_for_status()
+        
+        return jsonify({'success': True, 'message': 'Connection successful'})
+        
+    except requests.exceptions.HTTPError as e:
+        error_msg = f"API error: {e.response.status_code} - {e.response.text[:200]}"
+        logger.error(f"AI provider test failed: {error_msg}")
+        return jsonify({'success': False, 'error': error_msg}), 200
+    except Exception as e:
+        logger.error(f"Error testing AI provider: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 200
+
+# ==================== Log Analysis Endpoints ====================
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_log():
@@ -618,7 +988,7 @@ def analyze_log():
         if not log_content:
             return jsonify({'error': 'No log content provided'}), 400
         
-        raw_log = {'content': log_content, 'timestamp': datetime.now().isoformat()}
+        raw_log = RawLogEntry(content=log_content, timestamp=datetime.now())
         parsed_logs = system_components['preprocessor'].preprocess([raw_log])
         
         if not parsed_logs:
@@ -629,13 +999,13 @@ def analyze_log():
         
         if system_type == 'agentic':
             result = system_components['agentic_controller'].analyze_log(parsed_log)
-            alert = system_components['alert_generator'].generate_alert(result, parsed_log)
+            alert = system_components['alert_generator'].generate_alert(result)
         elif system_type == 'rule_based':
             result = system_components['rule_based'].analyze(parsed_log)
             alert = {
                 'severity': 'HIGH' if result.is_anomaly else 'INFO',
                 'description': f"Rule-based detection: {'Anomaly' if result.is_anomaly else 'Normal'}",
-                'confidence': result.confidence,
+                'confidence': _get_result_confidence(result),
                 'explanation': result.explanation
             }
         elif system_type == 'isolation_forest':
@@ -643,7 +1013,7 @@ def analyze_log():
             alert = {
                 'severity': 'HIGH' if result.is_anomaly else 'INFO',
                 'description': f"ML-based detection: {'Anomaly' if result.is_anomaly else 'Normal'}",
-                'confidence': result.confidence,
+                'confidence': _get_result_confidence(result),
                 'explanation': result.explanation
             }
         elif system_type == 'non_agentic':
@@ -651,7 +1021,7 @@ def analyze_log():
             alert = {
                 'severity': 'HIGH' if result.is_anomaly else 'INFO',
                 'description': f"Non-Agentic RAG: {'Anomaly' if result.is_anomaly else 'Normal'}",
-                'confidence': result.confidence,
+                'confidence': _get_result_confidence(result),
                 'explanation': result.explanation
             }
         else:
@@ -678,7 +1048,7 @@ def analyze_log():
         response = {
             'success': True,
             'is_anomaly': result.is_anomaly,
-            'confidence': result.confidence,
+            'confidence': _get_result_confidence(result),
             'alert': alert,
             'parsed_log': {
                 'template': parsed_log.template,
@@ -710,7 +1080,7 @@ def chat_message():
         
         if any(keyword in message.lower() for keyword in ['analyze', 'check', 'error', 'log']):
             log_content = message
-            raw_log = {'content': log_content, 'timestamp': datetime.now().isoformat()}
+            raw_log = RawLogEntry(content=log_content, timestamp=datetime.now())
             parsed_logs = system_components['preprocessor'].preprocess([raw_log])
             
             if parsed_logs:
@@ -719,7 +1089,7 @@ def chat_message():
                 
                 response_text = f"**Analysis Result:**\n\n"
                 response_text += f"**Is Anomaly:** {'Yes' if result.is_anomaly else 'No'}\n"
-                response_text += f"**Confidence:** {result.confidence:.2%}\n\n"
+                response_text += f"**Confidence:** {_get_result_confidence(result):.2%}\n\n"
                 
                 if result.reasoning_steps:
                     response_text += "**Reasoning:**\n"
@@ -730,7 +1100,7 @@ def chat_message():
                     'success': True,
                     'response': response_text,
                     'is_anomaly': result.is_anomaly,
-                    'confidence': result.confidence
+                    'confidence': _get_result_confidence(result)
                 })
         
         response_text = "I'm the Agentic RAG Log Analyzer. I can help you analyze system logs and detect anomalies. Try sending me a log entry to analyze!"

@@ -2,6 +2,65 @@
 
 let uploadedFile = null;
 let analysisResults = null;
+let currentSessionId = null;
+let chatHistory = [];
+
+function showToast(message, type = 'info', title = null, timeoutMs = 7000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const iconByType = {
+        success: 'fa-check-circle',
+        error: 'fa-times-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+
+    const titleByType = {
+        success: 'Success',
+        error: 'Error',
+        warning: 'Warning',
+        info: 'Info'
+    };
+
+    const safeTitle = title || titleByType[type] || 'Info';
+    const icon = iconByType[type] || iconByType.info;
+
+    const header = document.createElement('div');
+    header.className = 'toast-header';
+    header.innerHTML = `
+        <div class="toast-title">
+            <i class="fas ${icon}"></i>
+            <span>${safeTitle}</span>
+        </div>
+        <button class="toast-close" aria-label="Close">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'toast-body';
+    body.textContent = message;
+
+    toast.appendChild(header);
+    toast.appendChild(body);
+    container.appendChild(toast);
+
+    const closeBtn = header.querySelector('.toast-close');
+    const close = () => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    };
+    closeBtn.addEventListener('click', close);
+
+    if (timeoutMs && timeoutMs > 0) {
+        setTimeout(close, timeoutMs);
+    }
+}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -36,34 +95,13 @@ async function checkHealth() {
 
 // Setup file upload
 function setupFileUpload() {
-    const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
+
+    if (!fileInput) {
+        console.error('File input element not found');
+        return;
+    }
     
-    // Drag and drop
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.style.borderColor = 'var(--primary-color)';
-        uploadArea.style.background = 'rgba(99, 102, 241, 0.1)';
-    });
-    
-    uploadArea.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        uploadArea.style.borderColor = 'var(--border-color)';
-        uploadArea.style.background = 'var(--dark-bg)';
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.style.borderColor = 'var(--border-color)';
-        uploadArea.style.background = 'var(--dark-bg)';
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
-    });
-    
-    // File input change
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             handleFile(e.target.files[0]);
@@ -77,7 +115,7 @@ function handleFile(file) {
     const fileExt = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!allowedTypes.includes(fileExt)) {
-        alert('Invalid file type. Please upload .log, .txt, .json, or .csv files.');
+        showToast('Invalid file type. Please upload .log, .txt, .json, or .csv files.', 'warning');
         return;
     }
     
@@ -105,82 +143,59 @@ function formatFileSize(bytes) {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-// Analyze manual log
-async function analyzeManualLog() {
-    const logInput = document.getElementById('logInput').value.trim();
-    const systemType = document.getElementById('systemSelect').value;
-    
-    if (!logInput) {
-        alert('Please enter a log entry to analyze');
-        return;
-    }
-    
-    showProgress('Analyzing log entry...');
-    
-    try {
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                log_content: logInput,
-                system: systemType
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            displaySingleResult(data);
-        } else {
-            alert('Error: ' + data.error);
-        }
-    } catch (error) {
-        alert('Error analyzing log: ' + error.message);
-    } finally {
-        hideProgress();
-    }
-}
-
 // Analyze uploaded file
 async function analyzeFile() {
     if (!uploadedFile) {
-        alert('Please upload a log file first');
+        showToast('Please upload a log file first.', 'warning');
         return;
     }
     
     const systemType = document.getElementById('batchSystemSelect').value;
     const maxLogs = parseInt(document.getElementById('maxLogs').value);
     
-    showProgress('Uploading and analyzing file...');
+    showProgress('Uploading file...');
     
     try {
-        // Upload file
         const formData = new FormData();
         formData.append('file', uploadedFile);
-        formData.append('source_id', 'file-upload');
-        formData.append('source_type', 'application');
         formData.append('system_type', systemType);
         formData.append('max_logs', maxLogs);
         
-        updateProgress(20, 'Uploading file...');
+        updateProgress(5, 'File uploaded, starting analysis...');
         
-        const uploadResponse = await fetch('/api/analyze-file', {
+        const startTime = Date.now();
+        let progressInterval;
+        
+        const uploadPromise = fetch('/api/analyze-file', {
             method: 'POST',
             body: formData
         });
         
+        progressInterval = setInterval(() => {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const estimatedProgress = Math.min(90, 10 + (elapsed / 2));
+            updateProgress(estimatedProgress, `Analyzing logs... (${elapsed.toFixed(0)}s elapsed)`);
+        }, 500);
+        
+        const uploadResponse = await uploadPromise;
+        clearInterval(progressInterval);
+        
         const uploadData = await uploadResponse.json();
         
         if (uploadData.success) {
-            updateProgress(100, 'Analysis complete!');
-            displayBatchResults(uploadData);
+            currentSessionId = uploadData.session_id;
+            updateProgress(100, `Analysis complete! Found ${uploadData.anomalies_detected} anomalies in ${uploadData.total_time.toFixed(1)}s`);
+            setTimeout(() => {
+                displayBatchResults(uploadData);
+                hideProgress();
+            }, 1500);
         } else {
-            alert('Error: ' + uploadData.error);
+            hideProgress();
+            showToast(uploadData.error || 'Unknown error analyzing file.', 'error');
         }
     } catch (error) {
-        alert('Error analyzing file: ' + error.message);
-    } finally {
-        setTimeout(hideProgress, 1000);
+        hideProgress();
+        showToast(error.message || 'Unexpected error analyzing file.', 'error');
     }
 }
 
@@ -263,8 +278,10 @@ function displayBatchResults(data) {
     const reportSummary = document.getElementById('reportSummary');
     const reportDetails = document.getElementById('reportDetails');
     const anomalyList = document.getElementById('anomalyList');
+    const inlineChatSection = document.getElementById('inlineChatSection');
     
     analysisResults = data;
+    chatHistory = [];
     
     // Summary
     const anomalyRate = (data.anomalies_detected / data.total_logs * 100).toFixed(2);
@@ -345,24 +362,239 @@ function displayBatchResults(data) {
         anomalyHTML += '</div>';
         anomalyList.innerHTML = anomalyHTML;
     }
-    
+
     resultsSection.style.display = 'block';
+    inlineChatSection.style.display = 'block';
+    
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = '';
+    addChatMessage('system', `Analysis complete! You can now ask questions about the ${data.total_logs} logs analyzed.`);
+    
     resultsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+function buildAnalysisContextForChat() {
+    if (!analysisResults) return '';
+
+    const parts = [];
+    if (uploadedFile?.name) {
+        parts.push(`File: ${uploadedFile.name}`);
+    }
+
+    if (typeof analysisResults.total_logs === 'number') {
+        parts.push(`Total logs analyzed: ${analysisResults.total_logs}`);
+    }
+    if (typeof analysisResults.anomalies_detected === 'number') {
+        parts.push(`Anomalies detected: ${analysisResults.anomalies_detected}`);
+    }
+
+    if (Array.isArray(analysisResults.anomalies) && analysisResults.anomalies.length > 0) {
+        const top = analysisResults.anomalies.slice(0, 5).map((a, i) => {
+            const msg = (a.log?.content || a.log?.message || '').toString();
+            const sev = (a.alert?.severity || '').toString();
+            const desc = (a.alert?.description || a.alert?.explanation || '').toString();
+            return `#${i + 1} [${sev}] ${msg}\n${desc}`;
+        });
+        parts.push(`Top anomalies (up to 5):\n${top.join('\n\n')}`);
+    }
+
+    return parts.join('\n');
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    addChatMessage('user', message);
+    input.value = '';
+    
+    const context = buildAnalysisContextForChat();
+    
+    try {
+        addChatMessage('system', 'Thinking...');
+        
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: message,
+                context: context,
+                session_id: currentSessionId,
+                history: chatHistory
+            })
+        });
+        
+        const data = await response.json();
+        
+        const chatMessages = document.getElementById('chatMessages');
+        const thinkingMsg = chatMessages.lastElementChild;
+        if (thinkingMsg && thinkingMsg.textContent.includes('Thinking')) {
+            thinkingMsg.remove();
+        }
+        
+        if (data.response) {
+            addChatMessage('assistant', data.response);
+            chatHistory.push({ role: 'user', content: message });
+            chatHistory.push({ role: 'assistant', content: data.response });
+        } else {
+            addChatMessage('system', 'Error: Unable to get response');
+        }
+    } catch (error) {
+        const chatMessages = document.getElementById('chatMessages');
+        const thinkingMsg = chatMessages.lastElementChild;
+        if (thinkingMsg) thinkingMsg.remove();
+        addChatMessage('system', 'Error: ' + error.message);
+    }
+}
+
+function addChatMessage(role, content) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${role}`;
+    
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'chat-message-avatar';
+    avatarDiv.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : 
+                         role === 'assistant' ? '<i class="fas fa-robot"></i>' :
+                         '<i class="fas fa-info-circle"></i>';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'chat-message-content';
+    contentDiv.textContent = content;
+    
+    messageDiv.appendChild(avatarDiv);
+    messageDiv.appendChild(contentDiv);
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 // Progress functions
 function showProgress(message) {
-    document.getElementById('progressSection').style.display = 'block';
-    updateProgress(0, message);
+    const progressSection = document.getElementById('progressSection');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    
+    progressText.textContent = message;
+    progressFill.style.width = '0%';
+    progressSection.style.display = 'block';
+    progressSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function updateProgress(percent, message) {
-    document.getElementById('progressFill').style.width = percent + '%';
-    document.getElementById('progressText').textContent = message;
+function updateProgress(percentage, message) {
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    progressFill.style.width = Math.min(100, Math.max(0, percentage)) + '%';
+    if (message) {
+        progressText.textContent = message;
+    }
 }
 
 function hideProgress() {
-    document.getElementById('progressSection').style.display = 'none';
+    const progressSection = document.getElementById('progressSection');
+    setTimeout(() => {
+        progressSection.style.display = 'none';
+    }, 500);
+}
+
+// Sessions Management
+async function openSessionsModal() {
+    const modal = document.getElementById('sessionsModal');
+    modal.style.display = 'flex';
+    await loadSessions();
+}
+
+function closeSessionsModal() {
+    const modal = document.getElementById('sessionsModal');
+    modal.style.display = 'none';
+}
+
+async function loadSessions() {
+    try {
+        const response = await fetch('/api/analysis-sessions');
+        const data = await response.json();
+        
+        const sessionsList = document.getElementById('sessionsList');
+        
+        if (data.success && data.sessions.length > 0) {
+            sessionsList.innerHTML = data.sessions.map(session => `
+                <div class="session-item" onclick="loadSession('${session.session_id}')">
+                    <div class="session-item-header">
+                        <div class="session-item-title">
+                            <i class="fas fa-file-alt"></i>
+                            ${session.filename}
+                        </div>
+                        <div class="session-item-time">
+                            ${new Date(session.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="session-item-details">
+                        <div class="session-item-detail">
+                            <i class="fas fa-list"></i>
+                            ${session.total_logs} logs
+                        </div>
+                        <div class="session-item-detail">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            ${session.anomalies_detected} anomalies
+                        </div>
+                        <div class="session-item-detail">
+                            <i class="fas fa-cog"></i>
+                            ${session.system_type}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            sessionsList.innerHTML = `
+                <div class="empty-sessions">
+                    <i class="fas fa-inbox"></i>
+                    <p>No analysis sessions found</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        showToast('Error loading sessions: ' + error.message, 'error');
+    }
+}
+
+async function loadSession(sessionId) {
+    try {
+        const response = await fetch(`/api/analysis-sessions/${sessionId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentSessionId = sessionId;
+            analysisResults = data.session;
+            displayBatchResults(data.session);
+            closeSessionsModal();
+            showToast('Session loaded successfully', 'success');
+        }
+    } catch (error) {
+        showToast('Error loading session: ' + error.message, 'error');
+    }
+}
+
+async function clearAllSessions() {
+    if (!confirm('Are you sure you want to clear all analysis sessions? This cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/analysis-sessions', {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('All sessions cleared', 'success');
+            await loadSessions();
+        }
+    } catch (error) {
+        showToast('Error clearing sessions: ' + error.message, 'error');
+    }
 }
 
 // Download report
@@ -386,6 +618,9 @@ function exportJSON() {
 // Clear analysis
 function clearAnalysis() {
     document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('logInput').value = '';
+    const postAnalysisChat = document.getElementById('postAnalysisChat');
+    if (postAnalysisChat) postAnalysisChat.style.display = 'none';
+    const postQ = document.getElementById('postAnalysisQuestion');
+    if (postQ) postQ.value = '';
     analysisResults = null;
 }

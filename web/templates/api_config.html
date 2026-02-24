@@ -24,6 +24,10 @@
                     <i class="fas fa-search"></i>
                     <span>Log Analyzer</span>
                 </a>
+                <a href="/analysis-history" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Analysis History</span>
+                </a>
                 <a href="/api-config" class="nav-item active">
                     <i class="fas fa-cog"></i>
                     <span>API Configuration</span>
@@ -77,67 +81,69 @@
                 </div>
             </div>
 
-            <!-- Fetch Logs Section -->
+            <!-- BYOK AI API Configuration -->
             <div class="section">
                 <div class="section-header">
-                    <h3><i class="fas fa-download"></i> Fetch Logs from API</h3>
+                    <h3><i class="fas fa-robot"></i> BYOK AI API Configuration</h3>
+                    <p class="section-subtitle">Configure your own AI provider API keys (OpenAI, Claude, Gemini)</p>
                 </div>
-                <div class="fetch-container">
-                    <div class="form-group">
-                        <label>Select API Connection</label>
-                        <select id="apiConnectionSelect" class="form-select">
-                            <option value="">Select a connection...</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Start Time</label>
-                            <input type="datetime-local" id="startTime" class="form-input">
+                <div class="api-types-grid">
+                    <div class="api-type-card clickable" onclick="configureAIProvider('openai')">
+                        <div class="api-type-icon">
+                            <i class="fas fa-brain"></i>
                         </div>
-                        <div class="form-group">
-                            <label>End Time</label>
-                            <input type="datetime-local" id="endTime" class="form-input">
+                        <h4>OpenAI (ChatGPT)</h4>
+                        <p>Use GPT-4, GPT-3.5, or other OpenAI models</p>
+                        <ul>
+                            <li>GPT-4 Turbo</li>
+                            <li>GPT-3.5 Turbo</li>
+                            <li>Custom base URL support</li>
+                        </ul>
+                        <div class="config-status" id="openai-status">
+                            <i class="fas fa-circle"></i> Not Configured
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Query/Filter (Optional)</label>
-                        <input type="text" id="queryFilter" class="form-input" placeholder="e.g., severity:ERROR">
+                    <div class="api-type-card clickable" onclick="configureAIProvider('anthropic')">
+                        <div class="api-type-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h4>Anthropic (Claude)</h4>
+                        <p>Use Claude 3 Opus, Sonnet, or Haiku</p>
+                        <ul>
+                            <li>Claude 3.5 Sonnet</li>
+                            <li>Claude 3 Opus</li>
+                            <li>Advanced reasoning</li>
+                        </ul>
+                        <div class="config-status" id="anthropic-status">
+                            <i class="fas fa-circle"></i> Not Configured
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Max Logs to Fetch</label>
-                        <input type="number" id="maxFetch" class="form-input" value="1000" min="1" max="10000">
+                    <div class="api-type-card clickable" onclick="configureAIProvider('gemini')">
+                        <div class="api-type-icon">
+                            <i class="fab fa-google"></i>
+                        </div>
+                        <h4>Google Gemini</h4>
+                        <p>Use Gemini Pro or Gemini Flash</p>
+                        <ul>
+                            <li>Gemini 1.5 Pro</li>
+                            <li>Gemini 1.5 Flash</li>
+                            <li>Multimodal support</li>
+                        </ul>
+                        <div class="config-status" id="gemini-status">
+                            <i class="fas fa-circle"></i> Not Configured
+                        </div>
                     </div>
-                    <button class="btn btn-primary btn-lg" onclick="fetchLogs()">
-                        <i class="fas fa-cloud-download-alt"></i> Fetch Logs
-                    </button>
                 </div>
             </div>
 
-            <!-- Fetched Logs Preview -->
-            <div class="section" id="fetchedLogsSection" style="display: none;">
-                <div class="section-header">
-                    <h3><i class="fas fa-list"></i> Fetched Logs</h3>
-                    <div class="header-actions">
-                        <button class="btn btn-sm btn-primary" onclick="analyzeFetchedLogs()">
-                            <i class="fas fa-play"></i> Analyze
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="exportFetchedLogs()">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                </div>
-                <div class="logs-preview" id="logsPreview">
-                    <!-- Will be populated dynamically -->
-                </div>
-            </div>
-
-            <!-- API Documentation -->
+            <!-- Supported Log Source API Types -->
             <div class="section">
                 <div class="section-header">
                     <h3><i class="fas fa-book"></i> Supported API Types</h3>
+                    <p class="section-subtitle">Click on any API type to configure a connection</p>
                 </div>
                 <div class="api-types-grid">
-                    <div class="api-type-card">
+                    <div class="api-type-card clickable" onclick="configureLogAPI('syslog')">
                         <div class="api-type-icon">
                             <i class="fas fa-server"></i>
                         </div>
@@ -149,7 +155,7 @@
                             <li>Time-based filtering</li>
                         </ul>
                     </div>
-                    <div class="api-type-card">
+                    <div class="api-type-card clickable" onclick="configureLogAPI('elasticsearch')">
                         <div class="api-type-icon">
                             <i class="fas fa-cloud"></i>
                         </div>
@@ -161,7 +167,7 @@
                             <li>Aggregations</li>
                         </ul>
                     </div>
-                    <div class="api-type-card">
+                    <div class="api-type-card clickable" onclick="configureLogAPI('splunk')">
                         <div class="api-type-icon">
                             <i class="fas fa-database"></i>
                         </div>
@@ -173,7 +179,7 @@
                             <li>Real-time search</li>
                         </ul>
                     </div>
-                    <div class="api-type-card">
+                    <div class="api-type-card clickable" onclick="configureLogAPI('rest')">
                         <div class="api-type-icon">
                             <i class="fas fa-globe"></i>
                         </div>
@@ -185,7 +191,7 @@
                             <li>JSON/XML parsing</li>
                         </ul>
                     </div>
-                    <div class="api-type-card">
+                    <div class="api-type-card clickable" onclick="configureLogAPI('cloudwatch')">
                         <div class="api-type-icon">
                             <i class="fab fa-aws"></i>
                         </div>
@@ -197,7 +203,7 @@
                             <li>IAM authentication</li>
                         </ul>
                     </div>
-                    <div class="api-type-card">
+                    <div class="api-type-card clickable" onclick="configureLogAPI('azure')">
                         <div class="api-type-icon">
                             <i class="fab fa-microsoft"></i>
                         </div>
@@ -214,40 +220,29 @@
         </main>
     </div>
 
-    <!-- Add API Connection Modal -->
-    <div id="addAPIModal" class="modal">
+    <!-- Configure Log API Modal -->
+    <div id="configureLogAPIModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3>Add API Connection</h3>
-                <button class="modal-close" onclick="closeAPIModal()">
+                <h3 id="logAPIModalTitle">Configure API Connection</h3>
+                <button class="modal-close" onclick="closeLogAPIModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <form id="addAPIForm">
+                <form id="logAPIForm">
+                    <input type="hidden" id="logAPIType">
                     <div class="form-group">
                         <label>Connection Name</label>
-                        <input type="text" id="apiName" required placeholder="e.g., Production Elasticsearch">
-                    </div>
-                    <div class="form-group">
-                        <label>API Type</label>
-                        <select id="apiType" required onchange="updateAPIFields()">
-                            <option value="">Select API type...</option>
-                            <option value="elasticsearch">Elasticsearch</option>
-                            <option value="splunk">Splunk</option>
-                            <option value="cloudwatch">AWS CloudWatch</option>
-                            <option value="azure">Azure Monitor</option>
-                            <option value="syslog">Syslog</option>
-                            <option value="rest">Generic REST API</option>
-                        </select>
+                        <input type="text" id="logAPIName" required placeholder="e.g., Production Elasticsearch">
                     </div>
                     <div class="form-group">
                         <label>API Endpoint/URL</label>
-                        <input type="text" id="apiEndpoint" required placeholder="https://api.example.com">
+                        <input type="text" id="logAPIEndpoint" required placeholder="https://api.example.com">
                     </div>
                     <div class="form-group">
                         <label>Authentication Type</label>
-                        <select id="authType">
+                        <select id="logAPIAuthType" onchange="updateLogAPIAuthFields()">
                             <option value="none">None</option>
                             <option value="basic">Basic Auth</option>
                             <option value="bearer">Bearer Token</option>
@@ -255,21 +250,68 @@
                             <option value="oauth">OAuth 2.0</option>
                         </select>
                     </div>
-                    <div class="form-group" id="authFields">
-                        <!-- Dynamic auth fields will be inserted here -->
+                    <div id="logAPIAuthFields">
+                        <!-- Dynamic auth fields -->
                     </div>
                     <div class="form-group">
-                        <label>Test Connection</label>
-                        <button type="button" class="btn btn-secondary" onclick="testAPIConnection()">
+                        <button type="button" class="btn btn-secondary" onclick="testLogAPIConnection()">
                             <i class="fas fa-plug"></i> Test Connection
                         </button>
-                        <span id="testResult"></span>
+                        <span id="logAPITestResult"></span>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeAPIModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveAPIConnection()">Save Connection</button>
+                <button class="btn btn-secondary" onclick="closeLogAPIModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveLogAPIConnection()">Save Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configure AI Provider Modal -->
+    <div id="configureAIModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h3 id="aiModalTitle">Configure AI Provider</h3>
+                <button class="modal-close" onclick="closeAIModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="aiProviderForm">
+                    <input type="hidden" id="aiProvider">
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" id="aiAPIKey" required placeholder="Enter your API key">
+                        <small class="form-hint">Your API key is stored securely and never shared</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="aiModel" required placeholder="e.g., gpt-4o-mini">
+                        <small class="form-hint" id="aiModelHint">Enter the model name you want to use</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Base URL (Optional)</label>
+                        <input type="text" id="aiBaseURL" placeholder="Leave empty for default">
+                        <small class="form-hint">Custom API endpoint (advanced users only)</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="aiSetAsDefault">
+                            Set as active provider
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="testAIConnection()">
+                            <i class="fas fa-vial"></i> Test Connection
+                        </button>
+                        <span id="aiTestResult"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAIModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAIProvider()">Save Configuration</button>
             </div>
         </div>
     </div>

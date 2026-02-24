@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
+import uuid
 
 from src.agentic_controller.agentic_rag import AgenticAnalysisResult
 from src.preprocessing.log_preprocessor import ParsedLogEntry
@@ -97,7 +98,7 @@ class AlertGenerator:
     
     def generate_alert(self, analysis_result: AgenticAnalysisResult) -> Alert:
         self.alert_counter += 1
-        alert_id = f"ALERT-{datetime.now().strftime('%Y%m%d')}-{self.alert_counter:05d}"
+        alert_id = f"ALERT-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8]}"
         
         title = self._generate_title(analysis_result)
         description = self._generate_description(analysis_result)

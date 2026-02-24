@@ -24,6 +24,10 @@
                     <i class="fas fa-search"></i>
                     <span>Log Analyzer</span>
                 </a>
+                <a href="/analysis-history" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Analysis History</span>
+                </a>
                 <a href="/api-config" class="nav-item">
                     <i class="fas fa-cog"></i>
                     <span>API Configuration</span>
@@ -66,7 +70,7 @@
 
             <!-- Stats Cards -->
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.location.href='/log-analyzer'" style="cursor: pointer;">
                     <div class="stat-icon blue">
                         <i class="fas fa-file-alt"></i>
                     </div>
@@ -75,7 +79,7 @@
                         <p>Total Logs Analyzed</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.location.href='/log-analyzer'" style="cursor: pointer;">
                     <div class="stat-icon red">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
@@ -84,7 +88,7 @@
                         <p>Anomalies Detected</p>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" onclick="window.location.href='/log-analyzer'" style="cursor: pointer;">
                     <div class="stat-icon yellow">
                         <i class="fas fa-bell"></i>
                     </div>
@@ -138,6 +142,22 @@
                         <h4>Run Evaluation</h4>
                         <p>Compare system performance</p>
                     </a>
+                </div>
+            </div>
+
+            <!-- Recent Analysis History -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-history"></i> Recent Analysis Sessions</h3>
+                    <a href="/analysis-history" class="btn btn-sm btn-primary">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="history-container" id="historyContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-clock"></i>
+                        <p>No analysis sessions yet. Upload and analyze logs to get started!</p>
+                    </div>
                 </div>
             </div>
 

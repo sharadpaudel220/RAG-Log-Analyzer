@@ -1,0 +1,32 @@
+{
+  "session_id": "dc39d5ff-b00e-4f34-8767-b53a5b259968",
+  "filename": "system_logs.txt",
+  "timestamp": "2026-02-24T19:38:47.500322",
+  "system_type": "agentic",
+  "total_logs": 4,
+  "anomalies_detected": 0,
+  "total_time": 0.0046939849853515625,
+  "anomalies": [],
+  "all_logs": [
+    {
+      "content": "Timestamp                       (process)[PID]",
+      "severity": "INFO",
+      "template": "Timestamp (process)[PID]"
+    },
+    {
+      "content": "2026-02-24 17:46:37.258992+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:51411193",
+      "severity": "INFO",
+      "template": "2026-02-24 17:46:37.258992+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:51411193"
+    },
+    {
+      "content": "2026-02-24 17:46:37.259018+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:0 outputPackets:0 packetThreshold:50",
+      "severity": "INFO",
+      "template": "2026-02-24 17:46:37.259018+0545 localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: currentInfraTrafficType:9239 checking if realtime upgrade required with inputPackets:0 outputPackets:0 packetThreshold:50"
+    },
+    {
+      "content": "2026-02-24 17:46:38.287714+0545  localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 fastDiscoveryOnSince:51412222",
+      "severity": "INFO",
+      "template": "2026-02-24 <*> localhost kernel[0]: (com.apple.DriverKit-AppleBCMWLAN.dext) wlan0:com.apple.p2p: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50 noRegistrations:1 cachedPeerCount:0 fastDiscoveryInactive:1 <*>"
+    }
+  ]
+}
