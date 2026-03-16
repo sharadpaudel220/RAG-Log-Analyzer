@@ -3,6 +3,85 @@
 let apiConnections = [];
 let aiProviders = {};
 
+// Toast notification system
+function showToast(message, type = 'info', duration = 3000) {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const iconMap = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="fas ${iconMap[type] || iconMap.info}"></i>
+        <span>${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+function showDeleteConfirmation(connectionId) {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    
+    const confirmToast = document.createElement('div');
+    confirmToast.className = 'toast toast-confirm';
+    confirmToast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Are you sure you want to delete this connection?</span>
+        </div>
+        <div class="toast-actions">
+            <button class="toast-btn toast-btn-cancel" onclick="this.closest('.toast').remove()">Cancel</button>
+            <button class="toast-btn toast-btn-confirm" onclick="confirmDeleteConnection('${connectionId}', this)">Delete</button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(confirmToast);
+}
+
+async function confirmDeleteConnection(id, button) {
+    button.closest('.toast').remove();
+    
+    try {
+        const response = await fetch(`/api/api-connections/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            loadAPIConnections();
+            showToast('Connection deleted successfully!', 'success');
+        } else {
+            showToast('Error: ' + (data.error || 'Failed to delete connection'), 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting connection:', error);
+        showToast('Error deleting connection: ' + error.message, 'error');
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     checkHealth();
@@ -35,6 +114,63 @@ async function checkHealth() {
     }
 }
 
+// Toggle log source card
+function toggleLogSource(type) {
+    const content = document.getElementById(`${type}-content`);
+    const toggle = document.getElementById(`${type}-toggle`);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.classList.add('open');
+    } else {
+        content.style.display = 'none';
+        toggle.classList.remove('open');
+    }
+}
+
+// Toggle cloud section
+function toggleCloudSection() {
+    const grid = document.getElementById('cloudSourcesGrid');
+    const toggle = document.getElementById('cloud-section-toggle');
+    
+    if (grid.style.display === 'none') {
+        grid.style.display = 'grid';
+        toggle.classList.add('open');
+    } else {
+        grid.style.display = 'none';
+        toggle.classList.remove('open');
+    }
+}
+
+// Configure cloud API
+function configureCloudAPI(apiType) {
+    const modal = document.getElementById('configureLogAPIModal');
+    const titleEl = document.getElementById('logAPIModalTitle');
+    const typeInput = document.getElementById('logAPIType');
+    const sourceTypeInput = document.getElementById('logSourceType');
+    
+    const typeNames = {
+        'aws-cloudwatch': 'AWS CloudWatch',
+        'azure-monitor': 'Azure Monitor',
+        'splunk': 'Splunk',
+        'elasticsearch': 'Elasticsearch',
+        'datadog': 'Datadog',
+        'rest-api': 'REST API'
+    };
+    
+    typeInput.value = apiType;
+    sourceTypeInput.value = 'cloud'; // Mark as cloud source
+    titleEl.textContent = `Configure ${typeNames[apiType] || 'Cloud'} Connection`;
+    
+    // Reset form
+    document.getElementById('logAPIForm').reset();
+    document.getElementById('logAPIAuthFields').innerHTML = '';
+    document.getElementById('logAPITestResult').textContent = '';
+    document.getElementById('logAPIInterval').value = '5';
+    
+    modal.style.display = 'flex';
+}
+
 // Load API connections
 async function loadAPIConnections() {
     try {
@@ -44,10 +180,13 @@ async function loadAPIConnections() {
         if (data.success) {
             apiConnections = data.connections || [];
             displayAPIConnections();
-            updateConnectionSelect();
+            updateLogSourceConnections();
+        } else {
+            console.error('Failed to load API connections:', data.error);
         }
     } catch (error) {
         console.error('Failed to load API connections:', error);
+        apiConnections = [];
     }
 }
 
@@ -318,25 +457,73 @@ async function saveAIProvider() {
 
 // ==================== Log API Configuration ====================
 
-// Configure log API
 function configureLogAPI(apiType) {
     const modal = document.getElementById('configureLogAPIModal');
     const titleEl = document.getElementById('logAPIModalTitle');
     const typeInput = document.getElementById('logAPIType');
+    const sourceTypeInput = document.getElementById('logSourceType');
     
-    const apiNames = {
-        'syslog': 'Syslog API',
-        'elasticsearch': 'Elasticsearch',
-        'splunk': 'Splunk',
-        'rest': 'REST API',
-        'cloudwatch': 'AWS CloudWatch',
-        'azure': 'Azure Monitor'
+    typeInput.value = apiType;
+    sourceTypeInput.value = apiType; // Store the log source type (system, network, application, security)
+    
+    const typeNames = {
+        'system': 'System Logs',
+        'network': 'Network Logs',
+        'application': 'Application Logs',
+        'security': 'Security Audit Logs'
     };
     
-    titleEl.textContent = `Configure ${apiNames[apiType] || apiType}`;
-    typeInput.value = apiType;
+    titleEl.textContent = `Configure ${typeNames[apiType] || 'API'} Connection`;
+    
+    // Reset form
+    document.getElementById('logAPIForm').reset();
+    document.getElementById('logAPIAuthFields').innerHTML = '';
+    document.getElementById('logAPITestResult').textContent = '';
+    document.getElementById('logAPIInterval').value = '5';
     
     modal.style.display = 'flex';
+}
+
+// Update log source connections display
+function updateLogSourceConnections() {
+    const types = ['system', 'network', 'application', 'security'];
+    
+    types.forEach(type => {
+        const container = document.getElementById(`${type}-connections`);
+        const statusBadge = document.getElementById(`${type}-status`);
+        
+        // Filter connections by source type
+        const typeConnections = apiConnections.filter(conn => conn.sourceType === type);
+        
+        if (typeConnections.length === 0) {
+            container.innerHTML = '<div class="empty-connections">No connections configured</div>';
+            statusBadge.className = 'status-badge';
+            statusBadge.textContent = 'Not Connected';
+        } else {
+            statusBadge.className = 'status-badge connected';
+            statusBadge.textContent = `${typeConnections.length} Connected`;
+            
+            container.innerHTML = typeConnections.map(conn => `
+                <div class="connection-item">
+                    <div class="connection-info">
+                        <h5>${conn.name}</h5>
+                        <p>${conn.endpoint}</p>
+                        <p style="font-size: 11px; margin-top: 3px;">
+                            Fetch every ${conn.interval || 5} min • ${conn.authType === 'none' ? 'No auth' : conn.authType.toUpperCase()}
+                        </p>
+                    </div>
+                    <div class="connection-actions">
+                        <button class="btn-icon" onclick="editConnection('${conn.id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" onclick="deleteConnection('${conn.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    });
 }
 
 // Close log API modal
@@ -405,8 +592,10 @@ async function testLogAPIConnection() {
 async function saveLogAPIConnection() {
     const name = document.getElementById('logAPIName').value;
     const type = document.getElementById('logAPIType').value;
+    const sourceType = document.getElementById('logSourceType').value;
     const endpoint = document.getElementById('logAPIEndpoint').value;
     const authType = document.getElementById('logAPIAuthType').value;
+    const interval = document.getElementById('logAPIInterval').value;
     
     if (!name || !type || !endpoint) {
         alert('Please fill in all required fields');
@@ -425,17 +614,23 @@ async function saveLogAPIConnection() {
         authData.token_url = document.getElementById('logAPITokenURL')?.value;
     }
     
+    const connection = {
+        id: Date.now().toString(),
+        name: name,
+        type: type,
+        sourceType: sourceType || type,
+        endpoint: endpoint,
+        authType: authType,
+        authData: authData,
+        interval: interval || 5,
+        createdAt: new Date().toISOString()
+    };
+    
     try {
         const response = await fetch('/api/api-connections', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                name,
-                type,
-                endpoint,
-                auth_type: authType,
-                auth_data: authData
-            })
+            body: JSON.stringify(connection)
         });
         
         const data = await response.json();
@@ -443,53 +638,21 @@ async function saveLogAPIConnection() {
         if (data.success) {
             closeLogAPIModal();
             loadAPIConnections();
-            alert('API connection saved successfully!');
+            showToast('Connection saved successfully!', 'success');
         } else {
-            alert('Error: ' + data.error);
+            showToast('Error: ' + (data.error || 'Failed to save connection'), 'error');
         }
     } catch (error) {
-        alert('Error saving connection: ' + error.message);
+        console.error('Error saving connection:', error);
+        showToast('Error saving connection: ' + error.message, 'error');
     }
 }
 
-// Test connection
-async function testConnection(id) {
-    alert('Testing connection...');
-    // Implement actual test
-}
-
-// Edit connection
-function editConnection(id) {
-    const conn = apiConnections.find(c => c.id === id);
-    if (conn) {
-        document.getElementById('apiName').value = conn.name;
-        document.getElementById('apiType').value = conn.type;
-        document.getElementById('apiEndpoint').value = conn.endpoint;
-        addAPIConnection();
-    }
-}
+// ... (rest of the code remains the same)
 
 // Delete connection
-async function deleteConnection(id) {
-    if (!confirm('Are you sure you want to delete this connection?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/api-connections/${id}`, {
-            method: 'DELETE'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            loadAPIConnections();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    } catch (error) {
-        alert('Error deleting connection: ' + error.message);
-    }
+function deleteConnection(id) {
+    showDeleteConfirmation(id);
 }
 
 // Add API connection (legacy - kept for backward compatibility)

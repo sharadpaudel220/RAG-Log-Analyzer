@@ -193,3 +193,199 @@ DETAIL:  Key (alert_id)=(ALERT-20260224-00002) already exists.
 2026-02-24 22:03:10 - __main__ - INFO - Progress: 30/50 logs analyzed (60%)
 2026-02-24 22:03:11 - __main__ - INFO - Progress: 40/50 logs analyzed (80%)
 2026-02-24 22:03:43 - __main__ - INFO - Progress: 50/50 logs analyzed (100%)
+2026-02-25 07:22:53 - __main__ - INFO - Initializing system components...
+2026-02-25 07:22:53 - __main__ - INFO - Initializing database connection...
+2026-02-25 07:22:53 - __main__ - INFO - Database connection established
+2026-02-25 07:22:58 - __main__ - INFO - System components initialized successfully
+2026-02-25 08:22:18 - __main__ - INFO - Initializing system components...
+2026-02-25 08:22:18 - __main__ - INFO - Initializing database connection...
+2026-02-25 08:22:18 - __main__ - INFO - Database connection established
+2026-02-25 08:22:22 - __main__ - INFO - System components initialized successfully
+2026-02-25 08:22:25 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:26 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:27 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:29 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:30 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:30 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:31 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:31 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:31 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:31 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:31 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:31 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:32 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:32 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:32 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:32 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:32 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:33 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:33 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:33 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:22:53 - __main__ - ERROR - Error fetching API connections: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 2: FROM api_connections ORDER BY api_connections.created_at DES...
+             ^
+
+[SQL: SELECT api_connections.connection_id AS api_connections_connection_id, api_connections.name AS api_connections_name, api_connections.connection_type AS api_connections_connection_type, api_connections.api_type AS api_connections_api_type, api_connections.endpoint AS api_connections_endpoint, api_connections.auth_type AS api_connections_auth_type, api_connections.auth_data AS api_connections_auth_data, api_connections.fetch_interval AS api_connections_fetch_interval, api_connections.enabled AS api_connections_enabled, api_connections.last_fetch_at AS api_connections_last_fetch_at, api_connections.total_logs_fetched AS api_connections_total_logs_fetched, api_connections.meta AS api_connections_meta, api_connections.created_at AS api_connections_created_at, api_connections.updated_at AS api_connections_updated_at 
+FROM api_connections ORDER BY api_connections.created_at DESC]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:23:33 - __main__ - ERROR - Error creating API connection: (psycopg2.errors.UndefinedTable) relation "api_connections" does not exist
+LINE 1: INSERT INTO api_connections (connection_id, name, connection...
+                    ^
+
+[SQL: INSERT INTO api_connections (connection_id, name, connection_type, api_type, endpoint, auth_type, auth_data, fetch_interval, enabled, last_fetch_at, total_logs_fetched, meta) VALUES (%(connection_id)s::UUID, %(name)s, %(connection_type)s, %(api_type)s, %(endpoint)s, %(auth_type)s, %(auth_data)s::JSONB, %(fetch_interval)s, %(enabled)s, %(last_fetch_at)s, %(total_logs_fetched)s, %(meta)s::JSONB) RETURNING api_connections.created_at, api_connections.updated_at]
+[parameters: {'connection_id': UUID('1046cf61-d866-452b-ac24-76fc726d8c80'), 'name': 'CAT APIs System Log', 'connection_type': 'system', 'api_type': 'system', 'endpoint': 'https://www.boredapi.com/api/activity', 'auth_type': 'none', 'auth_data': '{}', 'fetch_interval': '5', 'enabled': True, 'last_fetch_at': None, 'total_logs_fetched': 0, 'meta': '{}'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-02-25 08:25:36 - __main__ - INFO - Initializing system components...
+2026-02-25 08:25:36 - __main__ - INFO - Initializing database connection...
+2026-02-25 08:25:36 - __main__ - INFO - Database connection established
+2026-02-25 08:25:41 - __main__ - INFO - System components initialized successfully
+2026-02-25 08:34:04 - __main__ - INFO - Initializing system components...
+2026-02-25 08:34:04 - __main__ - INFO - Initializing database connection...
+2026-02-25 08:34:04 - __main__ - INFO - Database connection established
+2026-02-25 08:34:05 - __main__ - INFO - Database tables verified/created
+2026-02-25 08:34:10 - __main__ - INFO - System components initialized successfully
+2026-02-25 09:19:13 - __main__ - INFO - Initializing system components...
+2026-02-25 09:19:13 - __main__ - INFO - Initializing database connection...
+2026-02-25 09:19:13 - __main__ - INFO - Database connection established
+2026-02-25 09:19:14 - __main__ - INFO - Database tables verified/created
+2026-02-25 09:19:19 - __main__ - INFO - System components initialized successfully
+2026-02-25 09:30:33 - __main__ - INFO - Initializing system components...
+2026-02-25 09:30:33 - __main__ - INFO - Initializing database connection...
+2026-02-25 09:30:33 - __main__ - INFO - Database connection established
+2026-02-25 09:30:33 - __main__ - INFO - Database tables verified/created
+2026-02-25 09:30:39 - __main__ - INFO - System components initialized successfully
+2026-02-26 21:21:45 - __main__ - INFO - Initializing system components...
+2026-02-26 21:21:45 - __main__ - INFO - Initializing database connection...
+2026-02-26 21:21:45 - __main__ - INFO - Database connection established
+2026-02-26 21:21:46 - __main__ - INFO - Database tables verified/created
+2026-02-26 21:21:52 - __main__ - INFO - System components initialized successfully
+2026-02-27 07:39:11 - __main__ - INFO - Initializing system components...
+2026-02-27 07:39:11 - __main__ - INFO - Initializing database connection...
+2026-02-27 07:39:11 - __main__ - INFO - Database connection established
+2026-02-27 07:39:11 - __main__ - INFO - Database tables verified/created
+2026-02-27 07:39:17 - __main__ - INFO - System components initialized successfully
+2026-03-14 12:52:17 - __main__ - INFO - Initializing system components...
+2026-03-14 12:52:17 - __main__ - INFO - Initializing database connection...
+2026-03-14 12:52:17 - __main__ - INFO - Database connection established
+2026-03-14 12:52:18 - __main__ - INFO - Database tables verified/created
+2026-03-14 12:52:23 - __main__ - INFO - System components initialized successfully

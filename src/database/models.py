@@ -158,6 +158,24 @@ class KnowledgeDoc(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
+class APIConnection(Base):
+    __tablename__ = 'api_connections'
+    
+    connection_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    connection_type = Column(String(100), nullable=False)  # e.g., 'system', 'network', 'application', 'security', 'cloud'
+    api_type = Column(String(100))  # e.g., 'aws-cloudwatch', 'azure-monitor', 'splunk', etc.
+    endpoint = Column(String(500), nullable=False)
+    auth_type = Column(String(50), nullable=False)  # 'none', 'basic', 'bearer', 'apikey', 'oauth'
+    auth_data = Column(JSONB)  # Encrypted credentials
+    fetch_interval = Column(Integer, default=5)  # in minutes
+    enabled = Column(Boolean, default=True)
+    last_fetch_at = Column(TIMESTAMP)
+    total_logs_fetched = Column(BigInteger, default=0)
+    meta = Column(JSONB)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
 class SystemStats(Base):
     __tablename__ = 'system_stats'
     

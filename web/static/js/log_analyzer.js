@@ -66,7 +66,17 @@ function showToast(message, type = 'info', title = null, timeoutMs = 7000) {
 document.addEventListener('DOMContentLoaded', function() {
     checkHealth();
     setupFileUpload();
+    loadConfiguredAPISources();
     setInterval(checkHealth, 30000);
+    
+    // Check if we're continuing an existing session
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const filename = urlParams.get('filename');
+    
+    if (sessionId) {
+        loadExistingSession(sessionId, filename);
+    }
 });
 
 // Check system health
@@ -576,10 +586,425 @@ async function loadSession(sessionId) {
     }
 }
 
+async function loadExistingSession(sessionId, filename) {
+    try {
+        showToast(`Loading session: ${filename || 'Previous analysis'}`, 'info');
+        
+        const response = await fetch(`/api/analysis-sessions/${sessionId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentSessionId = sessionId;
+            analysisResults = data.session;
+            chatHistory = data.session.chat_history || [];
+            
+            // Display the analysis results
+            displayBatchResults(data.session);
+            
+            // Load chat history into the chat interface
+            if (chatHistory.length > 0) {
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages) {
+                    chatMessages.innerHTML = '';
+                    chatHistory.forEach(msg => {
+                        appendMessage(msg.role, msg.content);
+                    });
+                }
+                
+                // Show chat section
+                const inlineChatSection = document.getElementById('inlineChatSection');
+                if (inlineChatSection) {
+                    inlineChatSection.style.display = 'block';
+                }
+            }
+            
+            showToast('Session loaded! You can continue chatting.', 'success');
+            
+            // Scroll to chat section
+            setTimeout(() => {
+                const inlineChatSection = document.getElementById('inlineChatSection');
+                if (inlineChatSection) {
+                    inlineChatSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Error loading session:', error);
+        showToast('Failed to load session', 'error');
+    }
+}
+
+// ============================================
+// API Log Streaming Functions
+// ============================================
+
+let selectedApiSource = null;
+let streamingInterval = null;
+let streamingStartTime = null;
+let streamingDurationInterval = null;
+let collectedApiLogs = [];
+let isStreamingPaused = false;
+
+// Load configured API sources
+async function loadConfiguredAPISources() {
+    const loadingEl = document.getElementById('apiSourcesLoading');
+    const noSourcesEl = document.getElementById('noApiSources');
+    const gridEl = document.getElementById('apiSourcesGrid');
+    
+    try {
+        const response = await fetch('/api/api-connections');
+        const data = await response.json();
+        
+        loadingEl.style.display = 'none';
+        
+        if (!data.connections || data.connections.length === 0) {
+            noSourcesEl.style.display = 'block';
+            gridEl.style.display = 'none';
+            return;
+        }
+        
+        // Filter only enabled connections
+        const enabledConnections = data.connections.filter(conn => conn.enabled);
+        
+        if (enabledConnections.length === 0) {
+            noSourcesEl.style.display = 'block';
+            gridEl.style.display = 'none';
+            return;
+        }
+        
+        noSourcesEl.style.display = 'none';
+        gridEl.style.display = 'grid';
+        
+        gridEl.innerHTML = enabledConnections.map(conn => `
+            <div class="api-source-card" onclick="selectApiSource('${conn.connection_id}')">
+                <span class="source-type-badge source-type-${conn.connection_type || 'system'}">${conn.connection_type || 'system'}</span>
+                <div class="source-card-title">${conn.name}</div>
+                <div class="source-card-endpoint">${conn.endpoint}</div>
+                <div class="source-card-meta">
+                    <div class="source-status">
+                        <span class="status-dot"></span>
+                        <span>Active</span>
+                    </div>
+                    <span>${conn.auth_type || 'none'}</span>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading API sources:', error);
+        loadingEl.style.display = 'none';
+        noSourcesEl.style.display = 'block';
+        gridEl.style.display = 'none';
+        showToast('Failed to load API sources', 'error');
+    }
+}
+
+// Select API source
+async function selectApiSource(connectionId) {
+    try {
+        const response = await fetch('/api/api-connections');
+        const data = await response.json();
+        
+        selectedApiSource = data.connections.find(conn => conn.connection_id === connectionId);
+        
+        if (!selectedApiSource) {
+            showToast('API source not found', 'error');
+            return;
+        }
+        
+        // Update UI
+        document.querySelectorAll('.api-source-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        event.target.closest('.api-source-card').classList.add('selected');
+        
+        // Show streaming controls
+        document.getElementById('apiStreamingControls').style.display = 'block';
+        document.getElementById('selectedSourceName').textContent = selectedApiSource.name;
+        
+        // Set default time range (last 1 hour to now)
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        
+        document.getElementById('apiEndTime').value = formatDateTimeLocal(now);
+        document.getElementById('apiStartTime').value = formatDateTimeLocal(oneHourAgo);
+        
+        // Reset streaming state
+        resetStreamingState();
+        
+        showToast(`Selected: ${selectedApiSource.name}`, 'success');
+        
+    } catch (error) {
+        console.error('Error selecting API source:', error);
+        showToast('Failed to select API source', 'error');
+    }
+}
+
+// Format date for datetime-local input
+function formatDateTimeLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// Close API streaming
+function closeApiStreaming() {
+    stopApiStreaming();
+    document.getElementById('apiStreamingControls').style.display = 'none';
+    selectedApiSource = null;
+    
+    document.querySelectorAll('.api-source-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+}
+
+// Reset streaming state
+function resetStreamingState() {
+    collectedApiLogs = [];
+    isStreamingPaused = false;
+    document.getElementById('logsCollectedCount').textContent = '0';
+    document.getElementById('streamingDuration').textContent = '00:00';
+    document.getElementById('streamingStatus').textContent = 'Idle';
+    document.getElementById('apiLogPreview').innerHTML = `
+        <div class="empty-preview">
+            <i class="fas fa-inbox"></i>
+            <p>No logs collected yet. Start streaming to see logs appear here.</p>
+        </div>
+    `;
+}
+
+// Start API streaming
+async function startApiStreaming() {
+    if (!selectedApiSource) {
+        showToast('Please select an API source first', 'warning');
+        return;
+    }
+    
+    const startTime = document.getElementById('apiStartTime').value;
+    const endTime = document.getElementById('apiEndTime').value;
+    const interval = parseInt(document.getElementById('apiFetchInterval').value) || 5;
+    
+    if (!startTime || !endTime) {
+        showToast('Please select start and end time', 'warning');
+        return;
+    }
+    
+    // Update UI
+    document.getElementById('streamPlayBtn').style.display = 'none';
+    document.getElementById('streamPauseBtn').style.display = 'inline-block';
+    document.getElementById('streamStopBtn').style.display = 'inline-block';
+    document.getElementById('analyzeApiLogsBtn').style.display = 'none';
+    document.getElementById('streamingStatus').textContent = 'Streaming';
+    
+    streamingStartTime = Date.now();
+    isStreamingPaused = false;
+    
+    // Start duration counter
+    streamingDurationInterval = setInterval(updateStreamingDuration, 1000);
+    
+    // Start fetching logs
+    fetchLogsFromAPI();
+    streamingInterval = setInterval(fetchLogsFromAPI, interval * 1000);
+    
+    showToast('Log streaming started', 'success');
+}
+
+// Pause API streaming
+function pauseApiStreaming() {
+    if (streamingInterval) {
+        clearInterval(streamingInterval);
+        streamingInterval = null;
+    }
+    
+    if (streamingDurationInterval) {
+        clearInterval(streamingDurationInterval);
+        streamingDurationInterval = null;
+    }
+    
+    isStreamingPaused = true;
+    
+    document.getElementById('streamPauseBtn').style.display = 'none';
+    document.getElementById('streamPlayBtn').style.display = 'inline-block';
+    document.getElementById('streamingStatus').textContent = 'Paused';
+    
+    showToast('Streaming paused', 'info');
+}
+
+// Stop API streaming
+function stopApiStreaming() {
+    if (streamingInterval) {
+        clearInterval(streamingInterval);
+        streamingInterval = null;
+    }
+    
+    if (streamingDurationInterval) {
+        clearInterval(streamingDurationInterval);
+        streamingDurationInterval = null;
+    }
+    
+    document.getElementById('streamPlayBtn').style.display = 'inline-block';
+    document.getElementById('streamPauseBtn').style.display = 'none';
+    document.getElementById('streamStopBtn').style.display = 'none';
+    document.getElementById('streamingStatus').textContent = 'Stopped';
+    
+    if (collectedApiLogs.length > 0) {
+        document.getElementById('analyzeApiLogsBtn').style.display = 'inline-block';
+        showToast(`Streaming stopped. ${collectedApiLogs.length} logs collected`, 'success');
+    } else {
+        showToast('Streaming stopped', 'info');
+    }
+}
+
+// Update streaming duration
+function updateStreamingDuration() {
+    if (!streamingStartTime) return;
+    
+    const elapsed = Math.floor((Date.now() - streamingStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    
+    document.getElementById('streamingDuration').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// Fetch logs from API
+async function fetchLogsFromAPI() {
+    if (!selectedApiSource || isStreamingPaused) return;
+    
+    try {
+        const startTime = document.getElementById('apiStartTime').value;
+        const endTime = document.getElementById('apiEndTime').value;
+        
+        const response = await fetch('/api/fetch-logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                connection_id: selectedApiSource.connection_id,
+                start_time: startTime,
+                end_time: endTime
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.logs && data.logs.length > 0) {
+            // Add new logs to collection
+            const newLogs = data.logs.filter(log => 
+                !collectedApiLogs.some(existing => existing.content === log.content)
+            );
+            
+            collectedApiLogs.push(...newLogs);
+            
+            // Update UI
+            document.getElementById('logsCollectedCount').textContent = collectedApiLogs.length;
+            
+            // Update preview
+            updateLogPreview(newLogs);
+            
+            if (newLogs.length > 0) {
+                console.log(`Fetched ${newLogs.length} new logs`);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error fetching logs from API:', error);
+        showToast('Error fetching logs from API', 'error');
+    }
+}
+
+// Update log preview
+function updateLogPreview(newLogs) {
+    const previewEl = document.getElementById('apiLogPreview');
+    
+    // Remove empty state if exists
+    const emptyPreview = previewEl.querySelector('.empty-preview');
+    if (emptyPreview) {
+        emptyPreview.remove();
+    }
+    
+    // Add new logs to preview (prepend for newest first)
+    newLogs.forEach(log => {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const timestamp = log.timestamp || new Date().toISOString();
+        const content = log.content || log.message || JSON.stringify(log);
+        
+        logEntry.innerHTML = `
+            <span class="log-timestamp">${new Date(timestamp).toLocaleString()}</span>
+            <span class="log-content">${escapeHtml(content)}</span>
+        `;
+        
+        previewEl.insertBefore(logEntry, previewEl.firstChild);
+    });
+    
+    // Keep only last 100 logs in preview
+    while (previewEl.children.length > 100) {
+        previewEl.removeChild(previewEl.lastChild);
+    }
+}
+
+// Clear API logs
+function clearApiLogs() {
+    collectedApiLogs = [];
+    document.getElementById('logsCollectedCount').textContent = '0';
+    document.getElementById('apiLogPreview').innerHTML = `
+        <div class="empty-preview">
+            <i class="fas fa-inbox"></i>
+            <p>No logs collected yet. Start streaming to see logs appear here.</p>
+        </div>
+    `;
+    showToast('Logs cleared', 'info');
+}
+
+// Analyze API logs
+async function analyzeApiLogs() {
+    if (collectedApiLogs.length === 0) {
+        showToast('No logs to analyze', 'warning');
+        return;
+    }
+    
+    // Convert collected logs to text format
+    const logsText = collectedApiLogs.map(log => {
+        const timestamp = log.timestamp || new Date().toISOString();
+        const content = log.content || log.message || JSON.stringify(log);
+        return `${timestamp} ${content}`;
+    }).join('\n');
+    
+    // Create a virtual file from the logs
+    const blob = new Blob([logsText], { type: 'text/plain' });
+    const file = new File([blob], `${selectedApiSource.name}_logs.txt`, { type: 'text/plain' });
+    
+    // Set as uploaded file and trigger analysis
+    uploadedFile = file;
+    
+    // Show file info
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('uploadInfo').style.display = 'block';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    
+    // Scroll to analysis section
+    document.querySelector('.section-header h3').scrollIntoView({ behavior: 'smooth' });
+    
+    showToast(`Ready to analyze ${collectedApiLogs.length} logs from ${selectedApiSource.name}`, 'success');
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 async function clearAllSessions() {
     if (!confirm('Are you sure you want to clear all analysis sessions? This cannot be undone.')) {
         return;
     }
+    // ... (rest of the code remains the same)
     
     try {
         const response = await fetch('/api/analysis-sessions', {

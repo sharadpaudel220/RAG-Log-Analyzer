@@ -115,6 +115,13 @@ def initialize_system():
         logger.error("Failed to initialize database connection")
     else:
         logger.info("Database connection established")
+        # Create tables if they don't exist
+        try:
+            from src.database.models import Base
+            Base.metadata.create_all(bind=db_config.engine)
+            logger.info("Database tables verified/created")
+        except Exception as e:
+            logger.error(f"Error creating database tables: {e}")
         
         system_components['ingestion'] = LogIngestion()
         system_components['preprocessor'] = LogPreprocessor()
@@ -777,43 +784,169 @@ Be concise, technical, and helpful for log analysis questions only."""
         logger.error(f"Chat error: {e}")
         return jsonify({'error': str(e)}), 500
 
-# API Configuration endpoints
+# ==================== API Configuration Endpoints ====================
+
 @app.route('/api/api-connections', methods=['GET'])
 def get_api_connections():
     """Get all API connections"""
-    # Mock data for now - implement actual storage later
-    connections = [
-        {
-            'id': 'elastic-prod',
-            'name': 'Production Elasticsearch',
-            'type': 'elasticsearch',
-            'endpoint': 'https://elastic.example.com:9200',
-            'status': 'active'
-        }
-    ]
-    return jsonify({'success': True, 'connections': connections})
+    try:
+        connections = db_service.get_all_api_connections()
+        return jsonify({'success': True, 'connections': connections})
+    except Exception as e:
+        logger.error(f"Error fetching API connections: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/api-connections', methods=['POST'])
 def create_api_connection():
     """Create new API connection"""
-    data = request.json
-    # Implement actual storage
-    return jsonify({'success': True, 'connection': data})
+    try:
+        data = request.json
+        connection_id = db_service.create_api_connection(data)
+        connection = db_service.get_api_connection(connection_id)
+        return jsonify({'success': True, 'connection': connection, 'id': connection_id})
+    except Exception as e:
+        logger.error(f"Error creating API connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/api-connections/<connection_id>', methods=['PUT'])
+def update_api_connection(connection_id):
+    """Update API connection"""
+    try:
+        data = request.json
+        success = db_service.update_api_connection(connection_id, data)
+        if success:
+            connection = db_service.get_api_connection(connection_id)
+            return jsonify({'success': True, 'connection': connection})
+        else:
+            return jsonify({'success': False, 'error': 'Connection not found'}), 404
+    except Exception as e:
+        logger.error(f"Error updating API connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/api-connections/<connection_id>', methods=['DELETE'])
 def delete_api_connection(connection_id):
     """Delete API connection"""
-    return jsonify({'success': True})
+    try:
+        success = db_service.delete_api_connection(connection_id)
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Connection not found'}), 404
+    except Exception as e:
+        logger.error(f"Error deleting API connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/fetch-logs', methods=['POST'])
 def fetch_logs_from_api():
-    """Fetch logs from configured API"""
-    data = request.json
-    # Mock implementation - integrate with actual APIs
-    logs = [
-        {'timestamp': '2024-01-15T10:23:45Z', 'severity': 'ERROR', 'message': 'Sample fetched log'}
-    ]
-    return jsonify({'success': True, 'logs': logs})
+    """Fetch logs from configured API connection"""
+    try:
+        data = request.json
+        connection_id = data.get('connection_id')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        if not connection_id:
+            return jsonify({'success': False, 'error': 'Connection ID required'}), 400
+        
+        # Get API connection details
+        connection = db_service.get_api_connection(connection_id)
+        if not connection:
+            return jsonify({'success': False, 'error': 'Connection not found'}), 404
+        
+        # Prepare authentication headers
+        headers = {'Content-Type': 'application/json'}
+        auth_type = connection.get('auth_type', 'none')
+        auth_data = connection.get('auth_data', {})
+        
+        if auth_type == 'bearer' and auth_data.get('token'):
+            headers['Authorization'] = f"Bearer {auth_data['token']}"
+        elif auth_type == 'apikey':
+            if auth_data.get('header_name') and auth_data.get('api_key'):
+                headers[auth_data['header_name']] = auth_data['api_key']
+        
+        # Fetch logs from the API endpoint
+        import requests
+        endpoint = connection.get('endpoint')
+        
+        # Add query parameters for time range if supported
+        params = {}
+        if start_time:
+            params['start_time'] = start_time
+        if end_time:
+            params['end_time'] = end_time
+        
+        try:
+            response = requests.get(
+                endpoint,
+                headers=headers,
+                params=params,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                # Parse response - handle different formats
+                try:
+                    api_data = response.json()
+                    
+                    # Extract logs from response (adapt based on API structure)
+                    logs = []
+                    if isinstance(api_data, list):
+                        logs = api_data
+                    elif isinstance(api_data, dict):
+                        # Try common keys
+                        logs = api_data.get('logs', api_data.get('data', api_data.get('results', [api_data])))
+                    
+                    # Normalize log format
+                    normalized_logs = []
+                    for log in logs[:100]:  # Limit to 100 logs per fetch
+                        if isinstance(log, dict):
+                            normalized_logs.append({
+                                'timestamp': log.get('timestamp', log.get('time', log.get('date', ''))),
+                                'content': log.get('message', log.get('content', log.get('log', str(log)))),
+                                'severity': log.get('severity', log.get('level', 'INFO'))
+                            })
+                        else:
+                            normalized_logs.append({
+                                'timestamp': '',
+                                'content': str(log),
+                                'severity': 'INFO'
+                            })
+                    
+                    # Update last fetch time
+                    db_service.update_api_connection(connection_id, {
+                        'last_fetch_at': datetime.now().isoformat(),
+                        'total_logs_fetched': connection.get('total_logs_fetched', 0) + len(normalized_logs)
+                    })
+                    
+                    return jsonify({'success': True, 'logs': normalized_logs})
+                    
+                except Exception as parse_error:
+                    logger.error(f"Error parsing API response: {parse_error}")
+                    # Return raw response as single log entry
+                    return jsonify({
+                        'success': True,
+                        'logs': [{
+                            'timestamp': datetime.now().isoformat(),
+                            'content': response.text[:1000],
+                            'severity': 'INFO'
+                        }]
+                    })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'API returned status code {response.status_code}'
+                }), 500
+                
+        except requests.exceptions.RequestException as req_error:
+            logger.error(f"Error fetching logs from API: {req_error}")
+            return jsonify({
+                'success': False,
+                'error': f'Failed to connect to API: {str(req_error)}'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error in fetch_logs_from_api: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==================== AI Provider Configuration API ====================
 

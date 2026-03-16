@@ -28,13 +28,13 @@
                     <i class="fas fa-history"></i>
                     <span>Analysis History</span>
                 </a>
-                <a href="/api-config" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>API Configuration</span>
-                </a>
                 <a href="/sources" class="nav-item active">
                     <i class="fas fa-plug"></i>
                     <span>Log Sources</span>
+                </a>
+                <a href="/api-config" class="nav-item">
+                    <i class="fas fa-robot"></i>
+                    <span>BYOK AI Config</span>
                 </a>
                 <a href="/chat" class="nav-item">
                     <i class="fas fa-comments"></i>
@@ -58,48 +58,245 @@
             <!-- Header -->
             <header class="header">
                 <div class="header-title">
-                    <h2>Log Sources Management</h2>
-                    <p class="header-subtitle">Configure and manage multiple log sources with API keys</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-primary" onclick="showAddSourceModal()">
-                        <i class="fas fa-plus"></i> Add Source
-                    </button>
-                    <button class="btn btn-secondary" onclick="refreshSources()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
+                    <h2>Distributed Log Sources</h2>
+                    <p class="header-subtitle">Connect and ingest logs from distributed systems via API</p>
                 </div>
             </header>
 
-            <!-- Source Type Filters -->
+            <!-- Log Type Cards -->
             <div class="section">
-                <div class="filter-chips">
-                    <button class="filter-chip active" onclick="filterSources('all')">
-                        <i class="fas fa-list"></i> All Sources
-                    </button>
-                    <button class="filter-chip" onclick="filterSources('system')">
-                        <i class="fas fa-server"></i> System
-                    </button>
-                    <button class="filter-chip" onclick="filterSources('network')">
-                        <i class="fas fa-network-wired"></i> Network
-                    </button>
-                    <button class="filter-chip" onclick="filterSources('application')">
-                        <i class="fas fa-code"></i> Application
-                    </button>
-                    <button class="filter-chip" onclick="filterSources('security')">
-                        <i class="fas fa-shield-alt"></i> Security
-                    </button>
-                    <button class="filter-chip" onclick="filterSources('container')">
-                        <i class="fas fa-box"></i> Container
-                    </button>
-                </div>
-            </div>
+                <div class="log-types-grid">
+                    <!-- System Logs -->
+                    <div class="log-type-card">
+                        <div class="log-type-header" onclick="toggleLogType('system')">
+                            <div class="log-type-icon system">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="log-type-info">
+                                <h3>System Logs</h3>
+                                <p>OS events, kernel messages, system services</p>
+                            </div>
+                            <div class="log-type-status">
+                                <span class="status-badge" id="system-status">Not Connected</span>
+                                <i class="fas fa-chevron-down toggle-icon" id="system-toggle"></i>
+                            </div>
+                        </div>
+                        <div class="log-type-content" id="system-content" style="display: none;">
+                            <div class="api-connection-form">
+                                <h4><i class="fas fa-plug"></i> API Connection Settings</h4>
+                                <div class="form-group">
+                                    <label>Connection Name</label>
+                                    <input type="text" id="system-name" placeholder="e.g., Production System Logs" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>API Endpoint</label>
+                                    <input type="text" id="system-endpoint" placeholder="https://api.example.com/logs" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Authentication Type</label>
+                                    <select id="system-auth-type" class="form-select" onchange="updateAuthFields('system')">
+                                        <option value="none">None</option>
+                                        <option value="apikey">API Key</option>
+                                        <option value="bearer">Bearer Token</option>
+                                        <option value="basic">Basic Auth</option>
+                                        <option value="oauth">OAuth 2.0</option>
+                                    </select>
+                                </div>
+                                <div id="system-auth-fields"></div>
+                                <div class="form-group">
+                                    <label>Fetch Interval (minutes)</label>
+                                    <input type="number" id="system-interval" value="5" min="1" class="form-input">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-secondary" onclick="testConnection('system')">
+                                        <i class="fas fa-vial"></i> Test Connection
+                                    </button>
+                                    <button class="btn btn-primary" onclick="saveConnection('system')">
+                                        <i class="fas fa-save"></i> Save & Connect
+                                    </button>
+                                </div>
+                                <div id="system-test-result" class="test-result"></div>
+                            </div>
+                            <div class="connected-sources" id="system-sources">
+                                <h4><i class="fas fa-link"></i> Active Connections</h4>
+                                <div class="empty-sources">No active connections</div>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Sources Grid -->
-            <div class="sources-grid" id="sourcesGrid">
-                <div class="empty-state">
-                    <i class="fas fa-plug"></i>
-                    <p>Loading sources...</p>
+                    <!-- Network Logs -->
+                    <div class="log-type-card">
+                        <div class="log-type-header" onclick="toggleLogType('network')">
+                            <div class="log-type-icon network">
+                                <i class="fas fa-network-wired"></i>
+                            </div>
+                            <div class="log-type-info">
+                                <h3>Network Logs</h3>
+                                <p>Firewall, router, switch, VPN logs</p>
+                            </div>
+                            <div class="log-type-status">
+                                <span class="status-badge" id="network-status">Not Connected</span>
+                                <i class="fas fa-chevron-down toggle-icon" id="network-toggle"></i>
+                            </div>
+                        </div>
+                        <div class="log-type-content" id="network-content" style="display: none;">
+                            <div class="api-connection-form">
+                                <h4><i class="fas fa-plug"></i> API Connection Settings</h4>
+                                <div class="form-group">
+                                    <label>Connection Name</label>
+                                    <input type="text" id="network-name" placeholder="e.g., Firewall Logs" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>API Endpoint</label>
+                                    <input type="text" id="network-endpoint" placeholder="https://api.example.com/network" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Authentication Type</label>
+                                    <select id="network-auth-type" class="form-select" onchange="updateAuthFields('network')">
+                                        <option value="none">None</option>
+                                        <option value="apikey">API Key</option>
+                                        <option value="bearer">Bearer Token</option>
+                                        <option value="basic">Basic Auth</option>
+                                        <option value="oauth">OAuth 2.0</option>
+                                    </select>
+                                </div>
+                                <div id="network-auth-fields"></div>
+                                <div class="form-group">
+                                    <label>Fetch Interval (minutes)</label>
+                                    <input type="number" id="network-interval" value="5" min="1" class="form-input">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-secondary" onclick="testConnection('network')">
+                                        <i class="fas fa-vial"></i> Test Connection
+                                    </button>
+                                    <button class="btn btn-primary" onclick="saveConnection('network')">
+                                        <i class="fas fa-save"></i> Save & Connect
+                                    </button>
+                                </div>
+                                <div id="network-test-result" class="test-result"></div>
+                            </div>
+                            <div class="connected-sources" id="network-sources">
+                                <h4><i class="fas fa-link"></i> Active Connections</h4>
+                                <div class="empty-sources">No active connections</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Application Logs -->
+                    <div class="log-type-card">
+                        <div class="log-type-header" onclick="toggleLogType('application')">
+                            <div class="log-type-icon application">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <div class="log-type-info">
+                                <h3>Application Logs</h3>
+                                <p>Web apps, microservices, containers</p>
+                            </div>
+                            <div class="log-type-status">
+                                <span class="status-badge" id="application-status">Not Connected</span>
+                                <i class="fas fa-chevron-down toggle-icon" id="application-toggle"></i>
+                            </div>
+                        </div>
+                        <div class="log-type-content" id="application-content" style="display: none;">
+                            <div class="api-connection-form">
+                                <h4><i class="fas fa-plug"></i> API Connection Settings</h4>
+                                <div class="form-group">
+                                    <label>Connection Name</label>
+                                    <input type="text" id="application-name" placeholder="e.g., Microservices Logs" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>API Endpoint</label>
+                                    <input type="text" id="application-endpoint" placeholder="https://api.example.com/app-logs" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Authentication Type</label>
+                                    <select id="application-auth-type" class="form-select" onchange="updateAuthFields('application')">
+                                        <option value="none">None</option>
+                                        <option value="apikey">API Key</option>
+                                        <option value="bearer">Bearer Token</option>
+                                        <option value="basic">Basic Auth</option>
+                                        <option value="oauth">OAuth 2.0</option>
+                                    </select>
+                                </div>
+                                <div id="application-auth-fields"></div>
+                                <div class="form-group">
+                                    <label>Fetch Interval (minutes)</label>
+                                    <input type="number" id="application-interval" value="5" min="1" class="form-input">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-secondary" onclick="testConnection('application')">
+                                        <i class="fas fa-vial"></i> Test Connection
+                                    </button>
+                                    <button class="btn btn-primary" onclick="saveConnection('application')">
+                                        <i class="fas fa-save"></i> Save & Connect
+                                    </button>
+                                </div>
+                                <div id="application-test-result" class="test-result"></div>
+                            </div>
+                            <div class="connected-sources" id="application-sources">
+                                <h4><i class="fas fa-link"></i> Active Connections</h4>
+                                <div class="empty-sources">No active connections</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Audit Logs -->
+                    <div class="log-type-card">
+                        <div class="log-type-header" onclick="toggleLogType('security')">
+                            <div class="log-type-icon security">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="log-type-info">
+                                <h3>Security Audit Logs</h3>
+                                <p>Authentication, authorization, security events</p>
+                            </div>
+                            <div class="log-type-status">
+                                <span class="status-badge" id="security-status">Not Connected</span>
+                                <i class="fas fa-chevron-down toggle-icon" id="security-toggle"></i>
+                            </div>
+                        </div>
+                        <div class="log-type-content" id="security-content" style="display: none;">
+                            <div class="api-connection-form">
+                                <h4><i class="fas fa-plug"></i> API Connection Settings</h4>
+                                <div class="form-group">
+                                    <label>Connection Name</label>
+                                    <input type="text" id="security-name" placeholder="e.g., Security Audit Logs" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>API Endpoint</label>
+                                    <input type="text" id="security-endpoint" placeholder="https://api.example.com/security" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Authentication Type</label>
+                                    <select id="security-auth-type" class="form-select" onchange="updateAuthFields('security')">
+                                        <option value="none">None</option>
+                                        <option value="apikey">API Key</option>
+                                        <option value="bearer">Bearer Token</option>
+                                        <option value="basic">Basic Auth</option>
+                                        <option value="oauth">OAuth 2.0</option>
+                                    </select>
+                                </div>
+                                <div id="security-auth-fields"></div>
+                                <div class="form-group">
+                                    <label>Fetch Interval (minutes)</label>
+                                    <input type="number" id="security-interval" value="5" min="1" class="form-input">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-secondary" onclick="testConnection('security')">
+                                        <i class="fas fa-vial"></i> Test Connection
+                                    </button>
+                                    <button class="btn btn-primary" onclick="saveConnection('security')">
+                                        <i class="fas fa-save"></i> Save & Connect
+                                    </button>
+                                </div>
+                                <div id="security-test-result" class="test-result"></div>
+                            </div>
+                            <div class="connected-sources" id="security-sources">
+                                <h4><i class="fas fa-link"></i> Active Connections</h4>
+                                <div class="empty-sources">No active connections</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -190,77 +387,244 @@ print(response.json())</code></pre>
         </main>
     </div>
 
-    <!-- Add Source Modal -->
-    <div id="addSourceModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New Log Source</h3>
-                <button class="modal-close" onclick="closeAddSourceModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="addSourceForm">
-                    <div class="form-group">
-                        <label>Source Name</label>
-                        <input type="text" id="sourceName" required placeholder="e.g., Production Web Servers">
-                    </div>
-                    <div class="form-group">
-                        <label>Source ID</label>
-                        <input type="text" id="sourceId" required placeholder="e.g., prod-web-servers">
-                    </div>
-                    <div class="form-group">
-                        <label>Source Type</label>
-                        <select id="sourceType" required>
-                            <option value="system">System Logs</option>
-                            <option value="network">Network Logs</option>
-                            <option value="application">Application Logs</option>
-                            <option value="security">Security/Audit Logs</option>
-                            <option value="database">Database Logs</option>
-                            <option value="web_server">Web Server Logs</option>
-                            <option value="container">Container Logs</option>
-                            <option value="cloud">Cloud Service Logs</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Ingestion Method</label>
-                        <select id="ingestionMethod" required>
-                            <option value="api">API (Push)</option>
-                            <option value="webhook">Webhook</option>
-                            <option value="file_upload">File Upload</option>
-                            <option value="streaming">Streaming</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="sourceDescription" rows="3" placeholder="Optional description"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeAddSourceModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="createSource()">Create Source</button>
-            </div>
-        </div>
-    </div>
+    <style>
+        .log-types-grid {
+            display: grid;
+            gap: 20px;
+        }
 
-    <!-- Source Detail Modal -->
-    <div id="sourceDetailModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="detailSourceName">Source Details</h3>
-                <button class="modal-close" onclick="closeSourceDetailModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="sourceDetailContent">
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeSourceDetailModal()">Close</button>
-            </div>
-        </div>
-    </div>
+        .log-type-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .log-type-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .log-type-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            cursor: pointer;
+            gap: 15px;
+        }
+
+        .log-type-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .log-type-icon.system {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .log-type-icon.network {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .log-type-icon.application {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .log-type-icon.security {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .log-type-info {
+            flex: 1;
+        }
+
+        .log-type-info h3 {
+            margin: 0 0 5px 0;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .log-type-info p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .log-type-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .status-badge.connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .toggle-icon {
+            color: rgba(255, 255, 255, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .log-type-content {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .api-connection-form {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .api-connection-form h4 {
+            margin: 0 0 20px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .test-result.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            display: block;
+        }
+
+        .test-result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            display: block;
+        }
+
+        .connected-sources {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .connected-sources h4 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .empty-sources {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .source-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .source-item-info h5 {
+            margin: 0 0 5px 0;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .source-item-info p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        .source-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+    </style>
 
     <script src="{{ url_for('static', filename='js/sources.js') }}"></script>
 </body>

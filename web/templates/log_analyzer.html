@@ -6,6 +6,7 @@
     <title>Agentic RAG Log Analyzer - Log Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_inline.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/api_streaming.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -33,10 +34,6 @@
                 <a href="/api-config" class="nav-item">
                     <i class="fas fa-cog"></i>
                     <span>API Configuration</span>
-                </a>
-                <a href="/sources" class="nav-item">
-                    <i class="fas fa-plug"></i>
-                    <span>Log Sources</span>
                 </a>
                 <a href="/chat" class="nav-item">
                     <i class="fas fa-comments"></i>
@@ -95,6 +92,114 @@
                             <button class="btn btn-sm btn-danger" onclick="removeFile()">
                                 <i class="fas fa-times"></i>
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Log Sources Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><i class="fas fa-cloud-download-alt"></i> Analyze Logs from API Sources</h3>
+                    <p class="section-subtitle">Stream and analyze logs from configured API connections</p>
+                </div>
+                
+                <!-- API Source Selection -->
+                <div class="api-sources-container" id="apiSourcesContainer">
+                    <div class="loading" id="apiSourcesLoading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading configured API sources...
+                    </div>
+                    <div class="no-sources" id="noApiSources" style="display: none;">
+                        <i class="fas fa-plug"></i>
+                        <p>No API connections configured</p>
+                        <a href="/api-config" class="btn btn-primary btn-sm">
+                            <i class="fas fa-cog"></i> Configure API Connections
+                        </a>
+                    </div>
+                    <div class="api-sources-grid" id="apiSourcesGrid" style="display: none;">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- API Log Streaming Controls -->
+                <div class="api-streaming-controls" id="apiStreamingControls" style="display: none;">
+                    <div class="streaming-header">
+                        <h4><i class="fas fa-stream"></i> Log Streaming: <span id="selectedSourceName">-</span></h4>
+                        <button class="btn btn-sm btn-secondary" onclick="closeApiStreaming()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+
+                    <!-- Time Range Filters -->
+                    <div class="time-filters">
+                        <div class="filter-group">
+                            <label>Start Date & Time</label>
+                            <input type="datetime-local" id="apiStartTime" class="form-input">
+                        </div>
+                        <div class="filter-group">
+                            <label>End Date & Time</label>
+                            <input type="datetime-local" id="apiEndTime" class="form-input">
+                        </div>
+                        <div class="filter-group">
+                            <label>Fetch Interval (seconds)</label>
+                            <input type="number" id="apiFetchInterval" class="form-input" value="5" min="1" max="60">
+                        </div>
+                    </div>
+
+                    <!-- Streaming Controls -->
+                    <div class="streaming-actions">
+                        <button class="btn btn-success" id="streamPlayBtn" onclick="startApiStreaming()">
+                            <i class="fas fa-play"></i> Start Streaming
+                        </button>
+                        <button class="btn btn-warning" id="streamPauseBtn" onclick="pauseApiStreaming()" style="display: none;">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button class="btn btn-danger" id="streamStopBtn" onclick="stopApiStreaming()" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                        <button class="btn btn-primary" id="analyzeApiLogsBtn" onclick="analyzeApiLogs()" style="display: none;">
+                            <i class="fas fa-chart-line"></i> Analyze Collected Logs
+                        </button>
+                    </div>
+
+                    <!-- Streaming Stats -->
+                    <div class="streaming-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-file-alt"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Logs Collected</span>
+                                <span class="stat-value" id="logsCollectedCount">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clock"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Streaming Duration</span>
+                                <span class="stat-value" id="streamingDuration">00:00</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-signal"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Status</span>
+                                <span class="stat-value" id="streamingStatus">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Log Preview -->
+                    <div class="live-log-preview">
+                        <div class="preview-header">
+                            <h5><i class="fas fa-eye"></i> Live Log Preview</h5>
+                            <button class="btn btn-sm btn-secondary" onclick="clearApiLogs()">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                        <div class="log-preview-container" id="apiLogPreview">
+                            <div class="empty-preview">
+                                <i class="fas fa-inbox"></i>
+                                <p>No logs collected yet. Start streaming to see logs appear here.</p>
+                            </div>
                         </div>
                     </div>
                 </div>

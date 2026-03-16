@@ -10,7 +10,7 @@ from src.database.config import db_config
 from src.database.models import (
     AnalysisSession, UploadedFile, LogEntry, Anomaly,
     ReasoningStep, RetrievedDocument, Alert, ChatMessage,
-    KnowledgeDoc, SystemStats
+    KnowledgeDoc, SystemStats, APIConnection
 )
 from src.utils.logger import get_logger
 
@@ -328,5 +328,130 @@ class DatabaseService:
                 'total_alerts_generated': 0,
                 'total_sessions': 0
             }
+
+    # ==================== API Connection Methods ====================
+    
+    @staticmethod
+    def create_api_connection(connection_data: Dict[str, Any]) -> str:
+        """Create a new API connection and return connection_id"""
+        with db_config.get_session() as session:
+            connection = APIConnection(
+                name=connection_data.get('name'),
+                connection_type=connection_data.get('sourceType', connection_data.get('type')),
+                api_type=connection_data.get('type'),
+                endpoint=connection_data.get('endpoint'),
+                auth_type=connection_data.get('authType', 'none'),
+                auth_data=connection_data.get('authData', {}),
+                fetch_interval=connection_data.get('interval', 5),
+                enabled=True,
+                meta=connection_data.get('meta', {})
+            )
+            session.add(connection)
+            session.flush()
+            
+            connection_id = str(connection.connection_id)
+            logger.info(f"Created API connection: {connection_id}")
+            return connection_id
+    
+    @staticmethod
+    def get_all_api_connections() -> List[Dict[str, Any]]:
+        """Get all API connections"""
+        with db_config.get_session() as session:
+            connections = session.query(APIConnection).order_by(APIConnection.created_at.desc()).all()
+            
+            return [
+                {
+                    'id': str(conn.connection_id),
+                    'name': conn.name,
+                    'type': conn.api_type,
+                    'sourceType': conn.connection_type,
+                    'endpoint': conn.endpoint,
+                    'authType': conn.auth_type,
+                    'authData': conn.auth_data,
+                    'interval': conn.fetch_interval,
+                    'enabled': conn.enabled,
+                    'lastFetchAt': conn.last_fetch_at.isoformat() if conn.last_fetch_at else None,
+                    'totalLogsFetched': conn.total_logs_fetched,
+                    'createdAt': conn.created_at.isoformat()
+                }
+                for conn in connections
+            ]
+    
+    @staticmethod
+    def get_api_connection(connection_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific API connection"""
+        with db_config.get_session() as session:
+            conn = session.query(APIConnection).filter_by(connection_id=connection_id).first()
+            if conn:
+                return {
+                    'id': str(conn.connection_id),
+                    'name': conn.name,
+                    'type': conn.api_type,
+                    'sourceType': conn.connection_type,
+                    'endpoint': conn.endpoint,
+                    'authType': conn.auth_type,
+                    'authData': conn.auth_data,
+                    'interval': conn.fetch_interval,
+                    'enabled': conn.enabled,
+                    'lastFetchAt': conn.last_fetch_at.isoformat() if conn.last_fetch_at else None,
+                    'totalLogsFetched': conn.total_logs_fetched,
+                    'createdAt': conn.created_at.isoformat()
+                }
+            return None
+    
+    @staticmethod
+    def update_api_connection(connection_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update an API connection"""
+        with db_config.get_session() as session:
+            conn = session.query(APIConnection).filter_by(connection_id=connection_id).first()
+            if conn:
+                if 'name' in update_data:
+                    conn.name = update_data['name']
+                if 'endpoint' in update_data:
+                    conn.endpoint = update_data['endpoint']
+                if 'authType' in update_data:
+                    conn.auth_type = update_data['authType']
+                if 'authData' in update_data:
+                    conn.auth_data = update_data['authData']
+                if 'interval' in update_data:
+                    conn.fetch_interval = update_data['interval']
+                if 'enabled' in update_data:
+                    conn.enabled = update_data['enabled']
+                
+                logger.info(f"Updated API connection: {connection_id}")
+                return True
+            return False
+    
+    @staticmethod
+    def delete_api_connection(connection_id: str) -> bool:
+        """Delete an API connection"""
+        with db_config.get_session() as session:
+            conn = session.query(APIConnection).filter_by(connection_id=connection_id).first()
+            if conn:
+                session.delete(conn)
+                logger.info(f"Deleted API connection: {connection_id}")
+                return True
+            return False
+    
+    @staticmethod
+    def get_enabled_connections_by_type(connection_type: str) -> List[Dict[str, Any]]:
+        """Get all enabled connections for a specific type"""
+        with db_config.get_session() as session:
+            connections = session.query(APIConnection).filter_by(
+                connection_type=connection_type,
+                enabled=True
+            ).all()
+            
+            return [
+                {
+                    'id': str(conn.connection_id),
+                    'name': conn.name,
+                    'endpoint': conn.endpoint,
+                    'authType': conn.auth_type,
+                    'authData': conn.auth_data,
+                    'interval': conn.fetch_interval
+                }
+                for conn in connections
+            ]
 
 db_service = DatabaseService()

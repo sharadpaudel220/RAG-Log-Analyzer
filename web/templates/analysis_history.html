@@ -214,6 +214,11 @@
             margin-bottom: 10px;
         }
 
+        .no-sessions p {
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 10px;
+        }
+
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -236,6 +241,418 @@
             text-align: center;
             padding: 40px;
             color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Tabs Styling */
+        .tabs-container {
+            margin-top: 15px;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .tab-btn.active {
+            color: #8b5cf6;
+            border-bottom-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .tabs-content {
+            padding: 10px 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            display: block;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Anomaly Cards */
+        .anomaly-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .anomaly-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .anomaly-number {
+            background: rgba(139, 92, 246, 0.2);
+            color: #8b5cf6;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .anomaly-confidence {
+            margin-left: auto;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+
+        .anomaly-body {
+            padding: 15px;
+        }
+
+        .anomaly-section {
+            margin-bottom: 15px;
+        }
+
+        .anomaly-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .anomaly-section strong {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .analysis-text {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Logs List */
+        .logs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-entry {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .log-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .log-number {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8b5cf6;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .log-severity {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .log-content {
+            background: rgba(0, 0, 0, 0.3);
+            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+        }
+
+        .log-template {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Chat History */
+        .chat-history {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .chat-history::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-history::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .chat-history::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 3px;
+        }
+
+        .chat-history::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+
+        .chat-message {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .chat-message.user {
+            border-left: 3px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .chat-message.assistant {
+            border-left: 3px solid #8b5cf6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chat-role {
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .chat-time {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+
+        .chat-content {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* No Data State */
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .no-data p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .no-data-inline {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+        }
+
+        /* Inline Chat Input */
+        .inline-chat-input {
+            margin-top: 20px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .chat-textarea {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .chat-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .send-chat-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+            white-space: nowrap;
+        }
+
+        .send-chat-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        }
+
+        .send-chat-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-chat-btn i {
+            font-size: 14px;
+        }
+
+        .chat-loading {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 6px;
+            color: #8b5cf6;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .chat-loading i {
+            margin-right: 8px;
+        }
+
+        /* Section Header with Action */
+        .section-header-with-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header-with-action h3 {
+            margin: 0;
+        }
+
+        .continue-chat-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .continue-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        }
+
+        .continue-chat-btn i {
+            font-size: 16px;
         }
 
         /* Toast Notifications */
@@ -436,10 +853,6 @@
                     <i class="fas fa-cog"></i>
                     <span>API Configuration</span>
                 </a>
-                <a href="/sources" class="nav-item">
-                    <i class="fas fa-plug"></i>
-                    <span>Log Sources</span>
-                </a>
                 <a href="/chat" class="nav-item">
                     <i class="fas fa-comments"></i>
                     <span>Chat Interface</span>
@@ -564,34 +977,134 @@
                 if (data.success) {
                     const session = data.session;
                     const anomalies = session.anomalies || [];
+                    const logs = session.all_logs || [];
+                    const chatHistory = session.chat_history || [];
                     
                     content.innerHTML = `
-                        <div class="detail-section">
-                            <h3>Session Information</h3>
-                            <div style="color: rgba(255, 255, 255, 0.7);">
-                                <p><strong>System Type:</strong> ${session.system_type}</p>
-                                <p><strong>Analysis Time:</strong> ${session.analysis_time ? session.analysis_time.toFixed(2) + 's' : 'N/A'}</p>
+                        <div class="tabs-container">
+                            <div class="tabs-header">
+                                <button class="tab-btn active" onclick="switchTab(event, '${sessionId}', 'report')">📊 Analysis Report</button>
+                                <button class="tab-btn" onclick="switchTab(event, '${sessionId}', 'logs')">📝 Processed Logs (${logs.length})</button>
+                                <button class="tab-btn" onclick="switchTab(event, '${sessionId}', 'chat')">💬 Chat History (${chatHistory.length})</button>
+                            </div>
+                            
+                            <div class="tabs-content">
+                                <!-- Report Tab -->
+                                <div id="tab-report-${sessionId}" class="tab-content active">
+                                    <div class="detail-section">
+                                        <h3>📋 Session Summary</h3>
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <span class="info-label">System Type:</span>
+                                                <span class="info-value">${session.system_type}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Total Logs:</span>
+                                                <span class="info-value">${session.total_logs}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Anomalies Detected:</span>
+                                                <span class="info-value">${session.anomalies_detected}</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Analysis Time:</span>
+                                                <span class="info-value">${session.analysis_time ? session.analysis_time.toFixed(2) + 's' : 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    ${anomalies.length > 0 ? `
+                                        <div class="detail-section">
+                                            <h3>⚠️ Critical Findings (${anomalies.length})</h3>
+                                            ${anomalies.map((anomaly, idx) => `
+                                                <div class="anomaly-card">
+                                                    <div class="anomaly-header">
+                                                        <span class="anomaly-number">#${idx + 1}</span>
+                                                        <span class="anomaly-severity severity-${(anomaly.severity || 'MEDIUM').toLowerCase()}">
+                                                            ${anomaly.severity || 'MEDIUM'}
+                                                        </span>
+                                                        <span class="anomaly-confidence">Confidence: ${(anomaly.confidence * 100).toFixed(1)}%</span>
+                                                    </div>
+                                                    <div class="anomaly-body">
+                                                        <div class="anomaly-section">
+                                                            <strong>📄 Log Entry:</strong>
+                                                            <pre class="log-content">${anomaly.log_content || 'No log content'}</pre>
+                                                        </div>
+                                                        ${anomaly.analysis ? `
+                                                            <div class="anomaly-section">
+                                                                <strong>🔍 Analysis:</strong>
+                                                                <p class="analysis-text">${anomaly.analysis}</p>
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : '<div class="no-data"><p>✅ No anomalies detected in this session.</p></div>'}
+                                </div>
+                                
+                                <!-- Logs Tab -->
+                                <div id="tab-logs-${sessionId}" class="tab-content">
+                                    <div class="detail-section">
+                                        <h3>📝 All Processed Logs</h3>
+                                        ${logs.length > 0 ? `
+                                            <div class="logs-list">
+                                                ${logs.map((log, idx) => `
+                                                    <div class="log-entry">
+                                                        <div class="log-header">
+                                                            <span class="log-number">#${idx + 1}</span>
+                                                            ${log.severity ? `<span class="log-severity severity-${log.severity.toLowerCase()}">${log.severity}</span>` : ''}
+                                                        </div>
+                                                        <pre class="log-content">${log.content}</pre>
+                                                        ${log.template ? `<div class="log-template">Template: ${log.template}</div>` : ''}
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        ` : '<div class="no-data"><p>No logs available</p></div>'}
+                                    </div>
+                                </div>
+                                
+                                <!-- Chat Tab -->
+                                <div id="tab-chat-${sessionId}" class="tab-content">
+                                    <div class="detail-section">
+                                        <h3>💬 AI Chat History</h3>
+                                        <div class="chat-history" id="chat-history-${sessionId}">
+                                            ${chatHistory.length > 0 ? chatHistory.map(msg => `
+                                                <div class="chat-message ${msg.role}">
+                                                    <div class="chat-header">
+                                                        <span class="chat-role">${msg.role === 'user' ? '👤 You' : '🤖 AI Assistant'}</span>
+                                                        <span class="chat-time">${new Date(msg.timestamp).toLocaleString()}</span>
+                                                    </div>
+                                                    <div class="chat-content">${msg.content}</div>
+                                                </div>
+                                            `).join('') : '<div class="no-data-inline"><p>No chat history yet. Start a conversation below!</p></div>'}
+                                        </div>
+                                        
+                                        <!-- Inline Chat Input -->
+                                        <div class="inline-chat-input">
+                                            <div class="chat-input-container">
+                                                <textarea 
+                                                    id="chat-input-${sessionId}" 
+                                                    class="chat-textarea" 
+                                                    placeholder="Ask a question about this analysis..."
+                                                    rows="3"
+                                                ></textarea>
+                                                <button 
+                                                    class="send-chat-btn" 
+                                                    onclick="sendChatMessage('${sessionId}')"
+                                                    id="send-btn-${sessionId}"
+                                                >
+                                                    <i class="fas fa-paper-plane"></i> Send
+                                                </button>
+                                            </div>
+                                            <div class="chat-loading" id="chat-loading-${sessionId}" style="display: none;">
+                                                <i class="fas fa-spinner fa-spin"></i> AI is thinking...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        
-                        ${anomalies.length > 0 ? `
-                            <div class="detail-section">
-                                <h3>Detected Anomalies (${anomalies.length})</h3>
-                                ${anomalies.map(anomaly => {
-                                    const alert = anomaly.alert || {};
-                                    const severity = (alert.severity || 'MEDIUM').toLowerCase();
-                                    return `
-                                        <div class="anomaly-item ${severity}">
-                                            <span class="anomaly-severity severity-${severity}">
-                                                ${alert.severity || 'UNKNOWN'}
-                                            </span>
-                                            <div class="anomaly-title">${alert.title || 'Anomaly Detected'}</div>
-                                            <div class="anomaly-log">${anomaly.log?.content || 'No log content'}</div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        ` : '<p style="color: rgba(255, 255, 255, 0.6);">No anomalies detected in this session.</p>'}
                     `;
                 } else {
                     content.innerHTML = '<p style="color: #dc3545;">Error loading session details</p>';
@@ -599,6 +1112,101 @@
             } catch (error) {
                 console.error('Error loading session details:', error);
                 content.innerHTML = '<p style="color: #dc3545;">Error loading session details</p>';
+            }
+        }
+        
+        function switchTab(event, sessionId, tabName) {
+            const container = event.target.closest('.tabs-container');
+            
+            // Remove active class from all tabs and contents
+            container.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            container.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}-${sessionId}`).classList.add('active');
+        }
+
+        async function sendChatMessage(sessionId) {
+            const textarea = document.getElementById(`chat-input-${sessionId}`);
+            const sendBtn = document.getElementById(`send-btn-${sessionId}`);
+            const loading = document.getElementById(`chat-loading-${sessionId}`);
+            const chatHistory = document.getElementById(`chat-history-${sessionId}`);
+            
+            const message = textarea.value.trim();
+            
+            if (!message) {
+                showToast('Please enter a message', 'warning');
+                return;
+            }
+            
+            // Disable input while sending
+            textarea.disabled = true;
+            sendBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            // Add user message to chat
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-message user';
+            userMsgDiv.innerHTML = `
+                <div class="chat-header">
+                    <span class="chat-role">👤 You</span>
+                    <span class="chat-time">${new Date().toLocaleString()}</span>
+                </div>
+                <div class="chat-content">${message}</div>
+            `;
+            
+            // Remove "no data" message if exists
+            const noData = chatHistory.querySelector('.no-data-inline');
+            if (noData) {
+                noData.remove();
+            }
+            
+            chatHistory.appendChild(userMsgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            
+            // Clear input
+            textarea.value = '';
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: sessionId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.response) {
+                    // Add AI response to chat
+                    const aiMsgDiv = document.createElement('div');
+                    aiMsgDiv.className = 'chat-message assistant';
+                    aiMsgDiv.innerHTML = `
+                        <div class="chat-header">
+                            <span class="chat-role">🤖 AI Assistant</span>
+                            <span class="chat-time">${new Date().toLocaleString()}</span>
+                        </div>
+                        <div class="chat-content">${data.response}</div>
+                    `;
+                    chatHistory.appendChild(aiMsgDiv);
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                } else {
+                    showToast('Error: No response from AI', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showToast('Error sending message: ' + error.message, 'error');
+            } finally {
+                // Re-enable input
+                textarea.disabled = false;
+                sendBtn.disabled = false;
+                loading.style.display = 'none';
+                textarea.focus();
             }
         }
 
