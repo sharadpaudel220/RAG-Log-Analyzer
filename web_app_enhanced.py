@@ -65,6 +65,10 @@ def _list_analysis_sessions() -> list:
 app = Flask(__name__, static_folder='web/static', template_folder='web/templates')
 CORS(app)
 
+# Disable template caching for development
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 ANALYSIS_SESSIONS_DIR = 'data/analysis_sessions'
 Path(ANALYSIS_SESSIONS_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -791,10 +795,14 @@ def get_api_connections():
     """Get all API connections"""
     try:
         connections = db_service.get_all_api_connections()
+        # Ensure connections is always a list
+        if connections is None:
+            connections = []
         return jsonify({'success': True, 'connections': connections})
     except Exception as e:
         logger.error(f"Error fetching API connections: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        # Return empty list instead of error to prevent UI errors
+        return jsonify({'success': True, 'connections': [], 'warning': str(e)})
 
 @app.route('/api/api-connections', methods=['POST'])
 def create_api_connection():
@@ -1304,6 +1312,298 @@ def evaluate_systems():
     except Exception as e:
         logger.error(f"Error in evaluation: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+# ==================== Network Capture API ====================
+
+# Global network capture instance
+network_capture_instance = None
+
+@app.route('/api/network-capture/test', methods=['POST'])
+def test_network_capture():
+    """Test network capture capability"""
+    try:
+        data = request.json or {}
+        interface = data.get('interface', 'en0')
+        
+        # Check if tcpdump is available
+        import subprocess
+        try:
+            subprocess.run(['which', 'tcpdump'], check=True, capture_output=True)
+            return jsonify({
+                'success': True,
+                'message': f'Network capture is available. Interface: {interface}',
+                'requires_sudo': True
+            })
+        except subprocess.CalledProcessError:
+            return jsonify({
+                'success': False,
+                'error': 'tcpdump not found. Please ensure tcpdump is installed.'
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Error testing network capture: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/network-capture/start', methods=['POST'])
+def start_network_capture():
+    """Start network packet capture"""
+    global network_capture_instance
+    
+    if not system_components['initialized']:
+        initialize_system()
+    
+    try:
+        if network_capture_instance and hasattr(network_capture_instance, 'capture'):
+            if network_capture_instance.capture.running:
+                return jsonify({'error': 'Network capture already running'}), 400
+        
+        data = request.json or {}
+        interface = data.get('interface', 'en0')
+        filter_expr = data.get('filter', 'tcp or udp or icmp')
+        auto_analyze = data.get('auto_analyze', True)
+        store_logs = data.get('store_logs', True)
+        
+        # Import network capture module
+        from src.connectors.network_capture import NetworkLogCollector
+        
+        # Define callback for captured logs
+        def on_network_log(log_entry):
+            try:
+                if auto_analyze and system_components['agentic_controller']:
+                    # Analyze the log
+                    raw_log = _to_raw_log_entry(log_entry)
+                    parsed_logs = system_components['preprocessor'].preprocess([raw_log])
+                    
+                    if parsed_logs:
+                        result = system_components['agentic_controller'].analyze_log(parsed_logs[0])
+                        system_components['system_stats']['total_logs_analyzed'] += 1
+                        
+                        if result.is_anomaly:
+                            system_components['system_stats']['anomalies_detected'] += 1
+                            
+                            # Generate alert if needed
+                            if result.severity in ['CRITICAL', 'HIGH']:
+                                alert = system_components['alert_generator'].generate_alert(result)
+                                system_components['recent_alerts'].insert(0, alert)
+                                system_components['system_stats']['alerts_generated'] += 1
+                                
+                                # Keep only last 100 alerts
+                                if len(system_components['recent_alerts']) > 100:
+                                    system_components['recent_alerts'] = system_components['recent_alerts'][:100]
+            except Exception as e:
+                logger.error(f"Error processing network log: {e}")
+        
+        # Create and start collector
+        network_capture_instance = NetworkLogCollector(
+            interface=interface,
+            filter_expression=filter_expr,
+            log_callback=on_network_log if auto_analyze else None
+        )
+        
+        network_capture_instance.start()
+        
+        logger.info(f"Network capture started on {interface}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Network capture started on interface {interface}',
+            'interface': interface,
+            'filter': filter_expr
+        })
+        
+    except PermissionError:
+        return jsonify({
+            'error': 'Permission denied. Network capture requires root/sudo privileges.',
+            'help': 'Please run the web application with sudo or grant tcpdump permissions.'
+        }), 403
+    except Exception as e:
+        logger.error(f"Error starting network capture: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/network-capture/stop', methods=['POST'])
+def stop_network_capture():
+    """Stop network packet capture"""
+    global network_capture_instance
+    
+    try:
+        if not network_capture_instance:
+            return jsonify({'error': 'Network capture not running'}), 400
+        
+        stats = network_capture_instance.get_stats()
+        network_capture_instance.stop()
+        network_capture_instance = None  # Clear the global instance
+        
+        logger.info("Network capture stopped")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Network capture stopped',
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Error stopping network capture: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/network-capture/stats', methods=['GET'])
+def get_network_capture_stats():
+    """Get network capture statistics"""
+    global network_capture_instance
+    
+    try:
+        if not network_capture_instance:
+            return jsonify({
+                'running': False,
+                'packets_captured': 0,
+                'logs_generated': 0
+            })
+        
+        stats = network_capture_instance.get_stats()
+        stats['running'] = network_capture_instance.capture.running if hasattr(network_capture_instance, 'capture') else False
+        
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Error getting network capture stats: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/network-capture/status', methods=['GET'])
+def get_network_capture_status():
+    """Get network capture status"""
+    global network_capture_instance
+    
+    try:
+        if not network_capture_instance:
+            return jsonify({'running': False})
+        
+        running = network_capture_instance.capture.running if hasattr(network_capture_instance, 'capture') else False
+        
+        return jsonify({
+            'running': running,
+            'stats': network_capture_instance.get_stats() if running else {}
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting network capture status: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/network-capture/logs', methods=['GET'])
+def get_network_capture_logs():
+    """Get captured network logs for analysis from web_app.log file"""
+    global network_capture_instance
+    
+    try:
+        # Check if network capture is running
+        if not network_capture_instance:
+            logger.warning("Network capture instance not found")
+            return jsonify({
+                'error': 'Network capture not running. Please start network capture first.',
+                'logs': [], 
+                'count': 0
+            }), 400
+        
+        # Read logs from web_app.log file
+        log_file_path = os.path.join('logs', 'web_app.log')
+        
+        if not os.path.exists(log_file_path):
+            logger.error(f"Log file not found: {log_file_path}")
+            return jsonify({
+                'error': f'Log file not found: {log_file_path}',
+                'logs': [],
+                'count': 0
+            }), 404
+        
+        # Read and parse log file
+        formatted_logs = []
+        try:
+            with open(log_file_path, 'r') as f:
+                lines = f.readlines()
+                
+            # Check if file is empty
+            if not lines or len(lines) == 0:
+                logger.warning("Log file is empty")
+                return jsonify({
+                    'error': 'No logs captured yet. Please wait for network activity to be captured.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+            
+            # Get last 100 lines or all if less
+            recent_lines = lines[-100:] if len(lines) > 100 else lines
+            
+            for line in recent_lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                # Parse log line format: "2026-03-15 20:46:03 - __main__ - INFO - Network capture started on en0"
+                try:
+                    parts = line.split(' - ', 3)
+                    if len(parts) >= 4:
+                        timestamp = parts[0]
+                        module = parts[1]
+                        severity = parts[2]
+                        content = parts[3]
+                        
+                        formatted_logs.append({
+                            'timestamp': timestamp,
+                            'content': line,  # Use full line as content
+                            'severity': severity,
+                            'source': 'network-capture',
+                            'module': module
+                        })
+                    else:
+                        # If parsing fails, use the whole line
+                        formatted_logs.append({
+                            'timestamp': '',
+                            'content': line,
+                            'severity': 'INFO',
+                            'source': 'network-capture'
+                        })
+                except Exception as parse_error:
+                    logger.warning(f"Failed to parse log line: {line[:50]}... Error: {parse_error}")
+                    # Still include the line even if parsing fails
+                    formatted_logs.append({
+                        'timestamp': '',
+                        'content': line,
+                        'severity': 'INFO',
+                        'source': 'network-capture'
+                    })
+            
+            # Check if we have any formatted logs
+            if len(formatted_logs) == 0:
+                logger.warning("No valid logs found in file")
+                return jsonify({
+                    'error': 'No valid logs found. The log file exists but contains no parseable log entries.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+            
+            logger.info(f"Successfully read {len(formatted_logs)} logs from {log_file_path}")
+            
+            return jsonify({
+                'logs': formatted_logs,
+                'count': len(formatted_logs),
+                'source_file': log_file_path
+            })
+            
+        except Exception as read_error:
+            logger.error(f"Error reading log file: {read_error}", exc_info=True)
+            return jsonify({
+                'error': f'Error reading log file: {str(read_error)}',
+                'logs': [],
+                'count': 0
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"Error getting network capture logs: {e}", exc_info=True)
+        return jsonify({
+            'error': str(e),
+            'logs': [],
+            'count': 0
+        }), 500
+
 
 if __name__ == '__main__':
     print("="*80)

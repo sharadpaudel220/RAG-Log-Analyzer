@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Agentic RAG Log Analyzer - Log Sources</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-2026.css') }}?v=2026031501">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Version: 2026-03-15 Network Capture UI Added -->
 </head>
 <body>
     <div class="container">
@@ -28,13 +32,9 @@
                     <i class="fas fa-history"></i>
                     <span>Analysis History</span>
                 </a>
-                <a href="/sources" class="nav-item active">
-                    <i class="fas fa-plug"></i>
-                    <span>Log Sources</span>
-                </a>
                 <a href="/api-config" class="nav-item">
-                    <i class="fas fa-robot"></i>
-                    <span>BYOK AI Config</span>
+                    <i class="fas fa-cog"></i>
+                    <span>API Configuration</span>
                 </a>
                 <a href="/chat" class="nav-item">
                     <i class="fas fa-comments"></i>
@@ -140,7 +140,18 @@
                             </div>
                         </div>
                         <div class="log-type-content" id="network-content" style="display: none;">
-                            <div class="api-connection-form">
+                            <!-- Connection Type Selector -->
+                            <div class="connection-type-selector">
+                                <button class="connection-type-btn active" onclick="switchNetworkConnectionType('api')" id="network-api-btn">
+                                    <i class="fas fa-plug"></i> API Connection
+                                </button>
+                                <button class="connection-type-btn" onclick="switchNetworkConnectionType('capture')" id="network-capture-btn">
+                                    <i class="fas fa-network-wired"></i> Network Capture
+                                </button>
+                            </div>
+
+                            <!-- API Connection Form -->
+                            <div class="api-connection-form" id="network-api-form">
                                 <h4><i class="fas fa-plug"></i> API Connection Settings</h4>
                                 <div class="form-group">
                                     <label>Connection Name</label>
@@ -175,6 +186,96 @@
                                 </div>
                                 <div id="network-test-result" class="test-result"></div>
                             </div>
+
+                            <!-- Network Capture Form -->
+                            <div class="api-connection-form" id="network-capture-form" style="display: none;">
+                                <h4><i class="fas fa-network-wired"></i> Network Packet Capture Settings</h4>
+                                <div class="info-banner">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div>
+                                        <strong>Real-time network traffic capture</strong>
+                                        <p>Captures live network packets and converts them to structured logs. Requires sudo/admin privileges.</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Connection Name</label>
+                                    <input type="text" id="capture-name" placeholder="e.g., Home Network Traffic" class="form-input" value="Network Packet Capture">
+                                </div>
+                                <div class="form-group">
+                                    <label>Network Interface</label>
+                                    <select id="capture-interface" class="form-select">
+                                        <option value="en0">en0 (WiFi - Primary)</option>
+                                        <option value="en1">en1 (Ethernet/Secondary)</option>
+                                        <option value="en2">en2 (USB/Thunderbolt)</option>
+                                        <option value="any">any (All Interfaces)</option>
+                                    </select>
+                                    <small style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 5px; display: block;">
+                                        Use 'en0' for WiFi on macOS. Run <code>ifconfig -l</code> to see all interfaces.
+                                    </small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Traffic Filter</label>
+                                    <select id="capture-filter-preset" class="form-select" onchange="updateCaptureFilter()">
+                                        <option value="all">All Traffic (TCP/UDP/ICMP)</option>
+                                        <option value="web">Web Traffic Only (HTTP/HTTPS)</option>
+                                        <option value="dns">DNS Queries Only</option>
+                                        <option value="custom">Custom Filter</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="capture-custom-filter" style="display: none;">
+                                    <label>Custom tcpdump Filter</label>
+                                    <input type="text" id="capture-filter-custom" placeholder="e.g., port 80 or port 443" class="form-input">
+                                    <small style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 5px; display: block;">
+                                        Use tcpdump filter syntax. Examples: "port 53", "host 8.8.8.8", "not net 192.168.1.0/24"
+                                    </small>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="capture-auto-analyze" checked style="margin-right: 8px;">
+                                        Auto-analyze captured logs
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="capture-store-logs" checked style="margin-right: 8px;">
+                                        Store raw logs to file
+                                    </label>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-secondary" onclick="testNetworkCapture()">
+                                        <i class="fas fa-vial"></i> Test Capture
+                                    </button>
+                                    <button class="btn btn-primary" onclick="startNetworkCapture()">
+                                        <i class="fas fa-play"></i> Start Capture
+                                    </button>
+                                    <button class="btn btn-danger" onclick="stopNetworkCapture()" id="stop-capture-btn" style="display: none;">
+                                        <i class="fas fa-stop"></i> Stop Capture
+                                    </button>
+                                </div>
+                                <div id="network-capture-result" class="test-result"></div>
+                                <div id="network-capture-stats" class="capture-stats" style="display: none;">
+                                    <h5><i class="fas fa-chart-line"></i> Capture Statistics</h5>
+                                    <div class="stats-grid">
+                                        <div class="stat-item">
+                                            <span class="stat-label">Packets Captured</span>
+                                            <span class="stat-value" id="stat-packets">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Logs Generated</span>
+                                            <span class="stat-value" id="stat-logs">0</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Capture Rate</span>
+                                            <span class="stat-value" id="stat-rate">0/sec</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Uptime</span>
+                                            <span class="stat-value" id="stat-uptime">0s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="connected-sources" id="network-sources">
                                 <h4><i class="fas fa-link"></i> Active Connections</h4>
                                 <div class="empty-sources">No active connections</div>
@@ -624,8 +725,125 @@ print(response.json())</code></pre>
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
         }
+
+        .connection-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .connection-type-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .connection-type-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .connection-type-btn.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            border-color: #8b5cf6;
+            color: white;
+        }
+
+        .info-banner {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: start;
+        }
+
+        .info-banner i {
+            color: #3b82f6;
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .info-banner strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-banner p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .capture-stats {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .capture-stats h5 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            display: block;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
     </style>
 
-    <script src="{{ url_for('static', filename='js/sources.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sources.js') }}?v=2026031501"></script>
 </body>
 </html>

@@ -111,6 +111,13 @@ datasets:
     path: data/datasets/bgl
     train_split: 0.7
     test_split: 0.3
+network_capture:
+  enabled: false
+  interface: en0
+  filter: tcp or udp or icmp
+  auto_analyze: true
+  store_raw_logs: true
+  raw_logs_path: data/router_logs
 logging:
   level: INFO
   log_file: logs/system.log

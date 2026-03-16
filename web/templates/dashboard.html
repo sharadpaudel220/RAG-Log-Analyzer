@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agentic RAG Log Analyzer - Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-2026.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -121,15 +121,15 @@
                         <div class="action-icon purple">
                             <i class="fas fa-cog"></i>
                         </div>
-                        <h4>Configure APIs</h4>
-                        <p>Connect to external log sources</p>
+                        <h4>API Configuration</h4>
+                        <p>Configure AI providers and log sources</p>
                     </a>
-                    <a href="/sources" class="action-card">
+                    <a href="/chat" class="action-card">
                         <div class="action-icon green">
-                            <i class="fas fa-plug"></i>
+                            <i class="fas fa-comments"></i>
                         </div>
-                        <h4>Manage Sources</h4>
-                        <p>Configure log sources and API keys</p>
+                        <h4>Chat Interface</h4>
+                        <p>Interactive log analysis assistant</p>
                     </a>
                     <a href="/evaluation" class="action-card">
                         <div class="action-icon orange">
@@ -207,6 +207,234 @@
             </div>
         </main>
     </div>
+
+    <style>
+        /* Enhanced Recent Analysis Sessions Styles */
+        .sessions-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .session-item {
+            background: var(--glass-medium);
+            backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .session-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+                0 4px 16px rgba(0, 0, 0, 0.12);
+            border-color: var(--color-teal);
+            background: var(--glass-strong);
+        }
+
+        .session-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.03) 100%);
+            color: var(--color-teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .session-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .session-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .session-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .session-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .session-meta i {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .anomaly-badge {
+            padding: 0.25rem 0.75rem;
+            background: var(--glass-light);
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .anomaly-badge.has-anomalies {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--color-coral);
+        }
+
+        .anomaly-badge.has-anomalies i {
+            color: var(--color-coral);
+        }
+
+        .session-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-badge.success {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--color-teal);
+        }
+
+        .status-badge.warning {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--color-coral);
+        }
+
+        .delete-btn-small {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            font-size: 0.875rem;
+        }
+
+        .delete-btn-small:hover {
+            background: rgba(251, 113, 133, 0.1);
+            color: var(--color-coral);
+            border-color: var(--color-coral);
+        }
+
+        .session-status > i {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Alert Items Enhancement */
+        .alert-item {
+            background: var(--glass-medium);
+            backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all var(--transition-base);
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .alert-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+                0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-severity {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .alert-severity.critical,
+        .alert-severity.high {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--color-coral);
+        }
+
+        .alert-severity.medium {
+            background: rgba(167, 139, 250, 0.15);
+            color: var(--color-lavender);
+        }
+
+        .alert-severity.low {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--color-teal);
+        }
+
+        .alert-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .alert-description {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .session-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .session-status {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .session-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
 
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>

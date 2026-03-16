@@ -334,6 +334,11 @@ function displayBatchResults(data) {
                 </div>
             </div>
         </div>
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <button class="btn btn-primary" onclick="viewAnalytics('${data.session_id}')" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                <i class="fas fa-chart-line"></i> View Analytics
+            </button>
+        </div>
     `;
     
     // Details
@@ -652,21 +657,46 @@ async function loadConfiguredAPISources() {
     const gridEl = document.getElementById('apiSourcesGrid');
     
     try {
-        const response = await fetch('/api/api-connections');
-        const data = await response.json();
+        // Fetch both API connections and network capture status
+        const [connectionsResponse, captureResponse] = await Promise.all([
+            fetch('/api/api-connections'),
+            fetch('/api/network-capture/status')
+        ]);
+        
+        const data = await connectionsResponse.json();
+        const captureStatus = await captureResponse.json();
         
         loadingEl.style.display = 'none';
         
-        if (!data.connections || data.connections.length === 0) {
-            noSourcesEl.style.display = 'block';
-            gridEl.style.display = 'none';
-            return;
+        const enabledConnections = (data.connections || []).filter(conn => conn.enabled);
+        const sources = [];
+        
+        // Add network capture source if running
+        if (captureStatus.running) {
+            const stats = captureStatus.stats || {};
+            sources.push({
+                id: 'network-capture',
+                type: 'network',
+                name: 'Network Packet Capture',
+                endpoint: `Capturing on ${stats.interface || 'unknown'}`,
+                status: 'Active',
+                meta: `${stats.packets_captured || 0} packets captured`
+            });
         }
         
-        // Filter only enabled connections
-        const enabledConnections = data.connections.filter(conn => conn.enabled);
+        // Add API connections
+        enabledConnections.forEach(conn => {
+            sources.push({
+                id: conn.connection_id,
+                type: conn.connection_type || 'system',
+                name: conn.name,
+                endpoint: conn.endpoint,
+                status: 'Active',
+                meta: conn.auth_type || 'none'
+            });
+        });
         
-        if (enabledConnections.length === 0) {
+        if (sources.length === 0) {
             noSourcesEl.style.display = 'block';
             gridEl.style.display = 'none';
             return;
@@ -675,17 +705,17 @@ async function loadConfiguredAPISources() {
         noSourcesEl.style.display = 'none';
         gridEl.style.display = 'grid';
         
-        gridEl.innerHTML = enabledConnections.map(conn => `
-            <div class="api-source-card" onclick="selectApiSource('${conn.connection_id}')">
-                <span class="source-type-badge source-type-${conn.connection_type || 'system'}">${conn.connection_type || 'system'}</span>
-                <div class="source-card-title">${conn.name}</div>
-                <div class="source-card-endpoint">${conn.endpoint}</div>
+        gridEl.innerHTML = sources.map(source => `
+            <div class="api-source-card" onclick="selectApiSource('${source.id}')">
+                <span class="source-type-badge source-type-${source.type}">${source.type}</span>
+                <div class="source-card-title">${source.name}</div>
+                <div class="source-card-endpoint">${source.endpoint}</div>
                 <div class="source-card-meta">
                     <div class="source-status">
                         <span class="status-dot"></span>
-                        <span>Active</span>
+                        <span>${source.status}</span>
                     </div>
-                    <span>${conn.auth_type || 'none'}</span>
+                    <span>${source.meta}</span>
                 </div>
             </div>
         `).join('');
@@ -695,21 +725,42 @@ async function loadConfiguredAPISources() {
         loadingEl.style.display = 'none';
         noSourcesEl.style.display = 'block';
         gridEl.style.display = 'none';
-        showToast('Failed to load API sources', 'error');
     }
 }
 
 // Select API source
 async function selectApiSource(connectionId) {
     try {
-        const response = await fetch('/api/api-connections');
-        const data = await response.json();
-        
-        selectedApiSource = data.connections.find(conn => conn.connection_id === connectionId);
-        
-        if (!selectedApiSource) {
-            showToast('API source not found', 'error');
-            return;
+        // Check if it's network capture
+        if (connectionId === 'network-capture') {
+            selectedApiSource = {
+                connection_id: 'network-capture',
+                name: 'Network Packet Capture',
+                connection_type: 'network',
+                endpoint: '/api/network-capture/logs',
+                auth_type: 'none'
+            };
+        } else {
+            const response = await fetch('/api/api-connections');
+            
+            if (!response.ok) {
+                console.error('Failed to fetch API connections');
+                return;
+            }
+            
+            const data = await response.json();
+            
+            if (!data.connections || data.connections.length === 0) {
+                console.log('No API connections available');
+                return;
+            }
+            
+            selectedApiSource = data.connections.find(conn => conn.connection_id === connectionId);
+            
+            if (!selectedApiSource) {
+                console.error('API source not found:', connectionId);
+                return;
+            }
         }
         
         // Update UI
@@ -718,25 +769,115 @@ async function selectApiSource(connectionId) {
         });
         event.target.closest('.api-source-card').classList.add('selected');
         
-        // Show streaming controls
-        document.getElementById('apiStreamingControls').style.display = 'block';
-        document.getElementById('selectedSourceName').textContent = selectedApiSource.name;
-        
-        // Set default time range (last 1 hour to now)
-        const now = new Date();
-        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-        
-        document.getElementById('apiEndTime').value = formatDateTimeLocal(now);
-        document.getElementById('apiStartTime').value = formatDateTimeLocal(oneHourAgo);
-        
-        // Reset streaming state
-        resetStreamingState();
+        // Show controls
+        const controlsEl = document.getElementById('selectedSourceControls');
+        if (controlsEl) {
+            controlsEl.style.display = 'block';
+            document.getElementById('selectedSourceName').textContent = selectedApiSource.name;
+        }
         
         showToast(`Selected: ${selectedApiSource.name}`, 'success');
         
     } catch (error) {
         console.error('Error selecting API source:', error);
         showToast('Failed to select API source', 'error');
+    }
+}
+
+// Fetch and analyze logs from API source
+async function fetchAndAnalyzeApiLogs() {
+    if (!selectedApiSource) {
+        showToast('Please select an API source first', 'warning');
+        return;
+    }
+
+    const logCount = parseInt(document.getElementById('apiLogCount').value) || 100;
+    const analysisMethod = document.getElementById('apiAnalysisMethod').value || 'agentic';
+    
+    try {
+        showToast('Fetching logs from API source...', 'info');
+        
+        let logs = [];
+        
+        // Fetch logs based on source type
+        if (selectedApiSource.connection_id === 'network-capture') {
+            const response = await fetch('/api/network-capture/logs');
+            const data = await response.json();
+            
+            if (!response.ok) {
+                showToast(data.error || 'Failed to fetch network capture logs', 'error');
+                return;
+            }
+            
+            logs = data.logs || [];
+        } else {
+            // Fetch from regular API connection
+            const response = await fetch(`/api/api-connections/${selectedApiSource.connection_id}/logs?limit=${logCount}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                showToast(data.error || 'Failed to fetch logs from API', 'error');
+                return;
+            }
+            
+            logs = data.logs || [];
+        }
+        
+        if (logs.length === 0) {
+            showToast('No logs found from this source. Please ensure network capture is running and capturing packets.', 'error');
+            return;
+        }
+        
+        showToast(`Fetched ${logs.length} logs. Preparing analysis...`, 'success');
+        
+        // Create a temporary file-like object for analysis
+        const logContent = logs.map(log => log.content || JSON.stringify(log)).join('\n');
+        const blob = new Blob([logContent], { type: 'text/plain' });
+        const file = new File([blob], `${selectedApiSource.name}_logs.txt`, { type: 'text/plain' });
+        
+        // Set as uploaded file
+        uploadedFile = file;
+        
+        // Update file info display in Upload section
+        const fileNameEl = document.getElementById('fileName');
+        const fileSizeEl = document.getElementById('fileSize');
+        const fileInfoEl = document.getElementById('fileInfo');
+        const uploadZoneEl = document.getElementById('uploadZone');
+        
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
+        if (fileInfoEl) fileInfoEl.style.display = 'flex';
+        if (uploadZoneEl) uploadZoneEl.style.display = 'none';
+        
+        // Set the analysis method dropdown in Configuration section
+        const batchSystemSelect = document.getElementById('batchSystemSelect');
+        if (batchSystemSelect) {
+            batchSystemSelect.value = analysisMethod;
+        }
+        
+        // Scroll to configuration section
+        const configSection = document.querySelector('.section');
+        if (configSection) {
+            configSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Auto-start analysis after a short delay
+        setTimeout(() => {
+            analyzeFile();
+        }, 800);
+        
+    } catch (error) {
+        console.error('Error fetching API logs:', error);
+        showToast(error.message || 'Failed to fetch logs from API source', 'error');
+    }
+}
+
+// Navigate to analysis history page with session ID
+function viewAnalytics(sessionId) {
+    if (sessionId) {
+        window.location.href = `/analysis-history?session=${sessionId}`;
+    } else {
+        window.location.href = '/analysis-history';
     }
 }
 

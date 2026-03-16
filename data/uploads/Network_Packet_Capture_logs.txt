@@ -48,10 +48,3 @@
 2026-03-16 22:20:59 - __main__ - INFO - Network capture started on en0
 2026-03-16 22:20:59 - __main__ - INFO - Network capture stopped
 2026-03-16 22:21:02 - __main__ - INFO - Network capture started on en0
-2026-03-16 22:21:19 - __main__ - INFO - Successfully read 50 logs from logs/web_app.log
-2026-03-16 22:21:19 - __main__ - INFO - Starting agentic analysis of 50 logs for session 6fca53b8-ebdf-472e-9c72-90675dc4fd96
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 10/50 logs analyzed (20%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 20/50 logs analyzed (40%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 30/50 logs analyzed (60%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 40/50 logs analyzed (80%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 50/50 logs analyzed (100%)

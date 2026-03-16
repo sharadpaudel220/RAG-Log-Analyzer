@@ -3,9 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic RAG Log Analyzer - API Configuration</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>API Configuration - Agentic RAG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-2026.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* API Config Specific Styles */
+        .config-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .config-card {
+            background: var(--glass-medium);
+            backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+                0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .config-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .config-icon.teal {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.03) 100%);
+            color: var(--color-teal);
+        }
+
+        .config-icon.lavender {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(167, 139, 250, 0.03) 100%);
+            color: var(--color-lavender);
+        }
+
+        .config-icon.coral {
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.15) 0%, rgba(251, 113, 133, 0.03) 100%);
+            color: var(--color-coral);
+        }
+
+        .config-card-title h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .config-card-title p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .provider-card {
+            background: var(--glass-light);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .provider-card:hover {
+            background: var(--glass-medium);
+            border-color: var(--color-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .provider-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(20, 184, 166, 0.02) 100%);
+            color: var(--color-teal);
+        }
+
+        .provider-card h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .provider-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .provider-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        .provider-features li {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 0.25rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+        }
+
+        .provider-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-teal);
+            font-weight: bold;
+        }
+
+        .provider-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .status-dot.configured {
+            background: var(--color-teal);
+            box-shadow: 0 0 8px rgba(20, 184, 166, 0.6);
+        }
+
+        .log-sources-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .source-card {
+            background: var(--glass-light);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: all var(--transition-base);
+        }
+
+        .source-card:hover {
+            border-color: var(--color-teal);
+        }
+
+        .source-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: background var(--transition-base);
+        }
+
+        .source-header:hover {
+            background: var(--glass-medium);
+        }
+
+        .source-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .source-icon-wrapper.system {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(20, 184, 166, 0.05) 100%);
+            color: var(--color-teal);
+        }
+
+        .source-icon-wrapper.network {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(167, 139, 250, 0.05) 100%);
+            color: var(--color-lavender);
+        }
+
+        .source-icon-wrapper.application {
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.2) 0%, rgba(251, 113, 133, 0.05) 100%);
+            color: var(--color-coral);
+        }
+
+        .source-icon-wrapper.security {
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.2) 0%, rgba(251, 113, 133, 0.05) 100%);
+            color: var(--color-coral);
+        }
+
+        .source-info {
+            flex: 1;
+        }
+
+        .source-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .source-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .source-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--glass-light);
+            color: var(--text-muted);
+        }
+
+        .status-badge.connected {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--color-teal);
+        }
+
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform var(--transition-base);
+        }
+
+        .expand-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .source-content {
+            padding: 1.25rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--glass-border);
+            display: none;
+        }
+
+        .source-content.open {
+            display: block;
+        }
+
+        .connection-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .connection-item {
+            background: var(--glass-medium);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connection-details h5 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .connection-details p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .connection-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .btn-icon:hover {
+            background: var(--glass-medium);
+            color: var(--text-primary);
+            border-color: var(--color-teal);
+        }
+
+        .empty-connections {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--glass-light);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+        }
+
+        .modal-close:hover {
+            background: var(--glass-medium);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--glass-light);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all var(--transition-base);
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--color-teal);
+            background: var(--glass-medium);
+        }
+
+        .form-hint {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.375rem;
+        }
+    </style>
 </head>
 <body>
     <div id="toastContainer" class="toast-container"></div>
@@ -44,8 +485,8 @@
             </nav>
             <div class="sidebar-footer">
                 <div class="status-indicator">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">Checking...</span>
+                    <span class="status-dot online"></span>
+                    <span>System Healthy</span>
                 </div>
             </div>
         </aside>
@@ -56,295 +497,204 @@
             <header class="header">
                 <div class="header-title">
                     <h2>API Configuration</h2>
-                    <p class="header-subtitle">Connect to external log sources and fetch logs via API</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-primary" onclick="addAPIConnection()">
-                        <i class="fas fa-plus"></i> Add Connection
-                    </button>
+                    <p class="header-subtitle">Connect to external log sources and configure AI providers</p>
                 </div>
             </header>
 
-            <!-- API Connections -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-link"></i> Configured API Connections</h3>
-                </div>
-                <div class="api-connections-grid" id="apiConnectionsGrid">
-                    <div class="empty-state">
-                        <i class="fas fa-plug"></i>
-                        <p>No API connections configured. Click "Add Connection" to get started!</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BYOK AI API Configuration -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-robot"></i> BYOK AI API Configuration</h3>
-                    <p class="section-subtitle">Configure your own AI provider API keys (OpenAI, Claude, Gemini)</p>
-                </div>
-                <div class="api-types-grid">
-                    <div class="api-type-card clickable" onclick="configureAIProvider('openai')">
-                        <div class="api-type-icon">
-                            <i class="fas fa-brain"></i>
+            <div class="config-grid">
+                <!-- AI Providers Section -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-icon teal">
+                            <i class="fas fa-robot"></i>
                         </div>
-                        <h4>OpenAI (ChatGPT)</h4>
-                        <p>Use GPT-4, GPT-3.5, or other OpenAI models</p>
-                        <ul>
-                            <li>GPT-4 Turbo</li>
-                            <li>GPT-3.5 Turbo</li>
-                            <li>Custom base URL support</li>
-                        </ul>
-                        <div class="config-status" id="openai-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
-                    <div class="api-type-card clickable" onclick="configureAIProvider('anthropic')">
-                        <div class="api-type-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <h4>Anthropic (Claude)</h4>
-                        <p>Use Claude 3 Opus, Sonnet, or Haiku</p>
-                        <ul>
-                            <li>Claude 3.5 Sonnet</li>
-                            <li>Claude 3 Opus</li>
-                            <li>Advanced reasoning</li>
-                        </ul>
-                        <div class="config-status" id="anthropic-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
-                    <div class="api-type-card clickable" onclick="configureAIProvider('gemini')">
-                        <div class="api-type-icon">
-                            <i class="fab fa-google"></i>
-                        </div>
-                        <h4>Google Gemini</h4>
-                        <p>Use Gemini Pro or Gemini Flash</p>
-                        <ul>
-                            <li>Gemini 1.5 Pro</li>
-                            <li>Gemini 1.5 Flash</li>
-                            <li>Multimodal support</li>
-                        </ul>
-                        <div class="config-status" id="gemini-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Distributed Log Sources via API -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-plug"></i> Distributed Log Sources</h3>
-                    <p class="section-subtitle">Configure API connections for different log types from distributed systems</p>
-                </div>
-                
-                <div class="log-sources-container">
-                    <!-- System Logs -->
-                    <div class="log-source-card">
-                        <div class="log-source-header" onclick="toggleLogSource('system')">
-                            <div class="log-source-icon system">
-                                <i class="fas fa-server"></i>
-                            </div>
-                            <div class="log-source-info">
-                                <h4>System Logs</h4>
-                                <p>OS events, kernel messages, system services</p>
-                            </div>
-                            <div class="log-source-status">
-                                <span class="status-badge" id="system-status">Not Connected</span>
-                                <i class="fas fa-chevron-down toggle-icon" id="system-toggle"></i>
-                            </div>
-                        </div>
-                        <div class="log-source-content" id="system-content" style="display: none;">
-                            <button class="btn btn-primary" onclick="configureLogAPI('system')">
-                                <i class="fas fa-plus"></i> Configure API Connection
-                            </button>
-                            <div id="system-connections" class="connections-list"></div>
+                        <div class="config-card-title">
+                            <h3>AI Provider Configuration</h3>
+                            <p>Configure your own AI provider API keys (OpenAI, Claude, Gemini)</p>
                         </div>
                     </div>
 
-                    <!-- Network Logs -->
-                    <div class="log-source-card">
-                        <div class="log-source-header" onclick="toggleLogSource('network')">
-                            <div class="log-source-icon network">
-                                <i class="fas fa-network-wired"></i>
+                    <div class="providers-grid">
+                        <!-- OpenAI -->
+                        <div class="provider-card" onclick="configureAIProvider('openai')">
+                            <div class="provider-icon">
+                                <i class="fas fa-brain"></i>
                             </div>
-                            <div class="log-source-info">
-                                <h4>Network Logs</h4>
-                                <p>Firewall, router, switch, VPN logs</p>
-                            </div>
-                            <div class="log-source-status">
-                                <span class="status-badge" id="network-status">Not Connected</span>
-                                <i class="fas fa-chevron-down toggle-icon" id="network-toggle"></i>
+                            <h4>OpenAI</h4>
+                            <p>GPT-4, GPT-3.5, and other OpenAI models</p>
+                            <ul class="provider-features">
+                                <li>GPT-4 Turbo</li>
+                                <li>GPT-3.5 Turbo</li>
+                                <li>Custom base URL</li>
+                            </ul>
+                            <div class="provider-status">
+                                <span class="status-dot" id="openai-dot"></span>
+                                <span id="openai-status">Not Configured</span>
                             </div>
                         </div>
-                        <div class="log-source-content" id="network-content" style="display: none;">
-                            <button class="btn btn-primary" onclick="configureLogAPI('network')">
-                                <i class="fas fa-plus"></i> Configure API Connection
-                            </button>
-                            <div id="network-connections" class="connections-list"></div>
-                        </div>
-                    </div>
 
-                    <!-- Application Logs -->
-                    <div class="log-source-card">
-                        <div class="log-source-header" onclick="toggleLogSource('application')">
-                            <div class="log-source-icon application">
-                                <i class="fas fa-code"></i>
+                        <!-- Anthropic -->
+                        <div class="provider-card" onclick="configureAIProvider('anthropic')">
+                            <div class="provider-icon" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(167, 139, 250, 0.02) 100%); color: var(--color-lavender);">
+                                <i class="fas fa-comments"></i>
                             </div>
-                            <div class="log-source-info">
-                                <h4>Application Logs</h4>
-                                <p>Web apps, microservices, containers</p>
-                            </div>
-                            <div class="log-source-status">
-                                <span class="status-badge" id="application-status">Not Connected</span>
-                                <i class="fas fa-chevron-down toggle-icon" id="application-toggle"></i>
+                            <h4>Anthropic Claude</h4>
+                            <p>Claude 3 Opus, Sonnet, and Haiku</p>
+                            <ul class="provider-features">
+                                <li>Claude 3.5 Sonnet</li>
+                                <li>Claude 3 Opus</li>
+                                <li>Advanced reasoning</li>
+                            </ul>
+                            <div class="provider-status">
+                                <span class="status-dot" id="anthropic-dot"></span>
+                                <span id="anthropic-status">Not Configured</span>
                             </div>
                         </div>
-                        <div class="log-source-content" id="application-content" style="display: none;">
-                            <button class="btn btn-primary" onclick="configureLogAPI('application')">
-                                <i class="fas fa-plus"></i> Configure API Connection
-                            </button>
-                            <div id="application-connections" class="connections-list"></div>
-                        </div>
-                    </div>
 
-                    <!-- Security Audit Logs -->
-                    <div class="log-source-card">
-                        <div class="log-source-header" onclick="toggleLogSource('security')">
-                            <div class="log-source-icon security">
-                                <i class="fas fa-shield-alt"></i>
+                        <!-- Google Gemini -->
+                        <div class="provider-card" onclick="configureAIProvider('gemini')">
+                            <div class="provider-icon" style="background: linear-gradient(135deg, rgba(251, 113, 133, 0.1) 0%, rgba(251, 113, 133, 0.02) 100%); color: var(--color-coral);">
+                                <i class="fab fa-google"></i>
                             </div>
-                            <div class="log-source-info">
-                                <h4>Security Audit Logs</h4>
-                                <p>Authentication, authorization, security events</p>
+                            <h4>Google Gemini</h4>
+                            <p>Gemini Pro and Gemini Flash</p>
+                            <ul class="provider-features">
+                                <li>Gemini 1.5 Pro</li>
+                                <li>Gemini 1.5 Flash</li>
+                                <li>Multimodal support</li>
+                            </ul>
+                            <div class="provider-status">
+                                <span class="status-dot" id="gemini-dot"></span>
+                                <span id="gemini-status">Not Configured</span>
                             </div>
-                            <div class="log-source-status">
-                                <span class="status-badge" id="security-status">Not Connected</span>
-                                <i class="fas fa-chevron-down toggle-icon" id="security-toggle"></i>
-                            </div>
-                        </div>
-                        <div class="log-source-content" id="security-content" style="display: none;">
-                            <button class="btn btn-primary" onclick="configureLogAPI('security')">
-                                <i class="fas fa-plus"></i> Configure API Connection
-                            </button>
-                            <div id="security-connections" class="connections-list"></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Cloud & Enterprise Log Sources -->
-            <div class="section">
-                <div class="section-header collapsible-header" onclick="toggleCloudSection()">
-                    <div>
-                        <h3><i class="fas fa-cloud"></i> Cloud & Enterprise Log Sources</h3>
-                        <p class="section-subtitle">Connect to AWS, Azure, Splunk, Elasticsearch and other enterprise platforms</p>
-                    </div>
-                    <i class="fas fa-chevron-down toggle-icon" id="cloud-section-toggle"></i>
-                </div>
-                
-                <div class="cloud-sources-grid" id="cloudSourcesGrid" style="display: none;">
-                    <!-- AWS CloudWatch -->
-                    <div class="cloud-source-card" onclick="configureCloudAPI('aws-cloudwatch')">
-                        <div class="cloud-source-icon aws">
-                            <i class="fab fa-aws"></i>
+                <!-- Log Sources Section -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-icon lavender">
+                            <i class="fas fa-server"></i>
                         </div>
-                        <h4>AWS CloudWatch</h4>
-                        <p>Fetch logs from CloudWatch</p>
-                        <ul>
-                            <li>Log groups/streams</li>
-                            <li>Filter patterns</li>
-                            <li>IAM authentication</li>
-                        </ul>
-                        <div class="config-status" id="aws-status">
-                            <i class="fas fa-circle"></i> Not Configured
+                        <div class="config-card-title">
+                            <h3>Log Source Connections</h3>
+                            <p>Configure API connections for different log types</p>
                         </div>
                     </div>
 
-                    <!-- Azure Monitor -->
-                    <div class="cloud-source-card" onclick="configureCloudAPI('azure-monitor')">
-                        <div class="cloud-source-icon azure">
-                            <i class="fab fa-microsoft"></i>
+                    <div class="log-sources-grid">
+                        <!-- System Logs -->
+                        <div class="source-card">
+                            <div class="source-header" onclick="toggleSource('system')">
+                                <div class="source-icon-wrapper system">
+                                    <i class="fas fa-server"></i>
+                                </div>
+                                <div class="source-info">
+                                    <h4>System Logs</h4>
+                                    <p>OS events, kernel messages, system services</p>
+                                </div>
+                                <div class="source-status">
+                                    <span class="status-badge" id="system-badge">Not Connected</span>
+                                    <i class="fas fa-chevron-down expand-icon" id="system-icon"></i>
+                                </div>
+                            </div>
+                            <div class="source-content" id="system-content">
+                                <button class="btn btn-primary" onclick="addConnection('system')">
+                                    <i class="fas fa-plus"></i> Add Connection
+                                </button>
+                                <div class="connection-list" id="system-connections">
+                                    <div class="empty-connections">
+                                        No connections configured
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h4>Azure Monitor</h4>
-                        <p>Query Azure Monitor logs</p>
-                        <ul>
-                            <li>KQL queries</li>
-                            <li>Log Analytics</li>
-                            <li>OAuth authentication</li>
-                        </ul>
-                        <div class="config-status" id="azure-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
 
-                    <!-- Splunk -->
-                    <div class="cloud-source-card" onclick="configureCloudAPI('splunk')">
-                        <div class="cloud-source-icon splunk">
-                            <i class="fas fa-database"></i>
+                        <!-- Network Logs -->
+                        <div class="source-card">
+                            <div class="source-header" onclick="toggleSource('network')">
+                                <div class="source-icon-wrapper network">
+                                    <i class="fas fa-network-wired"></i>
+                                </div>
+                                <div class="source-info">
+                                    <h4>Network Logs</h4>
+                                    <p>Firewall, router, switch, VPN logs</p>
+                                </div>
+                                <div class="source-status">
+                                    <span class="status-badge" id="network-badge">Not Connected</span>
+                                    <i class="fas fa-chevron-down expand-icon" id="network-icon"></i>
+                                </div>
+                            </div>
+                            <div class="source-content" id="network-content">
+                                <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                                    <button class="btn btn-primary" onclick="addConnection('network')">
+                                        <i class="fas fa-plus"></i> Add Connection
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="openNetworkCaptureModal()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                        <i class="fas fa-network-wired"></i> Add Network Capture
+                                    </button>
+                                </div>
+                                <div class="connection-list" id="network-connections">
+                                    <div class="empty-connections">
+                                        No connections configured
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h4>Splunk</h4>
-                        <p>Fetch logs from Splunk</p>
-                        <ul>
-                            <li>Search API</li>
-                            <li>SPL queries</li>
-                            <li>Real-time search</li>
-                        </ul>
-                        <div class="config-status" id="splunk-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
 
-                    <!-- Elasticsearch -->
-                    <div class="cloud-source-card" onclick="configureCloudAPI('elasticsearch')">
-                        <div class="cloud-source-icon elasticsearch">
-                            <i class="fas fa-search"></i>
+                        <!-- Application Logs -->
+                        <div class="source-card">
+                            <div class="source-header" onclick="toggleSource('application')">
+                                <div class="source-icon-wrapper application">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <div class="source-info">
+                                    <h4>Application Logs</h4>
+                                    <p>Web apps, microservices, containers</p>
+                                </div>
+                                <div class="source-status">
+                                    <span class="status-badge" id="application-badge">Not Connected</span>
+                                    <i class="fas fa-chevron-down expand-icon" id="application-icon"></i>
+                                </div>
+                            </div>
+                            <div class="source-content" id="application-content">
+                                <button class="btn btn-primary" onclick="addConnection('application')">
+                                    <i class="fas fa-plus"></i> Add Connection
+                                </button>
+                                <div class="connection-list" id="application-connections">
+                                    <div class="empty-connections">
+                                        No connections configured
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h4>Elasticsearch</h4>
-                        <p>Query logs from Elasticsearch</p>
-                        <ul>
-                            <li>Query DSL support</li>
-                            <li>Index patterns</li>
-                            <li>Aggregations</li>
-                        </ul>
-                        <div class="config-status" id="elasticsearch-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
 
-                    <!-- Datadog -->
-                    <div class="cloud-source-card" onclick="configureCloudAPI('datadog')">
-                        <div class="cloud-source-icon datadog">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h4>Datadog</h4>
-                        <p>Fetch logs from Datadog</p>
-                        <ul>
-                            <li>Logs API</li>
-                            <li>Query syntax</li>
-                            <li>API key auth</li>
-                        </ul>
-                        <div class="config-status" id="datadog-status">
-                            <i class="fas fa-circle"></i> Not Configured
-                        </div>
-                    </div>
-
-                    <!-- REST API -->
-                    <div class="cloud-source-card" onclick="configureCloudAPI('rest-api')">
-                        <div class="cloud-source-icon rest">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <h4>REST API</h4>
-                        <p>Generic REST API support</p>
-                        <ul>
-                            <li>Custom endpoints</li>
-                            <li>Flexible authentication</li>
-                            <li>JSON/XML parsing</li>
-                        </ul>
-                        <div class="config-status" id="rest-status">
-                            <i class="fas fa-circle"></i> Not Configured
+                        <!-- Security Logs -->
+                        <div class="source-card">
+                            <div class="source-header" onclick="toggleSource('security')">
+                                <div class="source-icon-wrapper security">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="source-info">
+                                    <h4>Security Audit Logs</h4>
+                                    <p>Authentication, authorization, security events</p>
+                                </div>
+                                <div class="source-status">
+                                    <span class="status-badge" id="security-badge">Not Connected</span>
+                                    <i class="fas fa-chevron-down expand-icon" id="security-icon"></i>
+                                </div>
+                            </div>
+                            <div class="source-content" id="security-content">
+                                <button class="btn btn-primary" onclick="addConnection('security')">
+                                    <i class="fas fa-plus"></i> Add Connection
+                                </button>
+                                <div class="connection-list" id="security-connections">
+                                    <div class="empty-connections">
+                                        No connections configured
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -352,62 +702,12 @@
         </main>
     </div>
 
-    <!-- Configure Log API Modal -->
-    <div id="configureLogAPIModal" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h3 id="logAPIModalTitle">Configure API Connection</h3>
-                <button class="modal-close" onclick="closeLogAPIModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="logAPIForm">
-                    <input type="hidden" id="logAPIType">
-                    <input type="hidden" id="logSourceType">
-                    <div class="form-group">
-                        <label>Connection Name</label>
-                        <input type="text" id="logAPIName" required placeholder="e.g., Production System Logs">
-                    </div>
-                    <div class="form-group">
-                        <label>API Endpoint/URL</label>
-                        <input type="text" id="logAPIEndpoint" required placeholder="https://api.example.com/logs">
-                    </div>
-                    <div class="form-group">
-                        <label>Authentication Type</label>
-                        <select id="logAPIAuthType" onchange="updateLogAPIAuthFields()">
-                            <option value="none">None</option>
-                            <option value="basic">Basic Auth</option>
-                            <option value="bearer">Bearer Token</option>
-                            <option value="apikey">API Key</option>
-                            <option value="oauth">OAuth 2.0</option>
-                        </select>
-                    </div>
-                    <div id="logAPIAuthFields">
-                        <!-- Dynamic auth fields -->
-                    </div>
-                    <div class="form-group">
-                        <label>Fetch Interval (minutes)</label>
-                        <input type="number" id="logAPIInterval" value="5" min="1" placeholder="5">
-                    </div>
-                    <div class="form-group">
-                        <button type="button" class="btn btn-secondary" onclick="testLogAPIConnection()">
-                            <i class="fas fa-plug"></i> Test Connection
-                        </button>
-                        <span id="logAPITestResult"></span>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeLogAPIModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveLogAPIConnection()">Save Connection</button>
-            </div>
-        </div>
-    </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
 
-    <!-- Configure AI Provider Modal -->
-    <div id="configureAIModal" class="modal">
-        <div class="modal-content modal-medium">
+    <!-- AI Provider Modal -->
+    <div id="aiProviderModal" class="modal">
+        <div class="modal-content">
             <div class="modal-header">
                 <h3 id="aiModalTitle">Configure AI Provider</h3>
                 <button class="modal-close" onclick="closeAIModal()">
@@ -419,24 +719,18 @@
                     <input type="hidden" id="aiProvider">
                     <div class="form-group">
                         <label>API Key</label>
-                        <input type="password" id="aiAPIKey" required placeholder="Enter your API key">
+                        <input type="password" id="aiAPIKey" class="form-input" placeholder="Enter your API key" required>
                         <small class="form-hint">Your API key is stored securely and never shared</small>
                     </div>
                     <div class="form-group">
-                        <label>Model</label>
-                        <input type="text" id="aiModel" required placeholder="e.g., gpt-4o-mini">
+                        <label>Model Name</label>
+                        <input type="text" id="aiModel" class="form-input" placeholder="e.g., gpt-4o-mini" required>
                         <small class="form-hint" id="aiModelHint">Enter the model name you want to use</small>
                     </div>
                     <div class="form-group">
                         <label>Base URL (Optional)</label>
-                        <input type="text" id="aiBaseURL" placeholder="Leave empty for default">
+                        <input type="text" id="aiBaseURL" class="form-input" placeholder="Leave empty for default">
                         <small class="form-hint">Custom API endpoint (advanced users only)</small>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="aiSetAsDefault">
-                            Set as active provider
-                        </label>
                     </div>
                     <div class="form-group">
                         <button type="button" class="btn btn-secondary" onclick="testAIConnection()">
@@ -453,327 +747,147 @@
         </div>
     </div>
 
+    <!-- Connection Modal -->
+    <div id="connectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="connectionModalTitle">Add Connection</h3>
+                <button class="modal-close" onclick="closeConnectionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="connectionForm">
+                    <input type="hidden" id="connectionType">
+                    <div class="form-group">
+                        <label>Connection Name</label>
+                        <input type="text" id="connectionName" class="form-input" placeholder="e.g., Production System Logs" required>
+                    </div>
+                    <div class="form-group">
+                        <label>API Endpoint URL</label>
+                        <input type="text" id="connectionEndpoint" class="form-input" placeholder="https://api.example.com/logs" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Authentication Type</label>
+                        <select id="connectionAuthType" class="form-select" onchange="updateAuthFields()">
+                            <option value="none">None</option>
+                            <option value="basic">Basic Auth</option>
+                            <option value="bearer">Bearer Token</option>
+                            <option value="apikey">API Key</option>
+                        </select>
+                    </div>
+                    <div id="authFields"></div>
+                    <div class="form-group">
+                        <label>Fetch Interval (minutes)</label>
+                        <input type="number" id="connectionInterval" class="form-input" value="5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="testConnection()">
+                            <i class="fas fa-plug"></i> Test Connection
+                        </button>
+                        <span id="connectionTestResult"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeConnectionModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveConnection()">Save Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Capture Modal -->
+    <div id="networkCaptureModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Network Packet Capture Settings</h3>
+                <button class="modal-close" onclick="closeNetworkCaptureModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; gap: 12px; align-items: start;">
+                    <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 20px; margin-top: 2px;"></i>
+                    <div>
+                        <strong style="color: #fff; display: block; margin-bottom: 5px;">Real-time network traffic capture</strong>
+                        <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.5;">Captures live network packets and converts them to structured logs. Requires sudo/admin privileges.</p>
+                    </div>
+                </div>
+                <form id="networkCaptureForm">
+                    <div class="form-group">
+                        <label>Connection Name</label>
+                        <input type="text" id="captureName" class="form-input" value="Network Packet Capture" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Network Interface</label>
+                        <select id="captureInterface" class="form-input">
+                            <option value="en0">en0 (WiFi - Primary)</option>
+                            <option value="en1">en1 (Ethernet/Secondary)</option>
+                            <option value="en2">en2 (USB/Thunderbolt)</option>
+                            <option value="any">any (All Interfaces)</option>
+                        </select>
+                        <small style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 5px; display: block;">
+                            Use 'en0' for WiFi on macOS. Run <code>ifconfig -l</code> to see all interfaces.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Traffic Filter</label>
+                        <select id="captureFilterPreset" class="form-input" onchange="updateCaptureFilterField()">
+                            <option value="all">All Traffic (TCP/UDP/ICMP)</option>
+                            <option value="web">Web Traffic Only (HTTP/HTTPS)</option>
+                            <option value="dns">DNS Queries Only</option>
+                            <option value="custom">Custom Filter</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="captureCustomFilterGroup" style="display: none;">
+                        <label>Custom tcpdump Filter</label>
+                        <input type="text" id="captureFilterCustom" class="form-input" placeholder="e.g., port 80 or port 443">
+                        <small style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 5px; display: block;">
+                            Use tcpdump filter syntax. Examples: "port 53", "host 8.8.8.8", "not net 192.168.1.0/24"
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="captureAutoAnalyze" checked style="width: auto;">
+                            Auto-analyze captured logs
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="captureStoreLogs" checked style="width: auto;">
+                            Store raw logs to file
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeNetworkCaptureModal()">Cancel</button>
+                <button class="btn btn-secondary" onclick="testNetworkCapture()" id="testCaptureBtn">
+                    <i class="fas fa-vial"></i> Test Capture
+                </button>
+                <button class="btn btn-primary" onclick="startNetworkCapture()" id="startCaptureBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="fas fa-play"></i> Start Capture
+                </button>
+                <button class="btn btn-danger" onclick="stopNetworkCapture()" id="stopCaptureBtn" style="display: none; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <i class="fas fa-stop"></i> Stop Capture
+                </button>
+            </div>
+        </div>
+    </div>
+
     <style>
-        .log-sources-container {
-            display: grid;
-            gap: 15px;
-        }
-
-        .log-source-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .log-source-card:hover {
-            border-color: rgba(139, 92, 246, 0.3);
-        }
-
-        .log-source-header {
-            display: flex;
-            align-items: center;
-            padding: 18px;
-            cursor: pointer;
-            gap: 15px;
-        }
-
-        .log-source-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .log-source-icon.system {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-
-        .log-source-icon.network {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .log-source-icon.application {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .log-source-icon.security {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .log-source-info {
-            flex: 1;
-        }
-
-        .log-source-info h4 {
-            margin: 0 0 4px 0;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .log-source-info p {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-        }
-
-        .log-source-status {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .status-badge.connected {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-        }
-
-        .toggle-icon {
-            color: rgba(255, 255, 255, 0.4);
-            transition: transform 0.3s ease;
-        }
-
-        .toggle-icon.open {
-            transform: rotate(180deg);
-        }
-
-        .log-source-content {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 18px;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .connections-list {
-            margin-top: 15px;
-        }
-
-        .connection-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .connection-info h5 {
-            margin: 0 0 4px 0;
-            color: #fff;
-            font-size: 14px;
-        }
-
-        .connection-info p {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 12px;
-        }
-
-        .connection-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-icon {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.6);
-            padding: 6px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-icon:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .empty-connections {
-            text-align: center;
-            padding: 20px;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 13px;
-        }
-
-        /* Collapsible Section */
-        .collapsible-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            padding: 10px 0;
-            transition: all 0.3s ease;
-        }
-
-        .collapsible-header:hover {
-            opacity: 0.8;
-        }
-
-        .collapsible-header .toggle-icon {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.6);
-            transition: transform 0.3s ease;
-        }
-
-        .collapsible-header .toggle-icon.open {
-            transform: rotate(180deg);
-        }
-
-        /* Cloud Sources Grid */
-        .cloud-sources-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .cloud-source-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .cloud-source-card:hover {
-            border-color: rgba(139, 92, 246, 0.5);
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-        }
-
-        .cloud-source-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-
-        .cloud-source-icon.aws {
-            background: linear-gradient(135deg, #ff9900 0%, #ff6600 100%);
-            color: white;
-        }
-
-        .cloud-source-icon.azure {
-            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
-            color: white;
-        }
-
-        .cloud-source-icon.splunk {
-            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-            color: #00c853;
-        }
-
-        .cloud-source-icon.elasticsearch {
-            background: linear-gradient(135deg, #005571 0%, #003d4f 100%);
-            color: #fec514;
-        }
-
-        .cloud-source-icon.datadog {
-            background: linear-gradient(135deg, #632ca6 0%, #4b1f7f 100%);
-            color: white;
-        }
-
-        .cloud-source-icon.rest {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: white;
-        }
-
-        .cloud-source-card h4 {
-            margin: 0 0 8px 0;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .cloud-source-card p {
-            margin: 0 0 12px 0;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-        }
-
-        .cloud-source-card ul {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-        }
-
-        .cloud-source-card ul li {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 12px;
-            padding: 4px 0;
-            padding-left: 16px;
-            position: relative;
-        }
-
-        .cloud-source-card ul li:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: #8b5cf6;
-        }
-
-        .cloud-source-card .config-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .cloud-source-card .config-status i {
-            font-size: 8px;
-        }
-
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            z-index: 10000;
-            pointer-events: none;
-        }
-
         .toast {
-            pointer-events: auto;
-            min-width: 320px;
-            max-width: 420px;
-            background: rgba(30, 41, 59, 0.98);
+            min-width: 300px;
+            background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            align-items: start;
+            gap: 12px;
             animation: slideIn 0.3s ease-out;
         }
 
@@ -799,23 +913,40 @@
             }
         }
 
-        .toast i:first-child {
-            font-size: 1.25rem;
-            flex-shrink: 0;
+        .toast.hiding {
+            animation: slideOut 0.3s ease-in forwards;
         }
 
-        .toast span {
+        .toast-icon {
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .toast-content {
             flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
             color: #fff;
-            font-size: 0.875rem;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
         }
 
         .toast-close {
-            background: transparent;
+            background: none;
             border: none;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             cursor: pointer;
-            padding: 0.25rem;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -828,96 +959,385 @@
             color: #fff;
         }
 
-        .toast-success {
-            border-left: 4px solid #10b981;
+        .toast.success {
+            border-left: 3px solid #10b981;
         }
 
-        .toast-success i:first-child {
+        .toast.success .toast-icon {
             color: #10b981;
         }
 
-        .toast-error {
-            border-left: 4px solid #ef4444;
+        .toast.error {
+            border-left: 3px solid #ef4444;
         }
 
-        .toast-error i:first-child {
+        .toast.error .toast-icon {
             color: #ef4444;
         }
 
-        .toast-warning {
-            border-left: 4px solid #f59e0b;
+        .toast.info {
+            border-left: 3px solid #3b82f6;
         }
 
-        .toast-warning i:first-child {
-            color: #f59e0b;
-        }
-
-        .toast-info {
-            border-left: 4px solid #3b82f6;
-        }
-
-        .toast-info i:first-child {
+        .toast.info .toast-icon {
             color: #3b82f6;
         }
 
-        .toast-confirm {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 1rem;
-            border-left: 4px solid #f59e0b;
+        .toast.warning {
+            border-left: 3px solid #f59e0b;
         }
 
-        .toast-content {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .toast-content i {
+        .toast.warning .toast-icon {
             color: #f59e0b;
-            font-size: 1.25rem;
-        }
-
-        .toast-content span {
-            color: #fff;
-            font-size: 0.875rem;
-        }
-
-        .toast-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-        }
-
-        .toast-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-        }
-
-        .toast-btn-cancel {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .toast-btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .toast-btn-confirm {
-            background: #f59e0b;
-            color: #fff;
-        }
-
-        .toast-btn-confirm:hover {
-            background: #d97706;
         }
     </style>
 
     <script src="{{ url_for('static', filename='js/api_config.js') }}"></script>
+    <script>
+        // Toast Notification System
+        function showToast(message, type = 'info', title = '', duration = 5000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            const titles = {
+                success: title || 'Success',
+                error: title || 'Error',
+                warning: title || 'Warning',
+                info: title || 'Info'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[type]}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after duration
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Toggle source expansion
+        function toggleSource(sourceType) {
+            const content = document.getElementById(`${sourceType}-content`);
+            const icon = document.getElementById(`${sourceType}-icon`);
+            
+            content.classList.toggle('open');
+            icon.classList.toggle('open');
+        }
+
+        // Configure AI Provider
+        function configureAIProvider(provider) {
+            document.getElementById('aiProvider').value = provider;
+            document.getElementById('aiModalTitle').textContent = `Configure ${provider.charAt(0).toUpperCase() + provider.slice(1)}`;
+            document.getElementById('aiProviderModal').classList.add('active');
+        }
+
+        function closeAIModal() {
+            document.getElementById('aiProviderModal').classList.remove('active');
+        }
+
+        // Add Connection
+        function addConnection(type) {
+            document.getElementById('connectionType').value = type;
+            document.getElementById('connectionModalTitle').textContent = `Add ${type.charAt(0).toUpperCase() + type.slice(1)} Connection`;
+            document.getElementById('connectionModal').classList.add('active');
+        }
+
+        function closeConnectionModal() {
+            document.getElementById('connectionModal').classList.remove('active');
+        }
+
+        // Update auth fields based on selection
+        function updateAuthFields() {
+            const authType = document.getElementById('connectionAuthType').value;
+            const authFields = document.getElementById('authFields');
+            
+            if (authType === 'basic') {
+                authFields.innerHTML = `
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="authUsername" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="authPassword" class="form-input" required>
+                    </div>
+                `;
+            } else if (authType === 'bearer' || authType === 'apikey') {
+                authFields.innerHTML = `
+                    <div class="form-group">
+                        <label>${authType === 'bearer' ? 'Bearer Token' : 'API Key'}</label>
+                        <input type="password" id="authToken" class="form-input" required>
+                    </div>
+                `;
+            } else {
+                authFields.innerHTML = '';
+            }
+        }
+
+        // Placeholder functions
+        function testAIConnection() {
+            console.log('Testing AI connection...');
+        }
+
+        function saveAIProvider() {
+            console.log('Saving AI provider...');
+            closeAIModal();
+        }
+
+        function testConnection() {
+            console.log('Testing connection...');
+        }
+
+        function saveConnection() {
+            console.log('Saving connection...');
+            closeConnectionModal();
+        }
+
+        // Network Capture Modal Functions
+        async function openNetworkCaptureModal() {
+            document.getElementById('networkCaptureModal').classList.add('active');
+            await checkCaptureStatus();
+        }
+
+        function closeNetworkCaptureModal() {
+            document.getElementById('networkCaptureModal').classList.remove('active');
+        }
+
+        async function checkCaptureStatus() {
+            try {
+                const response = await fetch('/api/network-capture/status');
+                const result = await response.json();
+                
+                const startBtn = document.getElementById('startCaptureBtn');
+                const stopBtn = document.getElementById('stopCaptureBtn');
+                const testBtn = document.getElementById('testCaptureBtn');
+                
+                if (result.running) {
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-flex';
+                    testBtn.disabled = true;
+                } else {
+                    startBtn.style.display = 'inline-flex';
+                    stopBtn.style.display = 'none';
+                    testBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error checking capture status:', error);
+            }
+        }
+
+        function updateCaptureFilterField() {
+            const preset = document.getElementById('captureFilterPreset').value;
+            const customGroup = document.getElementById('captureCustomFilterGroup');
+            
+            if (preset === 'custom') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+
+        async function testNetworkCapture() {
+            const interface_ = document.getElementById('captureInterface').value;
+            
+            try {
+                const response = await fetch('/api/network-capture/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interface: interface_ })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showToast(result.message, 'success', 'Test Successful');
+                } else {
+                    showToast(result.error || 'Test failed', 'error', 'Test Failed');
+                }
+            } catch (error) {
+                showToast(error.message, 'error', 'Connection Error');
+            }
+        }
+
+        async function startNetworkCapture() {
+            const preset = document.getElementById('captureFilterPreset').value;
+            let filter;
+            
+            switch (preset) {
+                case 'all':
+                    filter = 'tcp or udp or icmp';
+                    break;
+                case 'web':
+                    filter = 'port 80 or port 443';
+                    break;
+                case 'dns':
+                    filter = 'port 53';
+                    break;
+                case 'custom':
+                    filter = document.getElementById('captureFilterCustom').value || 'tcp or udp or icmp';
+                    break;
+                default:
+                    filter = 'tcp or udp or icmp';
+            }
+            
+            const data = {
+                name: document.getElementById('captureName').value,
+                interface: document.getElementById('captureInterface').value,
+                filter: filter,
+                auto_analyze: document.getElementById('captureAutoAnalyze').checked,
+                store_logs: document.getElementById('captureStoreLogs').checked
+            };
+            
+            try {
+                const response = await fetch('/api/network-capture/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showToast(
+                        `Network capture started successfully!<br><br><strong>Interface:</strong> ${result.interface}<br><strong>Filter:</strong> ${result.filter}`,
+                        'success',
+                        'Capture Started'
+                    );
+                    
+                    // Update buttons
+                    document.getElementById('startCaptureBtn').style.display = 'none';
+                    document.getElementById('stopCaptureBtn').style.display = 'inline-flex';
+                    document.getElementById('testCaptureBtn').disabled = true;
+                    
+                    // Update network badge
+                    updateNetworkBadge(true);
+                    
+                    // Start polling for status
+                    startStatusPolling();
+                } else {
+                    const errorMsg = result.error || 'Failed to start capture';
+                    const helpMsg = result.help ? `<br><br><em>${result.help}</em>` : '';
+                    showToast(errorMsg + helpMsg, 'error', 'Capture Failed');
+                }
+            } catch (error) {
+                showToast(error.message, 'error', 'Connection Error');
+            }
+        }
+
+        async function stopNetworkCapture() {
+            try {
+                const response = await fetch('/api/network-capture/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    const stats = result.stats || {};
+                    showToast(
+                        `Network capture stopped.<br><br><strong>Packets captured:</strong> ${stats.packets_captured || 0}<br><strong>Logs generated:</strong> ${stats.logs_generated || 0}`,
+                        'info',
+                        'Capture Stopped'
+                    );
+                    
+                    // Update buttons
+                    document.getElementById('startCaptureBtn').style.display = 'inline-flex';
+                    document.getElementById('stopCaptureBtn').style.display = 'none';
+                    document.getElementById('testCaptureBtn').disabled = false;
+                    
+                    // Update network badge
+                    updateNetworkBadge(false);
+                    
+                    // Stop polling
+                    stopStatusPolling();
+                } else {
+                    showToast(result.error || 'Failed to stop capture', 'error', 'Stop Failed');
+                }
+            } catch (error) {
+                showToast(error.message, 'error', 'Connection Error');
+            }
+        }
+
+        function updateNetworkBadge(isConnected) {
+            const badge = document.getElementById('network-badge');
+            if (isConnected) {
+                badge.textContent = 'Connected';
+                badge.style.background = 'rgba(16, 185, 129, 0.2)';
+                badge.style.color = '#10b981';
+            } else {
+                badge.textContent = 'Not Connected';
+                badge.style.background = 'rgba(100, 116, 139, 0.2)';
+                badge.style.color = '#94a3b8';
+            }
+        }
+
+        let statusPollingInterval = null;
+
+        function startStatusPolling() {
+            if (statusPollingInterval) return;
+            
+            statusPollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/network-capture/status');
+                    const result = await response.json();
+                    
+                    if (!result.running) {
+                        // Capture stopped unexpectedly
+                        updateNetworkBadge(false);
+                        document.getElementById('startCaptureBtn').style.display = 'inline-flex';
+                        document.getElementById('stopCaptureBtn').style.display = 'none';
+                        document.getElementById('testCaptureBtn').disabled = false;
+                        stopStatusPolling();
+                    }
+                } catch (error) {
+                    console.error('Status polling error:', error);
+                }
+            }, 5000); // Poll every 5 seconds
+        }
+
+        function stopStatusPolling() {
+            if (statusPollingInterval) {
+                clearInterval(statusPollingInterval);
+                statusPollingInterval = null;
+            }
+        }
+
+        // Check status on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/network-capture/status');
+                const result = await response.json();
+                
+                if (result.running) {
+                    updateNetworkBadge(true);
+                    startStatusPolling();
+                } else {
+                    updateNetworkBadge(false);
+                }
+            } catch (error) {
+                console.error('Error checking initial capture status:', error);
+            }
+        });
+    </script>
 </body>
 </html>

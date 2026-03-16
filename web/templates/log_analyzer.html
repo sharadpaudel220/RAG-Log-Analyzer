@@ -3,11 +3,469 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic RAG Log Analyzer - Log Analyzer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <title>Log Analyzer - Agentic RAG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-2026.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_inline.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api_streaming.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Enhanced card styles for log analyzer */
+        .analyzer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .analyzer-card {
+            background: var(--glass-medium);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+                0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: all var(--transition-base);
+        }
+
+        .analyzer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+                0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.03) 100%);
+            color: var(--color-teal);
+        }
+
+        .card-title {
+            flex: 1;
+        }
+
+        .card-title h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-title p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--color-teal);
+            background: var(--glass-light);
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--color-teal);
+            background: rgba(20, 184, 166, 0.05);
+        }
+
+        .upload-zone i {
+            font-size: 3rem;
+            color: var(--color-teal);
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .upload-zone h4 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-zone p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-section {
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-select,
+        .form-input {
+            padding: 0.75rem 1rem;
+            background: var(--glass-light);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all var(--transition-base);
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-teal);
+            background: var(--glass-medium);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--glass-light);
+            border-radius: var(--radius-sm);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .api-source-card {
+            background: var(--glass-light);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .api-source-card:hover {
+            background: var(--glass-medium);
+            border-color: var(--color-teal);
+            transform: translateY(-2px);
+        }
+
+        .api-source-card.selected {
+            border-color: var(--color-teal);
+            background: rgba(20, 184, 166, 0.1);
+        }
+
+        .source-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .source-badge {
+            padding: 0.25rem 0.75rem;
+            background: var(--color-teal);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .source-type-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .source-type-network {
+            background: rgba(167, 139, 250, 0.2);
+            color: var(--color-lavender);
+            border: 1px solid var(--color-lavender);
+        }
+
+        .source-type-system {
+            background: rgba(20, 184, 166, 0.2);
+            color: var(--color-teal);
+            border: 1px solid var(--color-teal);
+        }
+
+        .source-type-application {
+            background: rgba(251, 113, 133, 0.2);
+            color: var(--color-coral);
+            border: 1px solid var(--color-coral);
+        }
+
+        .source-type-security {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--color-gold);
+            border: 1px solid var(--color-gold);
+        }
+
+        .source-card-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .source-card-endpoint {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .source-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .source-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-teal);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #apiSourcesGrid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .source-info {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .source-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-selected {
+            background: var(--glass-medium);
+            border: 1px solid var(--color-teal);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-selected i {
+            font-size: 2rem;
+            color: var(--color-teal);
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-details h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-details p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-remove {
+            background: rgba(251, 113, 133, 0.1);
+            color: var(--color-coral);
+            border: 1px solid rgba(251, 113, 133, 0.2);
+        }
+
+        .btn-remove:hover {
+            background: rgba(251, 113, 133, 0.2);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-analyze {
+            flex: 1;
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: var(--glass-medium);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+            min-width: 300px;
+        }
+
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toast-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .toast-close:hover {
+            background: var(--glass-light);
+            color: var(--text-primary);
+        }
+
+        .toast-body {
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--color-teal);
+        }
+
+        .toast.success .toast-title {
+            color: var(--color-teal);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--color-coral);
+        }
+
+        .toast.error .toast-title {
+            color: var(--color-coral);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--color-gold);
+        }
+
+        .toast.warning .toast-title {
+            color: var(--color-gold);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--color-lavender);
+        }
+
+        .toast.info .toast-title {
+            color: var(--color-lavender);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.removing {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+    </style>
 </head>
 <body>
     <div id="toastContainer" class="toast-container"></div>
@@ -46,8 +504,8 @@
             </nav>
             <div class="sidebar-footer">
                 <div class="status-indicator">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">Checking...</span>
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span id="statusText">System Healthy</span>
                 </div>
             </div>
         </aside>
@@ -58,7 +516,7 @@
             <header class="header">
                 <div class="header-title">
                     <h2>Log Analyzer</h2>
-                    <p class="header-subtitle">Upload files or analyze individual log entries with AI</p>
+                    <p class="header-subtitle">Upload files or analyze logs from API sources with AI-powered analysis</p>
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary" onclick="clearAnalysis()">
@@ -67,269 +525,216 @@
                 </div>
             </header>
 
-            <!-- File Upload Section -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-upload"></i> Upload Log File</h3>
-                </div>
-                <div class="upload-container">
-                    <div class="upload-area" id="uploadArea">
-                        <i class="fas fa-file-upload"></i>
-                        <h4>Upload Log File</h4>
-                        <p>Select a .log, .txt, .json, or .csv file</p>
+            <!-- Main Analysis Cards -->
+            <div class="analyzer-grid">
+                <!-- Upload File Card -->
+                <div class="analyzer-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="card-title">
+                            <h3>Upload Log File</h3>
+                            <p>Select a log file from your computer</p>
+                        </div>
+                    </div>
+
+                    <div id="uploadZone" class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Drop file here or click to browse</h4>
+                        <p>Supports .log, .txt, .json, .csv files</p>
                         <input type="file" id="fileInput" accept=".log,.txt,.json,.csv" style="display: none;">
-                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <button class="btn btn-primary">
                             <i class="fas fa-folder-open"></i> Browse Files
                         </button>
                     </div>
-                    <div class="upload-info" id="uploadInfo" style="display: none;">
+
+                    <div id="fileSelected" class="file-selected" style="display: none;">
+                        <i class="fas fa-file-alt"></i>
                         <div class="file-details">
-                            <i class="fas fa-file-alt"></i>
-                            <div class="file-info">
-                                <h4 id="fileName">No file selected</h4>
-                                <p id="fileSize">0 KB</p>
-                            </div>
-                            <button class="btn btn-sm btn-danger" onclick="removeFile()">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <h4 id="fileName">No file selected</h4>
+                            <p id="fileSize">0 KB</p>
+                        </div>
+                        <button class="btn btn-sm btn-remove" onclick="removeFile()">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API Sources Card -->
+                <div class="analyzer-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(167, 139, 250, 0.03) 100%); color: var(--color-lavender);">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <div class="card-title">
+                            <h3>API Log Sources</h3>
+                            <p>Stream logs from configured connections</p>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- API Log Sources Section -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-cloud-download-alt"></i> Analyze Logs from API Sources</h3>
-                    <p class="section-subtitle">Stream and analyze logs from configured API connections</p>
-                </div>
-                
-                <!-- API Source Selection -->
-                <div class="api-sources-container" id="apiSourcesContainer">
-                    <div class="loading" id="apiSourcesLoading">
-                        <i class="fas fa-spinner fa-spin"></i> Loading configured API sources...
+                    <div id="apiSourcesLoading" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-lavender);"></i>
+                        <p style="margin-top: 1rem; color: var(--text-secondary);">Loading API sources...</p>
                     </div>
-                    <div class="no-sources" id="noApiSources" style="display: none;">
-                        <i class="fas fa-plug"></i>
-                        <p>No API connections configured</p>
-                        <a href="/api-config" class="btn btn-primary btn-sm">
-                            <i class="fas fa-cog"></i> Configure API Connections
+
+                    <div id="noApiSources" style="display: none; text-align: center; padding: 2rem;">
+                        <i class="fas fa-cloud-slash" style="font-size: 2rem; color: var(--text-secondary); opacity: 0.5;"></i>
+                        <p style="margin-top: 1rem; color: var(--text-secondary);">No active API sources found</p>
+                        <a href="/api-config" class="btn btn-sm btn-secondary" style="margin-top: 1rem;">
+                            <i class="fas fa-plus"></i> Configure Sources
                         </a>
                     </div>
-                    <div class="api-sources-grid" id="apiSourcesGrid" style="display: none;">
-                        <!-- Will be populated dynamically -->
-                    </div>
-                </div>
 
-                <!-- API Log Streaming Controls -->
-                <div class="api-streaming-controls" id="apiStreamingControls" style="display: none;">
-                    <div class="streaming-header">
-                        <h4><i class="fas fa-stream"></i> Log Streaming: <span id="selectedSourceName">-</span></h4>
-                        <button class="btn btn-sm btn-secondary" onclick="closeApiStreaming()">
-                            <i class="fas fa-times"></i> Close
+                    <div id="apiSourcesGrid" style="display: none; margin-bottom: 1rem;"></div>
+
+                    <div id="selectedSourceControls" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
+                        <div style="margin-bottom: 1rem;">
+                            <strong style="color: var(--color-lavender);">
+                                <i class="fas fa-check-circle"></i> Selected: <span id="selectedSourceName"></span>
+                            </strong>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">
+                                <i class="fas fa-list-ol"></i> Number of logs to fetch
+                            </label>
+                            <input type="number" id="apiLogCount" class="form-input" value="100" min="1" max="1000" 
+                                   style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-light);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">
+                                <i class="fas fa-brain"></i> Analysis Method
+                            </label>
+                            <select id="apiAnalysisMethod" class="form-input" 
+                                    style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-light);">
+                                <option value="agentic">Agentic RAG (Recommended)</option>
+                                <option value="non_agentic">Non-Agentic RAG</option>
+                                <option value="rule_based">Rule-Based</option>
+                                <option value="isolation_forest">Isolation Forest</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="fetchAndAnalyzeApiLogs()" style="width: 100%;">
+                            <i class="fas fa-download"></i> Fetch & Analyze Logs
                         </button>
                     </div>
 
-                    <!-- Time Range Filters -->
-                    <div class="time-filters">
-                        <div class="filter-group">
-                            <label>Start Date & Time</label>
-                            <input type="datetime-local" id="apiStartTime" class="form-input">
-                        </div>
-                        <div class="filter-group">
-                            <label>End Date & Time</label>
-                            <input type="datetime-local" id="apiEndTime" class="form-input">
-                        </div>
-                        <div class="filter-group">
-                            <label>Fetch Interval (seconds)</label>
-                            <input type="number" id="apiFetchInterval" class="form-input" value="5" min="1" max="60">
-                        </div>
-                    </div>
-
-                    <!-- Streaming Controls -->
-                    <div class="streaming-actions">
-                        <button class="btn btn-success" id="streamPlayBtn" onclick="startApiStreaming()">
-                            <i class="fas fa-play"></i> Start Streaming
-                        </button>
-                        <button class="btn btn-warning" id="streamPauseBtn" onclick="pauseApiStreaming()" style="display: none;">
-                            <i class="fas fa-pause"></i> Pause
-                        </button>
-                        <button class="btn btn-danger" id="streamStopBtn" onclick="stopApiStreaming()" style="display: none;">
-                            <i class="fas fa-stop"></i> Stop
-                        </button>
-                        <button class="btn btn-primary" id="analyzeApiLogsBtn" onclick="analyzeApiLogs()" style="display: none;">
-                            <i class="fas fa-chart-line"></i> Analyze Collected Logs
-                        </button>
-                    </div>
-
-                    <!-- Streaming Stats -->
-                    <div class="streaming-stats">
-                        <div class="stat-card">
-                            <i class="fas fa-file-alt"></i>
-                            <div class="stat-info">
-                                <span class="stat-label">Logs Collected</span>
-                                <span class="stat-value" id="logsCollectedCount">0</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-clock"></i>
-                            <div class="stat-info">
-                                <span class="stat-label">Streaming Duration</span>
-                                <span class="stat-value" id="streamingDuration">00:00</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-signal"></i>
-                            <div class="stat-info">
-                                <span class="stat-label">Status</span>
-                                <span class="stat-value" id="streamingStatus">Idle</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Live Log Preview -->
-                    <div class="live-log-preview">
-                        <div class="preview-header">
-                            <h5><i class="fas fa-eye"></i> Live Log Preview</h5>
-                            <button class="btn btn-sm btn-secondary" onclick="clearApiLogs()">
-                                <i class="fas fa-trash"></i> Clear
-                            </button>
-                        </div>
-                        <div class="log-preview-container" id="apiLogPreview">
-                            <div class="empty-preview">
-                                <i class="fas fa-inbox"></i>
-                                <p>No logs collected yet. Start streaming to see logs appear here.</p>
-                            </div>
-                        </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <a href="/api-config" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-cog"></i> Manage Sources
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Analysis Configuration -->
+            <!-- Configuration Card -->
             <div class="section">
-                <div class="section-header">
-                    <h3><i class="fas fa-sliders-h"></i> Analysis Configuration</h3>
-                </div>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>Analysis System</label>
-                        <select id="batchSystemSelect" class="form-select">
-                            <option value="agentic">Agentic RAG (Recommended)</option>
-                            <option value="non_agentic">Non-Agentic RAG</option>
-                            <option value="rule_based">Rule-Based</option>
-                            <option value="isolation_forest">Isolation Forest</option>
-                        </select>
-                    </div>
-                    <div class="config-item">
-                        <label>Max Logs to Analyze</label>
-                        <input type="number" id="maxLogs" class="form-input" value="100" min="1" max="10000">
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" id="generateReport" checked>
-                            Generate Detailed Report
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" id="exportResults" checked>
-                            Export Results
-                        </label>
-                    </div>
-                </div>
-                <div class="analyze-actions">
-                    <button class="btn btn-primary btn-lg" onclick="analyzeFile()">
-                        <i class="fas fa-play-circle"></i> Analyze Logs
-                    </button>
-                </div>
-            </div>
-
-            <!-- Analysis Progress -->
-            <div class="section" id="progressSection" style="display: none;">
-                <div class="section-header">
-                    <h3><i class="fas fa-spinner fa-spin"></i> Analysis in Progress</h3>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-text" id="progressText">Initializing...</div>
-                </div>
-            </div>
-
-            <!-- Analysis Results -->
-            <div class="section" id="resultsSection" style="display: none;">
-                <div class="section-header">
-                    <h3><i class="fas fa-chart-bar"></i> Analysis Report</h3>
-                    <div class="header-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="downloadReport()">
-                            <i class="fas fa-download"></i> Download Report
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="exportJSON()">
-                            <i class="fas fa-file-code"></i> Export JSON
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Summary Cards -->
-                <div class="report-summary" id="reportSummary">
-                    <!-- Will be populated dynamically -->
-                </div>
-
-                <!-- Detailed Results -->
-                <div class="report-details" id="reportDetails">
-                    <!-- Will be populated dynamically -->
-                </div>
-
-                <!-- Anomaly List -->
-                <div class="anomaly-list" id="anomalyList">
-                    <!-- Will be populated dynamically -->
-                </div>
-
-                <!-- Inline Chat Interface -->
-                <div class="section" id="inlineChatSection" style="display: none; margin-top: 1.5rem;">
-                    <div class="section-header">
-                        <h3><i class="fas fa-comments"></i> Ask Follow-up Questions</h3>
-                    </div>
-                    <div class="chat-container">
-                        <div class="chat-messages" id="chatMessages">
-                            <!-- Chat messages will appear here -->
+                <div class="analyzer-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, rgba(251, 113, 133, 0.15) 0%, rgba(251, 113, 133, 0.03) 100%); color: var(--color-coral);">
+                            <i class="fas fa-sliders-h"></i>
                         </div>
-                        <div class="chat-input-container">
-                            <textarea
-                                id="chatInput"
-                                placeholder="Ask a question about this analysis..."
-                                rows="2"
-                                onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendChatMessage(); }"
-                            ></textarea>
-                            <button class="btn btn-primary" onclick="sendChatMessage()">
-                                <i class="fas fa-paper-plane"></i> Send
+                        <div class="card-title">
+                            <h3>Analysis Configuration</h3>
+                            <p>Configure how your logs will be analyzed</p>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <div class="form-group">
+                            <label><i class="fas fa-brain"></i> Analysis System</label>
+                            <select id="batchSystemSelect" class="form-select">
+                                <option value="agentic">Agentic RAG (Recommended)</option>
+                                <option value="non_agentic">Non-Agentic RAG</option>
+                                <option value="rule_based">Rule-Based</option>
+                                <option value="isolation_forest">Isolation Forest</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-list-ol"></i> Maximum Logs to Analyze</label>
+                            <input type="number" id="maxLogs" class="form-input" value="100" min="1" max="10000" placeholder="Enter number of logs">
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="generateReport" checked>
+                            <label for="generateReport"><i class="fas fa-file-alt"></i> Generate Detailed Report</label>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="exportResults" checked>
+                            <label for="exportResults"><i class="fas fa-download"></i> Export Results to JSON</label>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-analyze" onclick="analyzeFile()">
+                            <i class="fas fa-play-circle"></i> Start Analysis
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Progress (Hidden by default) -->
+            <div class="section" id="progressSection" style="display: none;">
+                <div class="analyzer-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <div class="card-title">
+                            <h3>Analysis in Progress</h3>
+                            <p id="progressText">Initializing analysis...</p>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results (Hidden by default) -->
+            <div class="section" id="resultsSection" style="display: none;">
+                <div class="analyzer-card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.03) 100%); color: var(--color-teal);">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="card-title">
+                            <h3>Analysis Results</h3>
+                            <p>Detailed report and findings</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="downloadReport()">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="exportJSON()">
+                                <i class="fas fa-file-code"></i> Export JSON
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="report-summary" id="reportSummary">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Detailed Results -->
+                    <div class="report-details" id="reportDetails">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Anomaly List -->
+                    <div class="anomaly-list" id="anomalyList">
+                        <!-- Populated dynamically -->
                     </div>
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Sessions History Modal -->
-    <div class="modal" id="sessionsModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-history"></i> Analysis History</h3>
-                <button class="modal-close" onclick="closeSessionsModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="sessions-actions">
-                    <button class="btn btn-sm btn-danger" onclick="clearAllSessions()">
-                        <i class="fas fa-trash"></i> Clear All
-                    </button>
-                </div>
-                <div id="sessionsList" class="sessions-list">
-                    <!-- Sessions will be loaded here -->
-                </div>
-            </div>
-        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/log_analyzer.js') }}"></script>
