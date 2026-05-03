@@ -3,9 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic RAG Log Analyzer - Evaluation</title>
+    <title>Agentic RAG Log Analyzer — Dissertation Evaluation</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-2026.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/ollama_status.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .eval-tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; border-bottom:1px solid var(--glass-border); padding-bottom:0.5rem; }
+        .eval-tab { padding:0.6rem 1.2rem; border-radius:var(--radius-md); cursor:pointer; background:var(--glass-light); color:var(--text-secondary); border:1px solid var(--glass-border); font-weight:500; transition:all 0.2s; }
+        .eval-tab:hover { background:var(--glass-medium); color:var(--text-primary); }
+        .eval-tab.active { background:var(--primary-gradient); color:#fff; border-color:transparent; }
+        .full-panel { display:none; }
+        .full-panel.active { display:block; }
+        .metric-table { width:100%; border-collapse:collapse; margin-top:0.5rem; }
+        .metric-table th, .metric-table td { padding:0.6rem 0.9rem; text-align:left; border-bottom:1px solid var(--glass-border); font-size:0.88rem; }
+        .metric-table th { color:var(--text-secondary); font-weight:600; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; }
+        .metric-table td { color:var(--text-primary); }
+        .best-value { color:#14b8a6; font-weight:700; }
+        .system-chip { display:inline-block; padding:0.25rem 0.65rem; border-radius:12px; font-size:0.78rem; font-weight:600; }
+        .chart-card { background:var(--glass-light); padding:1rem 1.25rem; border-radius:14px; border:1px solid var(--glass-border); }
+        .chart-card h4 { margin:0 0 0.25rem; font-size:1rem; }
+        .chart-card .chart-meta { font-size:0.78rem; color:var(--text-secondary); margin-bottom:0.75rem; }
+        .toast-container { position:fixed; top:20px; right:20px; z-index:10000; display:flex; flex-direction:column; gap:10px; max-width:400px; }
+        .toast { background:var(--glass-medium); backdrop-filter:blur(20px); border-radius:var(--radius-md); box-shadow:0 8px 32px rgba(0,0,0,0.3); border:1px solid var(--glass-border); overflow:hidden; animation:slideIn 0.3s ease-out; min-width:300px; }
+        .toast-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--glass-border); }
+        .toast-title { display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.9rem; }
+        .toast-close { background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:1.2rem; padding:0; width:24px; height:24px; display:flex; align-items:center; justify-content:center; }
+        .toast-body { padding:12px 16px; font-size:0.9rem; color:var(--text-primary); }
+        .toast-success .toast-title { color:#14b8a6; }
+        .toast-error .toast-title { color:#fb7185; }
+        .toast-warning .toast-title { color:#fbbf24; }
+        .toast-info .toast-title { color:#a78bfa; }
+        @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+        @keyframes slideOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(100%); opacity:0; } }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -16,157 +47,553 @@
                 <h1>Agentic RAG</h1>
             </div>
             <nav class="nav-menu">
-                <a href="/" class="nav-item">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="/log-analyzer" class="nav-item">
-                    <i class="fas fa-search"></i>
-                    <span>Log Analyzer</span>
-                </a>
-                <a href="/analysis-history" class="nav-item">
-                    <i class="fas fa-history"></i>
-                    <span>Analysis History</span>
-                </a>
-                <a href="/api-config" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>API Configuration</span>
-                </a>
-                <a href="/chat" class="nav-item">
-                    <i class="fas fa-comments"></i>
-                    <span>Chat Interface</span>
-                </a>
-                <a href="/evaluation" class="nav-item active">
-                    <i class="fas fa-flask"></i>
-                    <span>Evaluation</span>
-                </a>
+                <a href="/" class="nav-item"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
+                <a href="/log-analyzer" class="nav-item"><i class="fas fa-search"></i><span>Log Analyzer</span></a>
+                <a href="/analysis-history" class="nav-item"><i class="fas fa-history"></i><span>Analysis History</span></a>
+                <a href="/api-config" class="nav-item"><i class="fas fa-cog"></i><span>API Configuration</span></a>
+                <a href="/chat" class="nav-item"><i class="fas fa-comments"></i><span>Chat Interface</span></a>
+                <a href="/evaluation" class="nav-item active"><i class="fas fa-graduation-cap"></i><span>Evaluation</span></a>
             </nav>
             <div class="sidebar-footer">
                 <div class="status-indicator">
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Checking...</span>
                 </div>
+                <div class="ollama-status" id="ollamaStatus" style="margin-top:10px; cursor:pointer; padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:6px; font-size:0.85rem; display:flex; align-items:center; gap:8px;" onclick="showOllamaDetails()"></div>
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main -->
         <main class="main-content">
-            <!-- Header -->
             <header class="header">
                 <div class="header-title">
-                    <h2>System Evaluation</h2>
-                    <p class="header-subtitle">Compare performance of all 4 detection systems</p>
+                    <h2><i class="fas fa-graduation-cap"></i> Dissertation Evaluation</h2>
+                    <p class="header-subtitle">Comparing Rule-Based, Isolation Forest, Non-Agentic RAG and Agentic RAG on the HDFS &amp; BGL benchmark datasets</p>
                 </div>
             </header>
 
-            <!-- Evaluation Section -->
             <div class="section">
                 <div class="section-header">
-                    <h3><i class="fas fa-flask"></i> Comparative System Evaluation</h3>
+                    <h3><i class="fas fa-flask"></i> Full Dissertation Evaluation</h3>
+                    <span style="margin-left:auto; font-size:0.85rem; color:var(--text-secondary);">
+                        4 systems × HDFS + BGL · paired t-tests · Chapter-6-ready outputs
+                    </span>
                 </div>
                 <div class="evaluation-container">
-                    <div class="evaluation-controls">
-                        <button class="btn btn-primary btn-lg" onclick="runEvaluation()">
-                            <i class="fas fa-play"></i> Run Comparative Evaluation
+                    <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem;">
+                        <button id="fullEvalRunBtn" class="btn btn-primary btn-lg" onclick="startFullEvaluation()">
+                            <i class="fas fa-play"></i> Run Full Evaluation
                         </button>
-                        <span class="eval-info">Compare all 4 systems on sample data</span>
+                        <button id="fullEvalStopBtn" class="btn btn-secondary" onclick="stopFullEvaluation()" style="display:none;">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                        <label style="display:flex; align-items:center; gap:0.5rem;">
+                            <input type="checkbox" id="fullEvalReset" checked> Reset checkpoint (fresh run)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem;">
+                            Cap per dataset:
+                            <select id="fullEvalCap" style="padding:0.3rem 0.6rem; border-radius:6px;">
+                                <option value="">Full</option>
+                                <option value="500">500 logs</option>
+                                <option value="1000">1000 logs</option>
+                                <option value="2000" selected>2000 logs</option>
+                            </select>
+                        </label>
                     </div>
-                    <div id="evaluationResults" class="evaluation-results"></div>
+
+                    <!-- Progress -->
+                    <div id="fullEvalProgressBox" style="display:none; margin-bottom:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.9rem;">
+                            <span id="fullEvalStage">Initialising...</span>
+                            <span id="fullEvalPct">0%</span>
+                        </div>
+                        <div style="background:var(--glass-light); border-radius:8px; overflow:hidden; height:14px;">
+                            <div id="fullEvalBar" style="height:100%; width:0%; background:linear-gradient(90deg,#14b8a6,#a78bfa); transition:width 0.4s ease;"></div>
+                        </div>
+                        <div id="fullEvalSubMsg" style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-secondary);"></div>
+                    </div>
+
+                    <!-- Results dashboard -->
+                    <div id="fullEvalResults" style="display:none;">
+                        <div class="eval-tabs">
+                            <div class="eval-tab active" data-fulltab="overview" onclick="switchFullTab('overview')"><i class="fas fa-th-large"></i> Overview</div>
+                            <div class="eval-tab" data-fulltab="detection" onclick="switchFullTab('detection')"><i class="fas fa-bullseye"></i> Detection Metrics</div>
+                            <div class="eval-tab" data-fulltab="efficiency" onclick="switchFullTab('efficiency')"><i class="fas fa-tachometer-alt"></i> Efficiency</div>
+                            <div class="eval-tab" data-fulltab="auc" onclick="switchFullTab('auc')"><i class="fas fa-chart-area"></i> AUC Curves</div>
+                            <div class="eval-tab" data-fulltab="tables" onclick="switchFullTab('tables')"><i class="fas fa-table"></i> Detailed Tables</div>
+                            <div class="eval-tab" data-fulltab="confusion" onclick="switchFullTab('confusion')"><i class="fas fa-th"></i> Confusion Matrices</div>
+                            <div class="eval-tab" data-fulltab="ttests" onclick="switchFullTab('ttests')"><i class="fas fa-square-root-alt"></i> Statistical Tests</div>
+                            <div class="eval-tab" data-fulltab="downloads" onclick="switchFullTab('downloads')"><i class="fas fa-download"></i> Downloads</div>
+                        </div>
+
+                        <!-- OVERVIEW -->
+                        <div id="fullPanel-overview" class="full-panel active">
+                            <div id="fullEvalOverview"></div>
+                            <div class="chart-card" style="margin-top:1.5rem;">
+                                <h4>F1-Score Across Datasets — All Four Models</h4>
+                                <div class="chart-meta">Datasets: HDFS, BGL · Models: Rule-Based, Isolation Forest, Non-Agentic RAG, Agentic RAG</div>
+                                <canvas id="chartF1Compare" height="220"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- DETECTION -->
+                        <div id="fullPanel-detection" class="full-panel">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(440px, 1fr)); gap:1.25rem;">
+                                <div class="chart-card">
+                                    <h4>Detection Metrics — HDFS Dataset</h4>
+                                    <div class="chart-meta">Models: Rule-Based · Isolation Forest · Non-Agentic RAG · Agentic RAG</div>
+                                    <canvas id="chartDetHDFS" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>Detection Metrics — BGL Dataset</h4>
+                                    <div class="chart-meta">Models: Rule-Based · Isolation Forest · Non-Agentic RAG · Agentic RAG</div>
+                                    <canvas id="chartDetBGL" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>MCC &amp; FPR Comparison — HDFS Dataset</h4>
+                                    <div class="chart-meta">Higher MCC = better · Lower FPR = better</div>
+                                    <canvas id="chartMccFprHDFS" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>MCC &amp; FPR Comparison — BGL Dataset</h4>
+                                    <div class="chart-meta">Higher MCC = better · Lower FPR = better</div>
+                                    <canvas id="chartMccFprBGL" height="240"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- EFFICIENCY -->
+                        <div id="fullPanel-efficiency" class="full-panel">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(440px, 1fr)); gap:1.25rem;">
+                                <div class="chart-card">
+                                    <h4>Mean Inference Latency (ms, log scale)</h4>
+                                    <div class="chart-meta">Lower = faster · per log entry · across HDFS &amp; BGL</div>
+                                    <canvas id="chartLatency" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>Throughput (logs / second)</h4>
+                                    <div class="chart-meta">Higher = better · derived from mean latency</div>
+                                    <canvas id="chartThroughput" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>p95 Latency — HDFS Dataset</h4>
+                                    <div class="chart-meta">95th-percentile per-log latency in milliseconds</div>
+                                    <canvas id="chartP95HDFS" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>p95 Latency — BGL Dataset</h4>
+                                    <div class="chart-meta">95th-percentile per-log latency in milliseconds</div>
+                                    <canvas id="chartP95BGL" height="240"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AUC -->
+                        <div id="fullPanel-auc" class="full-panel">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(440px, 1fr)); gap:1.25rem;">
+                                <div class="chart-card">
+                                    <h4>AUC-ROC vs AUC-PR — HDFS Dataset</h4>
+                                    <div class="chart-meta">Both metrics ∈ [0,1] · higher = better discrimination</div>
+                                    <canvas id="chartAUCHDFS" height="240"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <h4>AUC-ROC vs AUC-PR — BGL Dataset</h4>
+                                    <div class="chart-meta">Both metrics ∈ [0,1] · higher = better discrimination</div>
+                                    <canvas id="chartAUCBGL" height="240"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TABLES -->
+                        <div id="fullPanel-tables" class="full-panel">
+                            <div id="fullTables"></div>
+                        </div>
+
+                        <!-- CONFUSION -->
+                        <div id="fullPanel-confusion" class="full-panel">
+                            <div id="fullConfusion"></div>
+                        </div>
+
+                        <!-- TTESTS -->
+                        <div id="fullPanel-ttests" class="full-panel">
+                            <div id="fullTtests"></div>
+                        </div>
+
+                        <!-- DOWNLOADS -->
+                        <div id="fullPanel-downloads" class="full-panel">
+                            <p style="color:var(--text-secondary); margin-bottom:1rem;">All four artifacts are regenerated on every run.</p>
+                            <div style="display:grid; gap:0.75rem; max-width:560px;">
+                                <a class="btn btn-secondary" href="/api/evaluation/full/download/evaluation_report.txt"><i class="fas fa-file-alt"></i> Evaluation Report (TXT) — formatted results tables</a>
+                                <a class="btn btn-secondary" href="/api/evaluation/full/download/evaluation_results.json"><i class="fas fa-file-code"></i> Evaluation Results (JSON)</a>
+                                <a class="btn btn-secondary" href="/api/evaluation/full/download/evaluation_metrics.csv"><i class="fas fa-file-csv"></i> Evaluation Metrics (CSV)</a>
+                                <a class="btn btn-secondary" href="/api/evaluation/full/download/evaluation_run_log.txt"><i class="fas fa-terminal"></i> Run Log (TXT)</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <script>
-        // Reuse dashboard.js evaluation function
-        document.addEventListener('DOMContentLoaded', function() {
-            checkHealth();
-        });
+    <div id="toastContainer" class="toast-container"></div>
 
+    <script>
+        // ───────────────────────── Toast helper ─────────────────────────
+        function showToast(message, type='info', duration=3000) {
+            const c = document.getElementById('toastContainer'); if (!c) return;
+            const t = document.createElement('div'); t.className = `toast toast-${type}`;
+            const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+            const titles = { success:'Success', error:'Error', warning:'Warning', info:'Info' };
+            t.innerHTML = `<div class="toast-header"><div class="toast-title"><i class="fas ${icons[type]||icons.info}"></i>${titles[type]||titles.info}</div><button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fas fa-times"></i></button></div><div class="toast-body">${message}</div>`;
+            c.appendChild(t);
+            setTimeout(() => { t.style.animation='slideOut 0.3s ease-out forwards'; setTimeout(() => t.remove(), 300); }, duration);
+        }
+
+        // ───────────────────────── System health ─────────────────────────
         async function checkHealth() {
             try {
-                const response = await fetch('/api/health');
-                const data = await response.json();
-                
-                const statusDot = document.getElementById('statusDot');
-                const statusText = document.getElementById('statusText');
-                
-                if (data.status === 'healthy') {
-                    statusDot.style.background = '#10b981';
-                    statusText.textContent = 'System Healthy';
-                } else {
-                    statusDot.style.background = '#f59e0b';
-                    statusText.textContent = 'Initializing...';
-                }
-            } catch (error) {
-                const statusDot = document.getElementById('statusDot');
-                const statusText = document.getElementById('statusText');
-                statusDot.style.background = '#ef4444';
-                statusText.textContent = 'System Error';
+                const r = await fetch('/api/health'); const d = await r.json();
+                const dot = document.getElementById('statusDot'); const txt = document.getElementById('statusText');
+                if (d.status === 'healthy') { dot.style.background = '#10b981'; txt.textContent = 'System Healthy'; }
+                else { dot.style.background = '#f59e0b'; txt.textContent = 'Initialising...'; }
+            } catch (e) {
+                document.getElementById('statusDot').style.background = '#ef4444';
+                document.getElementById('statusText').textContent = 'System Error';
             }
         }
 
-        async function runEvaluation() {
-            const evaluationResults = document.getElementById('evaluationResults');
-            evaluationResults.innerHTML = '<div class="loading"></div> Running comparative evaluation...';
-            
+        // ───────────────────────── Constants ─────────────────────────
+        const SYSTEMS = ['Rule-Based', 'Isolation Forest', 'Non-Agentic RAG', 'Agentic RAG'];
+        const SYSTEM_COLORS = {
+            'Rule-Based': '#14b8a6',
+            'Isolation Forest': '#fb7185',
+            'Non-Agentic RAG': '#a78bfa',
+            'Agentic RAG': '#fbbf24'
+        };
+        const TICK_COLOR = '#cbd5e1';
+        const GRID_COLOR = 'rgba(255,255,255,0.06)';
+        let fullEvalPollTimer = null;
+        let fullEvalCharts = {};
+
+        // ───────────────────────── Run / Stop / Poll ─────────────────────────
+        async function startFullEvaluation() {
+            const cap = document.getElementById('fullEvalCap').value;
+            const reset = document.getElementById('fullEvalReset').checked;
             try {
-                const response = await fetch('/api/evaluate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        log_file: 'data/datasets/sample/sample_logs.log',
-                        max_logs: 10
-                    })
+                const r = await fetch('/api/evaluation/full/start', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ reset, max_logs: cap ? parseInt(cap, 10) : null })
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    let html = `<div style="margin-bottom: 1rem; color: var(--text-secondary);">Analyzed ${data.logs_analyzed} logs</div>`;
-                    
-                    data.results.forEach(result => {
-                        html += `
-                            <div class="eval-result-card">
-                                <div class="eval-system-name">${result.system}</div>
-                                <div class="eval-metrics">
-                                    <div class="eval-metric">
-                                        <span class="eval-metric-label">F1-Score</span>
-                                        <span class="eval-metric-value">${result.f1_score.toFixed(4)}</span>
-                                    </div>
-                                    <div class="eval-metric">
-                                        <span class="eval-metric-label">Precision</span>
-                                        <span class="eval-metric-value">${result.precision.toFixed(4)}</span>
-                                    </div>
-                                    <div class="eval-metric">
-                                        <span class="eval-metric-label">Recall</span>
-                                        <span class="eval-metric-value">${result.recall.toFixed(4)}</span>
-                                    </div>
-                                    <div class="eval-metric">
-                                        <span class="eval-metric-label">Accuracy</span>
-                                        <span class="eval-metric-value">${result.accuracy.toFixed(4)}</span>
-                                    </div>
-                                    <div class="eval-metric">
-                                        <span class="eval-metric-label">Latency</span>
-                                        <span class="eval-metric-value">${result.latency.toFixed(4)}s</span>
-                                    </div>
-                                    <div class="eval-metric">
-                                        <span class="eval-metric-label">Throughput</span>
-                                        <span class="eval-metric-value">${result.throughput.toFixed(2)} logs/s</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    evaluationResults.innerHTML = html;
-                } else {
-                    evaluationResults.innerHTML = `<div style="color: var(--danger-color);">Error: ${data.error}</div>`;
-                }
-            } catch (error) {
-                evaluationResults.innerHTML = `<div style="color: var(--danger-color);">Error: ${error.message}</div>`;
-            }
+                const data = await r.json();
+                if (!r.ok) { showToast(data.error || 'Failed to start', 'error'); return; }
+                showToast('Evaluation started', 'success');
+                document.getElementById('fullEvalRunBtn').style.display = 'none';
+                document.getElementById('fullEvalStopBtn').style.display = 'inline-flex';
+                document.getElementById('fullEvalProgressBox').style.display = 'block';
+                document.getElementById('fullEvalResults').style.display = 'none';
+                pollFullEvalStatus();
+            } catch (e) { showToast('Network error: ' + e.message, 'error'); }
         }
+
+        async function stopFullEvaluation() {
+            await fetch('/api/evaluation/full/stop', { method: 'POST' });
+            showToast('Stop requested', 'warning');
+        }
+
+        function pollFullEvalStatus() {
+            if (fullEvalPollTimer) clearInterval(fullEvalPollTimer);
+            fullEvalPollTimer = setInterval(async () => {
+                try {
+                    const r = await fetch('/api/evaluation/full/status');
+                    const s = await r.json();
+                    updateFullEvalProgress(s);
+                    if (['done','error','cancelled'].includes(s.state)) {
+                        clearInterval(fullEvalPollTimer); fullEvalPollTimer = null;
+                        document.getElementById('fullEvalRunBtn').style.display = 'inline-flex';
+                        document.getElementById('fullEvalStopBtn').style.display = 'none';
+                        if (s.state === 'done') { showToast('Evaluation complete', 'success'); await loadFullEvalResults(); }
+                        else if (s.state === 'error') { showToast('Evaluation failed: ' + (s.message || 'unknown'), 'error'); }
+                        else { showToast('Evaluation cancelled', 'warning'); }
+                    }
+                } catch (e) {}
+            }, 1500);
+        }
+
+        function updateFullEvalProgress(s) {
+            const pct = Math.min(100, Math.max(0, s.percent || 0));
+            document.getElementById('fullEvalBar').style.width = pct + '%';
+            document.getElementById('fullEvalPct').textContent = pct.toFixed(1) + '%';
+            const stage = s.current_system && s.current_dataset
+                ? `Running ${s.current_system} on ${s.current_dataset} (${s.processed || 0}/${s.total || 0})`
+                : (s.message || s.state || 'Working...');
+            document.getElementById('fullEvalStage').textContent = stage;
+            document.getElementById('fullEvalSubMsg').textContent =
+                `State: ${s.state || '-'} · Errors: ${(s.errors || []).length} · Timeouts: ${s.timeouts || 0}`;
+        }
+
+        async function loadFullEvalResults() {
+            try {
+                const r = await fetch('/api/evaluation/full/results');
+                if (!r.ok) { showToast('No results yet', 'warning'); return; }
+                const data = await r.json();
+                renderFullEval(data);
+                document.getElementById('fullEvalResults').style.display = 'block';
+            } catch (e) { showToast('Failed to load results: ' + e.message, 'error'); }
+        }
+
+        // ───────────────────────── Tabs ─────────────────────────
+        function switchFullTab(tab) {
+            document.querySelectorAll('[data-fulltab]').forEach(el => el.classList.toggle('active', el.dataset.fulltab === tab));
+            document.querySelectorAll('.full-panel').forEach(el => el.classList.remove('active'));
+            const panel = document.getElementById('fullPanel-' + tab);
+            if (panel) panel.classList.add('active');
+        }
+
+        // ───────────────────────── Helpers ─────────────────────────
+        function fmt(v, dp=4) {
+            if (v === null || v === undefined || (typeof v === 'number' && isNaN(v))) return 'N/A';
+            return typeof v === 'number' ? v.toFixed(dp) : v;
+        }
+        function bestInColumn(perDataset, key) {
+            const lower = ['latency_mean_ms','latency_median_ms','latency_p95_ms','fpr'].includes(key);
+            let best = null, bestSys = null;
+            SYSTEMS.forEach(s => {
+                const m = perDataset[s];
+                if (!m || typeof m[key] !== 'number' || isNaN(m[key])) return;
+                if (best === null || (lower ? m[key] < best : m[key] > best)) { best = m[key]; bestSys = s; }
+            });
+            return bestSys;
+        }
+        function chartOpts(extra = {}, yScale = {}) {
+            return {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: TICK_COLOR, font: { size: 12 } } },
+                    title: extra.title || { display: false },
+                    tooltip: { backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#fff', bodyColor: '#cbd5e1' }
+                },
+                scales: {
+                    x: { ticks: { color: TICK_COLOR }, grid: { color: GRID_COLOR } },
+                    y: { ticks: { color: TICK_COLOR }, grid: { color: GRID_COLOR }, ...yScale }
+                },
+                ...(extra.options || {})
+            };
+        }
+        function makeBar(canvasId, labels, datasets, opts = {}) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            if (fullEvalCharts[canvasId]) fullEvalCharts[canvasId].destroy();
+            fullEvalCharts[canvasId] = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: opts });
+        }
+
+        // ───────────────────────── Render ─────────────────────────
+        function renderFullEval(data) {
+            const datasets = Object.keys(data).filter(k => !k.startsWith('_'));
+            renderOverview(data, datasets);
+            renderDetectionCharts(data);
+            renderEfficiencyCharts(data, datasets);
+            renderAUCCharts(data);
+            renderTables(data, datasets);
+            renderConfusion(data, datasets);
+            renderTtests(data, datasets);
+        }
+
+        function renderOverview(data, datasets) {
+            const root = document.getElementById('fullEvalOverview');
+            let html = '';
+            datasets.forEach(ds => {
+                const perDs = data[ds] || {};
+                html += `<div style="margin-bottom:1.5rem;"><h4 style="margin:0 0 0.6rem;"><i class="fas fa-database"></i> ${ds} Dataset — Top-Line Metrics</h4>`;
+                html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:0.75rem;">';
+                SYSTEMS.forEach(sys => {
+                    const m = perDs[sys];
+                    if (!m || typeof m.f1_score !== 'number') return;
+                    const c = SYSTEM_COLORS[sys];
+                    html += `
+                        <div style="background:var(--glass-light); border-left:4px solid ${c}; padding:1rem; border-radius:8px;">
+                            <div style="font-weight:700; color:${c}; margin-bottom:0.5rem; font-size:0.95rem;">${sys}</div>
+                            <div style="font-size:0.85rem; line-height:1.7;">
+                                <div>F1: <b>${fmt(m.f1_score)}</b></div>
+                                <div>Precision: ${fmt(m.precision)}</div>
+                                <div>Recall: ${fmt(m.recall)}</div>
+                                <div>AUC-ROC: ${fmt(m.auc_roc)}</div>
+                                <div>MCC: ${fmt(m.mcc)}</div>
+                                <div>Latency: ${fmt(m.latency_mean_ms, 2)} ms</div>
+                            </div>
+                        </div>`;
+                });
+                html += '</div></div>';
+            });
+            root.innerHTML = html || '<p>No results to display.</p>';
+
+            // F1 across datasets
+            const f1DS = SYSTEMS.filter(s => datasets.some(d => data[d] && data[d][s])).map(s => ({
+                label: s, backgroundColor: SYSTEM_COLORS[s],
+                data: datasets.map(d => (data[d] && data[d][s] ? Number(data[d][s].f1_score) || 0 : 0))
+            }));
+            makeBar('chartF1Compare', datasets, f1DS,
+                chartOpts({ title: { display: true, text: 'F1-Score Comparison Across Datasets', color: TICK_COLOR, font: { size: 14, weight: 'bold' } } },
+                          { min: 0, max: 1, title: { display: true, text: 'F1-Score', color: TICK_COLOR } }));
+        }
+
+        function renderDetectionCharts(data) {
+            const labels = ['Precision', 'Recall', 'F1', 'Accuracy', 'AUC-ROC', 'MCC'];
+            const keys = ['precision', 'recall', 'f1_score', 'accuracy', 'auc_roc', 'mcc'];
+            ['HDFS', 'BGL'].forEach(ds => {
+                if (!data[ds]) return;
+                const datasetsArr = SYSTEMS.filter(s => data[ds][s]).map(s => ({
+                    label: s, backgroundColor: SYSTEM_COLORS[s],
+                    data: keys.map(k => Number(data[ds][s][k]) || 0)
+                }));
+                makeBar(ds === 'HDFS' ? 'chartDetHDFS' : 'chartDetBGL', labels, datasetsArr,
+                    chartOpts({ title: { display: true, text: `${ds} Dataset — All 4 Models`, color: TICK_COLOR, font: { size: 14, weight: 'bold' } } },
+                              { min: 0, max: 1, title: { display: true, text: 'Score (0–1)', color: TICK_COLOR } }));
+
+                // MCC + FPR combo
+                const mccArr = SYSTEMS.filter(s => data[ds][s]);
+                makeBar(ds === 'HDFS' ? 'chartMccFprHDFS' : 'chartMccFprBGL', mccArr, [
+                    { label: 'MCC',  backgroundColor: '#14b8a6', data: mccArr.map(s => Number(data[ds][s].mcc) || 0) },
+                    { label: 'FPR',  backgroundColor: '#fb7185', data: mccArr.map(s => Number(data[ds][s].fpr) || 0) }
+                ], chartOpts({ title: { display: true, text: `${ds} Dataset — MCC vs FPR`, color: TICK_COLOR, font: { size: 14, weight: 'bold' } } },
+                             { suggestedMin: -0.2, suggestedMax: 1, title: { display: true, text: 'Score', color: TICK_COLOR } }));
+            });
+        }
+
+        function renderEfficiencyCharts(data, datasets) {
+            // Mean latency (log scale)
+            const latDS = SYSTEMS.filter(s => datasets.some(d => data[d] && data[d][s])).map(s => ({
+                label: s, backgroundColor: SYSTEM_COLORS[s],
+                data: datasets.map(d => (data[d] && data[d][s] ? Number(data[d][s].latency_mean_ms) || 0 : 0))
+            }));
+            makeBar('chartLatency', datasets, latDS,
+                chartOpts({ title: { display: true, text: 'Mean Inference Latency per Log Entry', color: TICK_COLOR, font: { size: 14, weight: 'bold' } } },
+                          { type: 'logarithmic', title: { display: true, text: 'Latency (ms, log scale)', color: TICK_COLOR } }));
+
+            // Throughput
+            const tpDS = SYSTEMS.filter(s => datasets.some(d => data[d] && data[d][s])).map(s => ({
+                label: s, backgroundColor: SYSTEM_COLORS[s],
+                data: datasets.map(d => (data[d] && data[d][s] ? Number(data[d][s].throughput_per_sec) || 0 : 0))
+            }));
+            makeBar('chartThroughput', datasets, tpDS,
+                chartOpts({ title: { display: true, text: 'Throughput Across Datasets', color: TICK_COLOR, font: { size: 14, weight: 'bold' } } },
+                          { type: 'logarithmic', title: { display: true, text: 'Logs / second (log scale)', color: TICK_COLOR } }));
+
+            // p95 per dataset
+            ['HDFS', 'BGL'].forEach(ds => {
+                if (!data[ds]) return;
+                const sysList = SYSTEMS.filter(s => data[ds][s]);
+                makeBar(ds === 'HDFS' ? 'chartP95HDFS' : 'chartP95BGL', sysList, [{
+                    label: 'p95 latency (ms)', backgroundColor: sysList.map(s => SYSTEM_COLORS[s]),
+                    data: sysList.map(s => Number(data[ds][s].latency_p95_ms) || 0)
+                }], chartOpts({ title: { display: true, text: `${ds} Dataset — 95th-percentile Latency`, color: TICK_COLOR, font: { size: 14, weight: 'bold' } }, options: { plugins: { legend: { display: false } } } },
+                              { type: 'logarithmic', title: { display: true, text: 'Latency (ms, log scale)', color: TICK_COLOR } }));
+            });
+        }
+
+        function renderAUCCharts(data) {
+            ['HDFS', 'BGL'].forEach(ds => {
+                if (!data[ds]) return;
+                const sysList = SYSTEMS.filter(s => data[ds][s]);
+                makeBar(ds === 'HDFS' ? 'chartAUCHDFS' : 'chartAUCBGL', sysList, [
+                    { label: 'AUC-ROC', backgroundColor: '#14b8a6', data: sysList.map(s => Number(data[ds][s].auc_roc) || 0) },
+                    { label: 'AUC-PR',  backgroundColor: '#a78bfa', data: sysList.map(s => Number(data[ds][s].auc_pr)  || 0) }
+                ], chartOpts({ title: { display: true, text: `${ds} Dataset — AUC-ROC vs AUC-PR`, color: TICK_COLOR, font: { size: 14, weight: 'bold' } } },
+                             { min: 0, max: 1, title: { display: true, text: 'AUC (0–1)', color: TICK_COLOR } }));
+            });
+        }
+
+        function renderTables(data, datasets) {
+            const root = document.getElementById('fullTables');
+            const cols = [
+                ['precision','Prec'], ['recall','Rec'], ['f1_score','F1'], ['accuracy','Acc'],
+                ['auc_roc','AUC-ROC'], ['auc_pr','AUC-PR'], ['mcc','MCC'], ['fpr','FPR'],
+                ['latency_mean_ms','Latency μ (ms)'], ['latency_p95_ms','p95 (ms)'],
+                ['throughput_per_sec','Throughput/s'], ['n_samples','N']
+            ];
+            let html = '';
+            datasets.forEach(ds => {
+                const perDs = data[ds] || {};
+                html += `<h4 style="margin:1.5rem 0 0.5rem;"><i class="fas fa-database"></i> ${ds} Dataset — Detailed Metric Table</h4>`;
+                html += '<div style="overflow-x:auto;"><table class="metric-table"><thead><tr><th>Model</th>';
+                cols.forEach(([_, lbl]) => html += `<th>${lbl}</th>`);
+                html += '</tr></thead><tbody>';
+                SYSTEMS.forEach(sys => {
+                    const m = perDs[sys]; if (!m) return;
+                    const c = SYSTEM_COLORS[sys];
+                    html += `<tr><td><span class="system-chip" style="background:${c}22; color:${c}; border:1px solid ${c}">${sys}</span></td>`;
+                    cols.forEach(([key]) => {
+                        const v = m[key]; const best = bestInColumn(perDs, key); const cls = best === sys ? 'best-value' : '';
+                        const dp = key === 'n_samples' ? 0 : (key.includes('latency') || key === 'throughput_per_sec' ? 2 : 4);
+                        html += `<td class="${cls}">${typeof v === 'number' && !isNaN(v) ? v.toFixed(dp) : 'N/A'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            });
+            root.innerHTML = html;
+        }
+
+        function renderConfusion(data, datasets) {
+            const root = document.getElementById('fullConfusion');
+            let html = '';
+            datasets.forEach(ds => {
+                const perDs = data[ds] || {};
+                html += `<h4 style="margin:1rem 0 0.5rem;"><i class="fas fa-database"></i> ${ds} Dataset — Confusion Matrices</h4>`;
+                html += '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem;">';
+                SYSTEMS.forEach(sys => {
+                    const m = perDs[sys]; if (!m || typeof m.TP !== 'number') return;
+                    const total = m.TP + m.TN + m.FP + m.FN || 1;
+                    html += `
+                        <div style="background:var(--glass-light); padding:1rem; border-radius:10px; border-top:3px solid ${SYSTEM_COLORS[sys]};">
+                            <div style="font-weight:700; color:${SYSTEM_COLORS[sys]}; margin-bottom:0.5rem;">${sys}</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.5rem;">Dataset: ${ds}</div>
+                            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                                <tr><th></th><th style="font-weight:500; color:var(--text-secondary);">Pred 0</th><th style="font-weight:500; color:var(--text-secondary);">Pred 1</th></tr>
+                                <tr><th style="font-weight:500; color:var(--text-secondary);">Actual 0</th><td style="background:rgba(20,184,166,0.18); padding:0.5rem; text-align:center; font-weight:600;">TN: ${m.TN}</td><td style="background:rgba(251,113,133,0.18); padding:0.5rem; text-align:center; font-weight:600;">FP: ${m.FP}</td></tr>
+                                <tr><th style="font-weight:500; color:var(--text-secondary);">Actual 1</th><td style="background:rgba(251,113,133,0.18); padding:0.5rem; text-align:center; font-weight:600;">FN: ${m.FN}</td><td style="background:rgba(20,184,166,0.18); padding:0.5rem; text-align:center; font-weight:600;">TP: ${m.TP}</td></tr>
+                            </table>
+                            <div style="margin-top:0.5rem; font-size:0.78rem; color:var(--text-secondary);">N = ${total}</div>
+                        </div>`;
+                });
+                html += '</div>';
+            });
+            root.innerHTML = html;
+        }
+
+        function renderTtests(data, datasets) {
+            const root = document.getElementById('fullTtests');
+            let html = '<p style="color:var(--text-secondary); margin-bottom:1rem;">Paired t-tests comparing <b>Agentic RAG</b> against each baseline using per-entry correctness as the paired observation. Significance threshold (Bonferroni-corrected for 3 comparisons): <b>α = 0.017</b>.</p>';
+            datasets.forEach(ds => {
+                const tt = (data[ds] || {}).t_tests || {};
+                html += `<h4 style="margin:1rem 0 0.5rem;"><i class="fas fa-database"></i> ${ds} Dataset</h4>`;
+                html += '<table class="metric-table"><thead><tr><th>Comparison</th><th>t-statistic</th><th>p-value</th><th>Significant (α=0.017)</th><th>N</th></tr></thead><tbody>';
+                Object.entries(tt).forEach(([k, v]) => {
+                    if (typeof v !== 'object' || v === null) return;
+                    const tstat = v.t_stat, pval = v.p_value;
+                    const sig = v.significant ? '<span style="color:#14b8a6; font-weight:700;">YES ✓</span>' : '<span style="color:#94a3b8;">no</span>';
+                    html += `<tr><td>Agentic RAG ${k.replace('_', ' ')}</td><td>${tstat == null ? 'N/A' : Number(tstat).toFixed(4)}</td><td>${pval == null ? 'N/A' : Number(pval).toExponential(3)}</td><td>${sig}</td><td>${v.n_samples || '-'}</td></tr>`;
+                });
+                html += '</tbody></table>';
+            });
+            root.innerHTML = html;
+        }
+
+        // ───────────────────────── Init ─────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkHealth();
+            try {
+                const r = await fetch('/api/evaluation/full/status');
+                const s = await r.json();
+                if (s.state === 'running') {
+                    document.getElementById('fullEvalProgressBox').style.display = 'block';
+                    document.getElementById('fullEvalRunBtn').style.display = 'none';
+                    document.getElementById('fullEvalStopBtn').style.display = 'inline-flex';
+                    pollFullEvalStatus();
+                } else if (s.state === 'done') {
+                    await loadFullEvalResults();
+                }
+            } catch (e) {}
+        });
     </script>
 </body>
 </html>

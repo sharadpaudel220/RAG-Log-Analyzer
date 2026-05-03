@@ -1,0 +1,15 @@
+{
+  "state": "done",
+  "started_at": "2026-05-03T21:38:30.718494",
+  "finished_at": "2026-05-03T21:41:42.939658",
+  "current_system": "Agentic RAG",
+  "current_dataset": "BGL",
+  "processed": 4800,
+  "total": 4800,
+  "percent": 100.0,
+  "message": "Evaluation complete",
+  "errors": [],
+  "timeouts": 0,
+  "completed_combos": [],
+  "partial_results": {}
+}

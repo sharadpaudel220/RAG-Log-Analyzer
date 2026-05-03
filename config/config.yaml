@@ -32,11 +32,15 @@ retrieval:
   retrieval_strategy: hybrid
   rerank: true
 llm:
-  provider: ollama
-  model: mistral:7b-instruct
+  # Default: Groq Cloud + Llama-3.1-8B-Instant.
+  # Free tier (~14,400 req/day) is sufficient for full HDFS+BGL evaluation.
+  # Set GROQ_API_KEY in your .env (get one free: https://console.groq.com/keys).
+  # To switch back to local Ollama, set provider=ollama and model=mistral:7b-instruct.
+  provider: groq
+  model: llama-3.1-8b-instant
   temperature: 0.1
   max_tokens: 2048
-  timeout: 120
+  timeout: 60
   base_url: http://localhost:11434
   openai:
     api_key: ''
@@ -48,6 +52,9 @@ llm:
   gemini:
     api_key: ''
     base_url: https://generativelanguage.googleapis.com
+  groq:
+    api_key: ''
+    base_url: https://api.groq.com/openai
 agentic:
   max_reasoning_steps: 5
   reasoning_strategy: react

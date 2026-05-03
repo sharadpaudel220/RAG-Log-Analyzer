@@ -228,13 +228,11 @@ class NetworkCapture:
         # Build tcpdump command
         # -l: line buffered output
         # -n: don't resolve hostnames
-        # -t: don't print timestamp (we'll use our own)
         # -i: interface
         cmd = [
             'tcpdump',
             '-l',
             '-n',
-            '-tttt',  # timestamp with date
             '-i', self.interface,
             self.filter_expression
         ]
@@ -300,6 +298,17 @@ class NetworkCapture:
         self.stats['started_at'] = datetime.now().isoformat()
         self.thread = threading.Thread(target=self._capture_loop, daemon=True)
         self.thread.start()
+        
+        # Wait briefly to verify tcpdump started successfully
+        import time
+        time.sleep(0.5)
+        if self.process and self.process.poll() is not None:
+            self.running = False
+            stderr_output = self.process.stderr.read() if self.process.stderr else ''
+            logger.error(f"tcpdump failed immediately: {stderr_output}")
+            if 'permission' in stderr_output.lower() or 'denied' in stderr_output.lower():
+                raise PermissionError("tcpdump requires root privileges to capture network packets.")
+            raise RuntimeError(f"tcpdump failed to start: {stderr_output.strip()}")
         
         logger.info(f"Network capture started on {self.interface}")
     

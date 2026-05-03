@@ -488,6 +488,8 @@
                     <span class="status-dot online"></span>
                     <span>System Healthy</span>
                 </div>
+                <div class="ollama-status" id="ollamaStatus" style="margin-top: 10px; cursor: pointer; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;" onclick="showOllamaDetails()">
+                </div>
             </div>
         </aside>
 
@@ -515,6 +517,24 @@
                     </div>
 
                     <div class="providers-grid">
+                        <!-- Groq Cloud (recommended free tier) -->
+                        <div class="provider-card" onclick="configureAIProvider('groq')">
+                            <div class="provider-icon" style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.02) 100%); color: var(--color-teal);">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h4>Groq Cloud <span style="font-size:0.7rem; padding:0.1rem 0.5rem; background:rgba(20,184,166,0.15); color:var(--color-teal); border-radius:8px; vertical-align:middle;">FREE</span></h4>
+                            <p>Llama-3 / Mixtral served at ~150 ms latency</p>
+                            <ul class="provider-features">
+                                <li>llama-3.1-8b-instant (default)</li>
+                                <li>llama-3.3-70b-versatile</li>
+                                <li>~14,400 requests / day free</li>
+                            </ul>
+                            <div class="provider-status">
+                                <span class="status-dot" id="groq-dot"></span>
+                                <span id="groq-status">Not Configured</span>
+                            </div>
+                        </div>
+
                         <!-- OpenAI -->
                         <div class="provider-card" onclick="configureAIProvider('openai')">
                             <div class="provider-icon">
@@ -993,6 +1013,7 @@
     </style>
 
     <script src="{{ url_for('static', filename='js/api_config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ollama_status.js') }}"></script>
     <script>
         // Toast Notification System
         function showToast(message, type = 'info', title = '', duration = 5000) {

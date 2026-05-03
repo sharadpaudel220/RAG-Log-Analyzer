@@ -21,6 +21,9 @@ class DetectionMetrics:
     true_negatives: int
     false_positives: int
     false_negatives: int
+    auc_roc: float = 0.0
+    auc_pr: float = 0.0
+    mcc: float = 0.0
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -30,6 +33,9 @@ class DetectionMetrics:
             'false_positive_rate': self.false_positive_rate,
             'false_negative_rate': self.false_negative_rate,
             'accuracy': self.accuracy,
+            'auc_roc': self.auc_roc,
+            'auc_pr': self.auc_pr,
+            'mcc': self.mcc,
             'true_positives': self.true_positives,
             'true_negatives': self.true_negatives,
             'false_positives': self.false_positives,
@@ -58,7 +64,8 @@ class MetricsCalculator:
     def calculate_detection_metrics(
         self, 
         predictions: List[bool], 
-        ground_truth: List[bool]
+        ground_truth: List[bool],
+        confidence_scores: List[float] = None
     ) -> DetectionMetrics:
         if len(predictions) != len(ground_truth):
             raise ValueError("Predictions and ground truth must have same length")
@@ -77,7 +84,25 @@ class MetricsCalculator:
         
         accuracy = (tp + tn) / len(predictions) if len(predictions) > 0 else 0.0
         
-        logger.info(f"Detection metrics - Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1_score:.4f}")
+        # Matthews Correlation Coefficient (balanced measure for imbalanced data)
+        mcc_denom = ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) ** 0.5
+        mcc = (tp * tn - fp * fn) / mcc_denom if mcc_denom > 0 else 0.0
+        
+        # AUC-ROC and AUC-PR (require confidence scores)
+        auc_roc = 0.0
+        auc_pr = 0.0
+        
+        if confidence_scores and len(confidence_scores) == len(ground_truth):
+            try:
+                from sklearn.metrics import roc_auc_score, average_precision_score
+                y_true = [1 if g else 0 for g in ground_truth]
+                auc_roc = roc_auc_score(y_true, confidence_scores)
+                auc_pr = average_precision_score(y_true, confidence_scores)
+                logger.info(f"AUC-ROC: {auc_roc:.4f}, AUC-PR: {auc_pr:.4f}")
+            except Exception as e:
+                logger.warning(f"Could not compute AUC metrics: {e}")
+        
+        logger.info(f"Detection metrics - Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1_score:.4f}, MCC: {mcc:.4f}, AUC-ROC: {auc_roc:.4f}, AUC-PR: {auc_pr:.4f}")
         
         return DetectionMetrics(
             precision=precision,
@@ -86,6 +111,9 @@ class MetricsCalculator:
             false_positive_rate=fpr,
             false_negative_rate=fnr,
             accuracy=accuracy,
+            auc_roc=auc_roc,
+            auc_pr=auc_pr,
+            mcc=mcc,
             true_positives=tp,
             true_negatives=tn,
             false_positives=fp,

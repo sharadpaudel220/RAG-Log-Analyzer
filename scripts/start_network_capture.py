@@ -43,7 +43,7 @@ class NetworkCaptureApp:
         )
         
         # Open log file
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         log_filename = f"network_logs_{timestamp}.jsonl"
         self.log_file = open(self.output_dir / log_filename, 'a')
         

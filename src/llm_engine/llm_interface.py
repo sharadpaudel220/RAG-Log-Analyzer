@@ -45,7 +45,10 @@ class LLMEngine:
 
         self.gemini_api_key = config.get_env('GEMINI_API_KEY') or config.get('llm.gemini.api_key', '')
         self.gemini_base_url = config.get('llm.gemini.base_url', 'https://generativelanguage.googleapis.com')
-        
+
+        self.groq_api_key = config.get_env('GROQ_API_KEY') or config.get('llm.groq.api_key', '')
+        self.groq_base_url = config.get('llm.groq.base_url', 'https://api.groq.com/openai')
+
         logger.info(f"LLMEngine initialized with {self.provider} - {self.model}")
     
     def generate(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
@@ -53,7 +56,9 @@ class LLMEngine:
         provider_aliases = {
             'chatgpt': 'openai',
             'claude': 'anthropic',
-            'google': 'gemini'
+            'google': 'gemini',
+            'llama': 'groq',
+            'groq-cloud': 'groq'
         }
         provider = provider_aliases.get(provider, provider)
 
@@ -66,6 +71,8 @@ class LLMEngine:
                 return self._generate_anthropic(prompt, system_prompt, **kwargs)
             if provider == 'gemini':
                 return self._generate_gemini(prompt, system_prompt, **kwargs)
+            if provider == 'groq':
+                return self._generate_groq(prompt, system_prompt, **kwargs)
             raise ValueError(f"Unsupported LLM provider: {self.provider}")
         except ValueError as e:
             logger.error(str(e))
@@ -77,7 +84,8 @@ class LLMEngine:
         env_var_name = {
             'openai': 'OPENAI_API_KEY',
             'anthropic': 'ANTHROPIC_API_KEY',
-            'gemini': 'GEMINI_API_KEY'
+            'gemini': 'GEMINI_API_KEY',
+            'groq': 'GROQ_API_KEY'
         }.get(provider_name, 'API_KEY')
         raise ValueError(f"Missing API key for provider '{provider_name}'. Set {env_var_name} or configure llm.{provider_name}.api_key in config.yaml")
     
@@ -260,6 +268,53 @@ class LLMEngine:
                 model=self.model
             )
     
+    def _generate_groq(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
+        """Groq Cloud — OpenAI-compatible API. Free tier: ~14,400 req/day.
+        Recommended models: llama-3.1-8b-instant, llama-3.3-70b-versatile, mixtral-8x7b-32768."""
+        self._ensure_api_key('groq', self.groq_api_key)
+        url = f"{self.groq_base_url.rstrip('/')}/v1/chat/completions"
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": kwargs.get('temperature', self.temperature),
+            "max_tokens": kwargs.get('max_tokens', self.max_tokens)
+        }
+        headers = {
+            "Authorization": f"Bearer {self.groq_api_key}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            result = response.json()
+
+            choice = (result.get('choices') or [{}])[0]
+            message = choice.get('message') or {}
+            content = message.get('content', '')
+            usage = result.get('usage') or {}
+
+            return LLMResponse(
+                content=content,
+                model=result.get('model', self.model),
+                prompt_tokens=usage.get('prompt_tokens', 0),
+                completion_tokens=usage.get('completion_tokens', 0),
+                total_tokens=usage.get('total_tokens', 0),
+                finish_reason=choice.get('finish_reason', 'stop')
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error calling Groq API: {e}")
+            return LLMResponse(
+                content=f"Error: Unable to generate response - {str(e)}",
+                model=self.model
+            )
+
     def analyze_log_anomaly(self, log_content: str, context: str, template: str) -> LLMResponse:
         system_prompt = "You are a log analysis expert. Analyze logs quickly and concisely."
         
@@ -324,12 +379,22 @@ Return ONLY a valid JSON object matching the schema. Do not include any explanat
             return {}
     
     def check_health(self) -> bool:
+        provider = (self.provider or '').lower().strip()
         try:
-            if self.provider != 'ollama':
-                return True
-            url = f"{self.base_url}/api/tags"
-            response = requests.get(url, timeout=5)
-            return response.status_code == 200
+            if provider == 'ollama':
+                response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+                return response.status_code == 200
+            if provider == 'groq':
+                # An API key is sufficient evidence for cloud providers; a real
+                # ping costs quota. Light validation only.
+                return bool(self.groq_api_key)
+            if provider in ('openai', 'chatgpt'):
+                return bool(self.openai_api_key)
+            if provider in ('anthropic', 'claude'):
+                return bool(self.anthropic_api_key)
+            if provider in ('gemini', 'google'):
+                return bool(self.gemini_api_key)
+            return True
         except Exception as e:
             logger.error(f"Health check failed: {e}")
             return False

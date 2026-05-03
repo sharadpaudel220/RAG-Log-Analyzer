@@ -16,6 +16,11 @@ from werkzeug.utils import secure_filename
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Base directory for the application
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)
+
 from src.utils.logger import get_logger
 from src.input_layer.log_ingestion import RawLogEntry, LogIngestion
 from src.preprocessing.log_preprocessor import LogPreprocessor
@@ -37,7 +42,7 @@ from src.utils.logger import get_logger
 
 load_dotenv()
 
-logger = get_logger(__name__, log_file="logs/web_app.log")
+logger = get_logger(__name__, log_file=os.path.join(LOGS_DIR, "web_app.log"))
 
 
 def _get_result_confidence(result) -> float:
@@ -132,9 +137,28 @@ def initialize_system():
         system_components['knowledge_manager'] = KnowledgeBaseManager()
         system_components['retrieval_system'] = RetrievalSystem(system_components['knowledge_manager'])
         system_components['llm_engine'] = LLMEngine()
+        
+        # Check that the configured LLM provider is reachable / has a key
+        llm_engine = system_components['llm_engine']
+        llm_ok = llm_engine.check_health()
+        provider_label = (llm_engine.provider or 'unknown').lower()
+        if not llm_ok:
+            logger.warning(
+                f"LLM provider '{provider_label}' is not ready. "
+                f"For cloud providers set the matching API key in .env; "
+                f"for ollama start the local server."
+            )
+            system_components['ollama_available'] = False
+            system_components['llm_available'] = False
+        else:
+            logger.info(f"LLM provider '{provider_label}' ready (model: {llm_engine.model})")
+            system_components['ollama_available'] = (provider_label == 'ollama')
+            system_components['llm_available'] = True
+        
         system_components['agentic_controller'] = AgenticController(
             system_components['retrieval_system'],
-            system_components['llm_engine']
+            system_components['llm_engine'],
+            force_full_react=True
         )
         system_components['alert_generator'] = AlertGenerator()
         system_components['rule_based'] = RuleBasedSystem()
@@ -239,21 +263,11 @@ def evaluation():
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
-    if not system_components['initialized']:
-        initialize_system()
-    
-    health_status = {
-        'status': 'healthy' if system_components['initialized'] else 'initializing',
-        'components': {
-            'llm_engine': system_components['llm_engine'].check_health() if system_components['llm_engine'] else False,
-            'knowledge_base': len(system_components['knowledge_manager'].documents) if system_components['knowledge_manager'] else 0,
-            'preprocessor': system_components['preprocessor'] is not None,
-            'agentic_controller': system_components['agentic_controller'] is not None,
-            'log_sources': len(system_components['source_manager'].sources) if system_components['source_manager'] else 0
-        },
-        'timestamp': datetime.now().isoformat()
-    }
-    return jsonify(health_status)
+    return jsonify({
+        'status': 'healthy',
+        'system_initialized': system_components['initialized'],
+        'ollama_available': system_components.get('ollama_available', False)
+    })
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
@@ -574,6 +588,10 @@ def analyze_file():
         # Read file content for database storage
         with open(filepath, 'r') as f:
             file_content = f.read()
+        
+        # Check if Ollama is available for Agentic RAG
+        if system_type == 'agentic' and not system_components.get('ollama_available', False):
+            return jsonify({'error': 'Ollama is not running. Agentic RAG requires Ollama to be running for ReAct-based log analysis. Please start Ollama and try again.'}), 503
         
         # Create database session (returns session_id as string)
         session_id = db_service.create_analysis_session(filename, system_type, file_content)
@@ -965,7 +983,7 @@ def get_ai_providers():
         from src.utils.config_loader import config
         
         providers = {}
-        for provider_name in ['openai', 'anthropic', 'gemini']:
+        for provider_name in ['groq', 'openai', 'anthropic', 'gemini']:
             api_key = config.get_env(f'{provider_name.upper()}_API_KEY') or config.get(f'llm.{provider_name}.api_key', '')
             model = config.get('llm.model', '') if config.get('llm.provider', '') == provider_name else ''
             base_url = config.get(f'llm.{provider_name}.base_url', '')
@@ -997,7 +1015,7 @@ def save_ai_provider():
         if not provider or not api_key or not model:
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
-        if provider not in ['openai', 'anthropic', 'gemini']:
+        if provider not in ['groq', 'openai', 'anthropic', 'gemini']:
             return jsonify({'success': False, 'error': 'Invalid provider'}), 400
         
         # Save to environment variables (runtime only - recommend using .env file)
@@ -1128,7 +1146,11 @@ def analyze_log():
         
         if not log_content:
             return jsonify({'error': 'No log content provided'}), 400
-        
+
+        # Check if Ollama is available for Agentic RAG
+        if system_type == 'agentic' and not system_components.get('ollama_available', False):
+            return jsonify({'error': 'Ollama is not running. Agentic RAG requires Ollama to be running for ReAct-based log analysis. Please start Ollama and try again.'}), 503
+
         raw_log = RawLogEntry(content=log_content, timestamp=datetime.now())
         parsed_logs = system_components['preprocessor'].preprocess([raw_log])
         
@@ -1264,7 +1286,7 @@ def get_alerts():
 
 @app.route('/api/evaluate', methods=['POST'])
 def evaluate_systems():
-    """Run comparative evaluation"""
+    """Run comparative evaluation with detailed metrics"""
     if not system_components['initialized']:
         initialize_system()
     
@@ -1272,11 +1294,35 @@ def evaluate_systems():
         data = request.json
         log_file = data.get('log_file', 'data/datasets/sample/sample_logs.log')
         max_logs = data.get('max_logs', 10)
+        session_id = data.get('session_id')
         
-        raw_logs = system_components['ingestion'].ingest_file(log_file)[:max_logs]
-        parsed_logs = system_components['preprocessor'].preprocess(raw_logs)
+        if session_id:
+            session_data = _load_analysis_session(session_id)
+            if not session_data:
+                return jsonify({'error': 'Session not found'}), 404
+            logger.info(f"Session data loaded: {len(session_data.get('all_logs', []))} logs, keys: {list(session_data.keys())}")
+            from src.input_layer.log_ingestion import RawLogEntry
+            raw_logs = []
+            for log in session_data.get('all_logs', []):
+                raw_logs.append(RawLogEntry(
+                    content=log.get('content', log.get('raw_content', '')),
+                    timestamp=datetime.now(),
+                    metadata=log
+                ))
+            logger.info(f"Built {len(raw_logs)} raw log entries for session evaluation")
+            parsed_logs = system_components['preprocessor'].preprocess(raw_logs)[:max_logs]
+            logger.info(f"Preprocessed into {len(parsed_logs)} parsed log entries")
+        else:
+            raw_logs = system_components['ingestion'].ingest_file(log_file)[:max_logs]
+            logger.info(f"Ingested {len(raw_logs)} raw log entries from file {log_file}")
+            parsed_logs = system_components['preprocessor'].preprocess(raw_logs)
+            logger.info(f"Preprocessed into {len(parsed_logs)} parsed log entries")
+        
+        if not parsed_logs:
+            return jsonify({'error': 'No logs available for evaluation'}), 400
         
         ground_truth = [log.severity in ['ERROR', 'CRITICAL', 'FATAL'] for log in parsed_logs]
+        total_logs = len(parsed_logs)
         
         results = []
         
@@ -1293,25 +1339,445 @@ def evaluate_systems():
                 ground_truth=ground_truth
             )
             
+            dm = result.detection_metrics
+            em = result.efficiency_metrics
+            
             results.append({
                 'system': system_name,
-                'f1_score': result.detection_metrics.f1_score,
-                'precision': result.detection_metrics.precision,
-                'recall': result.detection_metrics.recall,
-                'accuracy': result.detection_metrics.accuracy,
-                'latency': result.efficiency_metrics.average_latency,
-                'throughput': result.efficiency_metrics.throughput
+                'f1': dm.f1_score,
+                'precision': dm.precision,
+                'recall': dm.recall,
+                'accuracy': dm.accuracy,
+                'auc_roc': dm.auc_roc,
+                'auc_pr': dm.auc_pr,
+                'mcc': dm.mcc,
+                'latency': em.average_latency,
+                'throughput': em.throughput,
+                'true_positives': dm.true_positives,
+                'true_negatives': dm.true_negatives,
+                'false_positives': dm.false_positives,
+                'false_negatives': dm.false_negatives,
+                'total_time': em.total_time,
+                'total_logs': total_logs
             })
         
         return jsonify({
             'success': True,
             'results': results,
-            'logs_analyzed': len(parsed_logs)
+            'logs_analyzed': total_logs
         })
         
     except Exception as e:
         logger.error(f"Error in evaluation: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/evaluate/benchmark', methods=['POST'])
+def evaluate_benchmark():
+    """Run evaluation on benchmark datasets with validated ground truth (thesis-level rigor)."""
+    if not system_components['initialized']:
+        initialize_system()
+    
+    try:
+        data = request.json or {}
+        dataset_name = data.get('dataset', 'hdfs')
+        max_logs = data.get('max_logs', 2000)
+        use_cv = data.get('use_cross_validation', False)
+        n_folds = data.get('n_folds', 5)
+        n_runs = data.get('n_runs', 3)
+        
+        # Load benchmark dataset with pre-labeled ground truth
+        from src.evaluation.dataset_loader import get_dataset
+        dataset = get_dataset(dataset_name, max_logs=max_logs)
+        
+        if not dataset:
+            return jsonify({
+                'error': f'Benchmark dataset "{dataset_name}" not found. Available: HDFS, BGL'
+            }), 404
+        
+        # Preprocess logs
+        parsed_logs = system_components['preprocessor'].preprocess(dataset.raw_logs)
+        
+        if not parsed_logs:
+            return jsonify({'error': 'No logs could be preprocessed'}), 400
+        
+        # Use actual labeled ground truth from dataset (NOT keyword-based)
+        ground_truth = dataset.ground_truth[:len(parsed_logs)]
+        total_logs = len(parsed_logs)
+        
+        logger.info(f"Benchmark evaluation: {dataset.name}, {total_logs} logs, "
+                   f"{dataset.anomaly_count} anomalies ({dataset.anomaly_ratio:.2%})")
+        
+        systems = [
+            ('Rule-Based', system_components['rule_based'].analyze),
+            ('Isolation Forest', system_components['isolation_forest'].analyze),
+            ('Non-Agentic RAG', system_components['non_agentic_rag'].analyze),
+            ('Agentic RAG', system_components['agentic_controller'].analyze_log)
+        ]
+        
+        results = []
+        cv_fold_scores = {}  # For statistical testing
+        
+        for system_name, analyzer in systems:
+            if use_cv:
+                # Run cross-validation for statistical robustness
+                cv_result = system_components['evaluator'].evaluate_with_cross_validation(
+                    system_name=system_name,
+                    analysis_function=analyzer,
+                    log_entries=parsed_logs,
+                    ground_truth=ground_truth,
+                    n_folds=n_folds,
+                    n_runs=n_runs
+                )
+                
+                # Extract mean scores for display
+                agg = cv_result['aggregated_metrics']
+                dm_dict = {
+                    'precision': agg['precision']['mean'],
+                    'recall': agg['recall']['mean'],
+                    'f1_score': agg['f1_score']['mean'],
+                    'accuracy': agg['accuracy']['mean'],
+                    'auc_roc': agg['auc_roc']['mean'],
+                    'auc_pr': agg['auc_pr']['mean'],
+                    'mcc': agg['mcc']['mean'],
+                    'true_positives': 0,
+                    'true_negatives': 0,
+                    'false_positives': 0,
+                    'false_negatives': 0
+                }
+                em_dict = {
+                    'average_latency': 0,
+                    'total_time': 0,
+                    'throughput': 0,
+                    'memory_usage_mb': 0
+                }
+                
+                cv_fold_scores[system_name] = agg['f1_score']['values']
+                
+                results.append({
+                    'system': system_name,
+                    'f1': agg['f1_score']['mean'],
+                    'precision': agg['precision']['mean'],
+                    'recall': agg['recall']['mean'],
+                    'accuracy': agg['accuracy']['mean'],
+                    'auc_roc': agg['auc_roc']['mean'],
+                    'auc_pr': agg['auc_pr']['mean'],
+                    'mcc': agg['mcc']['mean'],
+                    'f1_std': agg['f1_score']['std'],
+                    'f1_ci_low': agg['f1_score']['ci_95_low'],
+                    'f1_ci_high': agg['f1_score']['ci_95_high'],
+                    'latency': 0,
+                    'throughput': 0,
+                    'total_time': 0,
+                    'total_logs': total_logs,
+                    'is_cv': True,
+                    'n_folds': n_folds,
+                    'n_runs': n_runs
+                })
+            else:
+                # Single run (faster)
+                result = system_components['evaluator'].evaluate_system(
+                    system_name=system_name,
+                    analysis_function=analyzer,
+                    log_entries=parsed_logs,
+                    ground_truth=ground_truth
+                )
+                
+                dm = result.detection_metrics
+                em = result.efficiency_metrics
+                
+                results.append({
+                    'system': system_name,
+                    'f1': dm.f1_score,
+                    'precision': dm.precision,
+                    'recall': dm.recall,
+                    'accuracy': dm.accuracy,
+                    'auc_roc': dm.auc_roc,
+                    'auc_pr': dm.auc_pr,
+                    'mcc': dm.mcc,
+                    'f1_std': 0,
+                    'f1_ci_low': dm.f1_score,
+                    'f1_ci_high': dm.f1_score,
+                    'latency': em.average_latency,
+                    'throughput': em.throughput,
+                    'true_positives': dm.true_positives,
+                    'true_negatives': dm.true_negatives,
+                    'false_positives': dm.false_positives,
+                    'false_negatives': dm.false_negatives,
+                    'total_time': em.total_time,
+                    'total_logs': total_logs,
+                    'is_cv': False
+                })
+        
+        # Statistical comparison (if cross-validation used)
+        statistical_tests = []
+        if use_cv and len(results) >= 2:
+            for i in range(len(systems)):
+                for j in range(i + 1, len(systems)):
+                    s1_name = systems[i][0]
+                    s2_name = systems[j][0]
+                    if s1_name in cv_fold_scores and s2_name in cv_fold_scores:
+                        test_result = system_components['evaluator'].metrics_calculator.paired_t_test(
+                            cv_fold_scores[s1_name], cv_fold_scores[s2_name], alpha=0.05
+                        )
+                        test_result['system1'] = s1_name
+                        test_result['system2'] = s2_name
+                        statistical_tests.append(test_result)
+        
+        return jsonify({
+            'success': True,
+            'results': results,
+            'logs_analyzed': total_logs,
+            'dataset': dataset.name,
+            'anomaly_count': dataset.anomaly_count,
+            'anomaly_ratio': dataset.anomaly_ratio,
+            'use_cross_validation': use_cv,
+            'statistical_tests': statistical_tests
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in benchmark evaluation: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/datasets', methods=['GET'])
+def list_datasets():
+    """List available benchmark datasets."""
+    from src.evaluation.dataset_loader import list_available_datasets
+    datasets = list_available_datasets()
+    return jsonify({'success': True, 'datasets': datasets})
+
+
+@app.route('/api/evaluate/ablation', methods=['POST'])
+def run_ablation_study():
+    """Run ablation study on Agentic RAG components using benchmark datasets."""
+    if not system_components['initialized']:
+        initialize_system()
+    
+    try:
+        data = request.json or {}
+        dataset_name = data.get('dataset', 'hdfs')
+        max_logs = data.get('max_logs', 1000)
+        
+        # Load benchmark dataset with pre-labeled ground truth
+        from src.evaluation.dataset_loader import get_dataset
+        dataset = get_dataset(dataset_name, max_logs=max_logs)
+        
+        if not dataset:
+            return jsonify({
+                'error': f'Benchmark dataset "{dataset_name}" not found. Available: HDFS, BGL'
+            }), 404
+        
+        # Preprocess logs
+        parsed_logs = system_components['preprocessor'].preprocess(dataset.raw_logs)
+        
+        if not parsed_logs:
+            return jsonify({'error': 'No logs could be preprocessed'}), 400
+        
+        ground_truth = dataset.ground_truth[:len(parsed_logs)]
+        total_logs = len(parsed_logs)
+        
+        logger.info(f"Ablation study on {dataset.name}, {total_logs} logs")
+        
+        # Run ablation study
+        ablation_results = system_components['evaluator'].run_ablation_study(
+            base_controller=system_components['agentic_controller'],
+            log_entries=parsed_logs,
+            ground_truth=ground_truth
+        )
+        
+        return jsonify({
+            'success': True,
+            'dataset': dataset.name,
+            'logs_analyzed': total_logs,
+            'anomaly_count': dataset.anomaly_count,
+            'anomaly_ratio': dataset.anomaly_ratio,
+            'full_system_f1': ablation_results['full_system_f1'],
+            'ablation_results': ablation_results['ablation_results'],
+            'total_variants': ablation_results['total_variants']
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in ablation study: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/evaluate/qualitative', methods=['POST'])
+def evaluate_qualitative():
+    """Run qualitative analysis with sample predictions and explanations (thesis-level explainability)."""
+    if not system_components['initialized']:
+        initialize_system()
+    
+    try:
+        data = request.json or {}
+        dataset_name = data.get('dataset', 'hdfs')
+        system_name = data.get('system', 'Agentic RAG')
+        max_logs = data.get('max_logs', 200)
+        max_examples = data.get('max_examples', 10)
+        
+        # Load benchmark dataset
+        from src.evaluation.dataset_loader import get_dataset
+        dataset = get_dataset(dataset_name, max_logs=max_logs)
+        
+        if not dataset:
+            return jsonify({
+                'error': f'Benchmark dataset "{dataset_name}" not found. Available: HDFS, BGL'
+            }), 404
+        
+        parsed_logs = system_components['preprocessor'].preprocess(dataset.raw_logs)
+        if not parsed_logs:
+            return jsonify({'error': 'No logs could be preprocessed'}), 400
+        
+        ground_truth = dataset.ground_truth[:len(parsed_logs)]
+        
+        # Map system name to analyzer
+        analyzers = {
+            'Rule-Based': system_components['rule_based'].analyze,
+            'Isolation Forest': system_components['isolation_forest'].analyze,
+            'Non-Agentic RAG': system_components['non_agentic_rag'].analyze,
+            'Agentic RAG': system_components['agentic_controller'].analyze_log
+        }
+        
+        analyzer = analyzers.get(system_name)
+        if not analyzer:
+            return jsonify({'error': f'Unknown system: {system_name}'}), 400
+        
+        result = system_components['evaluator'].evaluate_with_explanations(
+            system_name=system_name,
+            analysis_function=analyzer,
+            log_entries=parsed_logs,
+            ground_truth=ground_truth,
+            max_examples=max_examples
+        )
+        
+        return jsonify({
+            'success': True,
+            'system_name': result['system_name'],
+            'dataset': dataset.name,
+            'total_logs': result['total_logs'],
+            'detection_metrics': result['detection_metrics'],
+            'examples': result['examples']
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in qualitative evaluation: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== Full Dissertation Evaluation ====================
+
+import threading as _eval_threading
+
+_full_eval_thread = None
+_full_eval_lock = _eval_threading.Lock()
+
+
+def _run_full_eval_in_background(max_logs):
+    """Background runner for the full dissertation evaluation pipeline."""
+    try:
+        from run_full_evaluation import run_full_evaluation
+        run_full_evaluation(max_logs_per_dataset=max_logs)
+    except Exception as exc:
+        logger.error(f"Full evaluation crashed: {exc}", exc_info=True)
+        try:
+            import json as _j
+            from pathlib import Path as _P
+            status_path = _P('evaluation_status.json')
+            state = {}
+            if status_path.exists():
+                state = _j.loads(status_path.read_text())
+            state['state'] = 'error'
+            state['message'] = f'Crashed: {exc}'
+            status_path.write_text(_j.dumps(state, indent=2, default=str))
+        except Exception:
+            pass
+
+
+@app.route('/api/evaluation/full/start', methods=['POST'])
+def start_full_evaluation():
+    """Kick off the full dissertation evaluation in a background thread."""
+    global _full_eval_thread
+    with _full_eval_lock:
+        if _full_eval_thread is not None and _full_eval_thread.is_alive():
+            return jsonify({'success': False, 'error': 'Evaluation already running'}), 409
+        data = request.json or {}
+        max_logs = data.get('max_logs')  # None = full dataset
+        # Wipe checkpoint if user requested a fresh run
+        if data.get('reset', True):
+            for fname in ('evaluation_status.json', 'evaluation_checkpoint.json'):
+                try:
+                    p = os.path.join(os.path.dirname(__file__), fname)
+                    if os.path.exists(p):
+                        os.remove(p)
+                except Exception:
+                    pass
+        _full_eval_thread = _eval_threading.Thread(
+            target=_run_full_eval_in_background, args=(max_logs,), daemon=True
+        )
+        _full_eval_thread.start()
+        return jsonify({'success': True, 'message': 'Full evaluation started'})
+
+
+@app.route('/api/evaluation/full/status', methods=['GET'])
+def full_evaluation_status():
+    """Return the current evaluation status (polled by the UI)."""
+    status_path = os.path.join(os.path.dirname(__file__), 'evaluation_status.json')
+    if not os.path.exists(status_path):
+        return jsonify({'state': 'idle', 'percent': 0})
+    try:
+        with open(status_path, 'r') as f:
+            return jsonify(json.load(f))
+    except Exception as exc:
+        return jsonify({'state': 'error', 'message': str(exc)}), 500
+
+
+@app.route('/api/evaluation/full/results', methods=['GET'])
+def full_evaluation_results():
+    """Return parsed dissertation_results.json."""
+    results_path = os.path.join(os.path.dirname(__file__), 'evaluation_results.json')
+    if not os.path.exists(results_path):
+        return jsonify({'error': 'No results yet. Run evaluation first.'}), 404
+    try:
+        with open(results_path, 'r') as f:
+            return jsonify(json.load(f))
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/evaluation/full/download/<filename>', methods=['GET'])
+def full_evaluation_download(filename):
+    """Serve one of the four output artifacts for download."""
+    allowed = {
+        'evaluation_results.json',
+        'evaluation_metrics.csv',
+        'evaluation_report.txt',
+        'evaluation_run_log.txt',
+    }
+    if filename not in allowed:
+        return jsonify({'error': 'Invalid file'}), 400
+    path = os.path.join(os.path.dirname(__file__), filename)
+    if not os.path.exists(path):
+        return jsonify({'error': 'File not generated yet'}), 404
+    from flask import send_file
+    return send_file(path, as_attachment=True, download_name=filename)
+
+
+@app.route('/api/evaluation/full/stop', methods=['POST'])
+def stop_full_evaluation():
+    """Soft-stop: marks status as cancelled. Background thread continues but
+    the next checkpoint flush will reflect the cancel and the UI will stop polling."""
+    status_path = os.path.join(os.path.dirname(__file__), 'evaluation_status.json')
+    try:
+        if os.path.exists(status_path):
+            with open(status_path, 'r') as f:
+                state = json.load(f)
+            state['state'] = 'cancelled'
+            state['message'] = 'Cancelled by user'
+            with open(status_path, 'w') as f:
+                json.dump(state, f, indent=2, default=str)
+        return jsonify({'success': True})
+    except Exception as exc:
+        return jsonify({'error': str(exc)}), 500
 
 
 # ==================== Network Capture API ====================
@@ -1361,33 +1827,51 @@ def start_network_capture():
         data = request.json or {}
         interface = data.get('interface', 'en0')
         filter_expr = data.get('filter', 'tcp or udp or icmp')
-        auto_analyze = data.get('auto_analyze', True)
-        store_logs = data.get('store_logs', True)
-        
+        auto_analyze = data.get('auto_analyze', True) in (True, 'true', 'True', 'yes', 1, '1')
+        store_logs = data.get('store_logs', True) in (True, 'true', 'True', 'yes', 1, '1')
+
+        # Create dynamic log file name
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        network_log_filename = os.path.join(LOGS_DIR, f"network_logs_{timestamp}.log")
+
         # Import network capture module
         from src.connectors.network_capture import NetworkLogCollector
-        
+
+        # Open log file if store_logs is enabled
+        network_log_file = None
+        if store_logs:
+            os.makedirs(LOGS_DIR, exist_ok=True)
+            network_log_file = open(network_log_filename, 'a')
+
         # Define callback for captured logs
         def on_network_log(log_entry):
             try:
+                # Write to log file if enabled
+                if network_log_file:
+                    log_line = f"{log_entry.get('timestamp', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))} - {log_entry.get('severity', 'INFO')} - {log_entry.get('content', '')}\n"
+                    network_log_file.write(log_line)
+                    network_log_file.flush()
+                    os.fsync(network_log_file.fileno())
+
                 if auto_analyze and system_components['agentic_controller']:
                     # Analyze the log
                     raw_log = _to_raw_log_entry(log_entry)
                     parsed_logs = system_components['preprocessor'].preprocess([raw_log])
-                    
+
                     if parsed_logs:
                         result = system_components['agentic_controller'].analyze_log(parsed_logs[0])
                         system_components['system_stats']['total_logs_analyzed'] += 1
-                        
+
                         if result.is_anomaly:
                             system_components['system_stats']['anomalies_detected'] += 1
-                            
+
                             # Generate alert if needed
                             if result.severity in ['CRITICAL', 'HIGH']:
                                 alert = system_components['alert_generator'].generate_alert(result)
                                 system_components['recent_alerts'].insert(0, alert)
                                 system_components['system_stats']['alerts_generated'] += 1
-                                
+
                                 # Keep only last 100 alerts
                                 if len(system_components['recent_alerts']) > 100:
                                     system_components['recent_alerts'] = system_components['recent_alerts'][:100]
@@ -1398,18 +1882,23 @@ def start_network_capture():
         network_capture_instance = NetworkLogCollector(
             interface=interface,
             filter_expression=filter_expr,
-            log_callback=on_network_log if auto_analyze else None
+            log_callback=on_network_log if auto_analyze or store_logs else None
         )
-        
+
+        # Store log file reference in the instance
+        network_capture_instance.log_file = network_log_file
+        network_capture_instance.log_filename = network_log_filename
+
         network_capture_instance.start()
-        
-        logger.info(f"Network capture started on {interface}")
-        
+
+        logger.info(f"Network capture started on {interface}, saving to {network_log_filename}")
+
         return jsonify({
             'success': True,
             'message': f'Network capture started on interface {interface}',
             'interface': interface,
-            'filter': filter_expr
+            'filter': filter_expr,
+            'log_file': network_log_filename if store_logs else None
         })
         
     except PermissionError:
@@ -1425,17 +1914,29 @@ def start_network_capture():
 def stop_network_capture():
     """Stop network packet capture"""
     global network_capture_instance
-    
+
     try:
         if not network_capture_instance:
             return jsonify({'error': 'Network capture not running'}), 400
-        
+
         stats = network_capture_instance.get_stats()
+
+        # Stop capture first so callback isn't called anymore
         network_capture_instance.stop()
+
+        # Close log file safely after capture stops
+        try:
+            if hasattr(network_capture_instance, 'log_file') and network_capture_instance.log_file:
+                network_capture_instance.log_file.flush()
+                network_capture_instance.log_file.close()
+                logger.info(f"Closed network capture log file: {network_capture_instance.log_filename}")
+        except Exception as close_err:
+            logger.warning(f"Error closing network log file: {close_err}")
+
         network_capture_instance = None  # Clear the global instance
-        
+
         logger.info("Network capture stopped")
-        
+
         return jsonify({
             'success': True,
             'message': 'Network capture stopped',
@@ -1490,41 +1991,71 @@ def get_network_capture_status():
 
 @app.route('/api/network-capture/logs', methods=['GET'])
 def get_network_capture_logs():
-    """Get captured network logs for analysis from web_app.log file"""
+    """Get captured network logs for analysis from the dynamic log file"""
     global network_capture_instance
-    
+
     try:
-        # Check if network capture is running
+        # Check if network capture is running or has been stopped
         if not network_capture_instance:
-            logger.warning("Network capture instance not found")
-            return jsonify({
-                'error': 'Network capture not running. Please start network capture first.',
-                'logs': [], 
-                'count': 0
-            }), 400
-        
-        # Read logs from web_app.log file
-        log_file_path = os.path.join('logs', 'web_app.log')
-        
-        if not os.path.exists(log_file_path):
-            logger.error(f"Log file not found: {log_file_path}")
-            return jsonify({
-                'error': f'Log file not found: {log_file_path}',
-                'logs': [],
-                'count': 0
-            }), 404
-        
-        # Read and parse log file
-        formatted_logs = []
-        try:
-            with open(log_file_path, 'r') as f:
-                lines = f.readlines()
-                
-            # Check if file is empty
-            if not lines or len(lines) == 0:
-                logger.warning("Log file is empty")
+            # Try to find the most recent network capture log file
+            logs_dir = LOGS_DIR
+            if not os.path.exists(logs_dir):
+                logger.warning("Logs directory not found")
                 return jsonify({
-                    'error': 'No logs captured yet. Please wait for network activity to be captured.',
+                    'error': 'No network capture logs found. Please start network capture first.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+
+            # Find the most recent network_logs_*.log file
+            network_log_files = [f for f in os.listdir(logs_dir) if f.startswith('network_logs_') and f.endswith('.log')]
+            if not network_log_files:
+                logger.warning("No network capture log files found")
+                return jsonify({
+                    'error': 'No network capture logs found. Please start network capture first.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+
+            # Sort by modification time and get the most recent
+            network_log_files.sort(key=lambda f: os.path.getmtime(os.path.join(logs_dir, f)), reverse=True)
+            log_file_path = os.path.join(logs_dir, network_log_files[0])
+        else:
+            # Use the current network capture log file
+            log_file_path = network_capture_instance.log_filename if hasattr(network_capture_instance, 'log_filename') else None
+            has_file = log_file_path and os.path.exists(log_file_path)
+            
+            # If log file exists, read from file (primary source)
+            if has_file:
+                try:
+                    with open(log_file_path, 'r', errors='ignore') as f:
+                        lines = f.readlines()
+                except Exception as e:
+                    logger.error(f"Error reading network capture log file: {e}")
+                    return jsonify({
+                        'error': f'Error reading log file: {str(e)}',
+                        'logs': [],
+                        'count': 0
+                    }), 500
+            # If no log file but capture is running, fall back to in-memory logs
+            elif hasattr(network_capture_instance, 'recent_logs') and network_capture_instance.recent_logs:
+                logger.info(f"No log file on disk; returning {len(network_capture_instance.recent_logs)} in-memory network logs")
+                return jsonify({
+                    'logs': network_capture_instance.recent_logs,
+                    'count': len(network_capture_instance.recent_logs),
+                    'source': 'network-capture-memory'
+                })
+            elif hasattr(network_capture_instance, 'collected_logs') and network_capture_instance.collected_logs:
+                logger.info(f"No log file on disk; returning {len(network_capture_instance.collected_logs)} in-memory network logs")
+                return jsonify({
+                    'logs': network_capture_instance.collected_logs,
+                    'count': len(network_capture_instance.collected_logs),
+                    'source': 'network-capture-memory'
+                })
+            else:
+                logger.warning(f"Network capture log file not found: {log_file_path}")
+                return jsonify({
+                    'error': 'Network capture log file not found. Please start network capture first.',
                     'logs': [],
                     'count': 0
                 }), 400
@@ -1588,16 +2119,294 @@ def get_network_capture_logs():
                 'source_file': log_file_path
             })
             
-        except Exception as read_error:
-            logger.error(f"Error reading log file: {read_error}", exc_info=True)
+    except Exception as e:
+        logger.error(f"Error getting network capture logs: {e}", exc_info=True)
+        return jsonify({
+            'error': str(e),
+            'logs': [],
+            'count': 0
+        }), 500
+
+# ==================== System Log Capture ====================
+
+# Global system log capture instance
+system_log_capture_instance = None
+
+def capture_system_logs_thread():
+    """Background thread that reads system logs from source directory and writes to capture file"""
+    global system_log_capture_instance
+
+    first_run = True
+
+    while system_log_capture_instance and system_log_capture_instance.get('running', False):
+        try:
+            instance = system_log_capture_instance
+            if not instance or not instance.get('running', False):
+                break
+
+            log_directory = instance['log_directory']
+            file_pattern = instance['file_pattern']
+            log_file = instance['log_file']
+            max_lines = int(instance['max_lines'])
+
+            all_lines = []
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            if first_run:
+                # Always write a startup entry on first run
+                all_lines.append(f"=== System Log Capture Started at {timestamp} ===")
+                all_lines.append(f"Watching: {log_directory}/{file_pattern}")
+
+            # Find and read matching log files
+            import glob
+            search_pattern = os.path.join(log_directory, file_pattern)
+            log_files = glob.glob(search_pattern)
+
+            if not log_files:
+                logger.warning(f"No log files found in {log_directory} matching {file_pattern}")
+            else:
+                for log_file_path in log_files:
+                    try:
+                        with open(log_file_path, 'r', errors='ignore') as f:
+                            lines = f.readlines()
+                            all_lines.extend([line.strip() for line in lines if line.strip()])
+                    except Exception as e:
+                        logger.warning(f"Could not read log file {log_file_path}: {e}")
+
+            # Limit lines and write to file
+            if len(all_lines) > max_lines:
+                all_lines = all_lines[-max_lines:]
+
+            if all_lines:
+                if not first_run:
+                    log_file.write(f"\n=== Capture at {timestamp} ===\n")
+                for line in all_lines:
+                    log_file.write(line + '\n')
+                log_file.flush()
+                os.fsync(log_file.fileno())
+                logger.info(f"Wrote {len(all_lines)} lines to system log capture file")
+
+            first_run = False
+
+            # Wait for refresh interval
+            import time
+            time.sleep(int(instance['refresh_interval']))
+
+        except Exception as e:
+            logger.error(f"Error in system log capture thread: {e}", exc_info=True)
+            import time
+            time.sleep(2)
+
+    logger.info("System log capture thread stopped")
+
+@app.route('/api/system-log/start', methods=['POST'])
+def start_system_log_capture():
+    """Start system log capture"""
+    global system_log_capture_instance
+
+    if not system_components['initialized']:
+        initialize_system()
+
+    try:
+        if system_log_capture_instance:
+            return jsonify({'error': 'System log capture already running'}), 400
+
+        data = request.json or {}
+        log_directory = data.get('log_directory', '/var/log')
+        file_pattern = data.get('file_pattern', '*.log')
+        refresh_interval = int(data.get('refresh_interval', 1))
+        max_lines = int(data.get('max_lines', 100))
+
+        # Create dynamic log file name
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        system_log_filename = os.path.join(LOGS_DIR, f"system_logs_{timestamp}.log")
+
+        # Open log file
+        os.makedirs(LOGS_DIR, exist_ok=True)
+        system_log_file = open(system_log_filename, 'a')
+
+        # Create system log capture instance
+        system_log_capture_instance = {
+            'log_directory': log_directory,
+            'file_pattern': file_pattern,
+            'refresh_interval': refresh_interval,
+            'max_lines': max_lines,
+            'log_file': system_log_file,
+            'log_filename': system_log_filename,
+            'running': True,
+            'started_at': datetime.now()
+        }
+
+        # Start background capture thread
+        capture_thread = threading.Thread(target=capture_system_logs_thread, daemon=True)
+        system_log_capture_instance['thread'] = capture_thread
+        capture_thread.start()
+
+        logger.info(f"System log capture started, saving to {system_log_filename}")
+
+        return jsonify({
+            'success': True,
+            'message': f'System log capture started for {log_directory}',
+            'log_directory': log_directory,
+            'file_pattern': file_pattern,
+            'log_file': system_log_filename
+        })
+
+    except Exception as e:
+        logger.error(f"Error starting system log capture: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/system-log/stop', methods=['POST'])
+def stop_system_log_capture():
+    """Stop system log capture"""
+    global system_log_capture_instance
+
+    try:
+        if not system_log_capture_instance:
+            return jsonify({'error': 'System log capture not running'}), 400
+
+        # Signal the thread to stop
+        system_log_capture_instance['running'] = False
+
+        # Wait for thread to finish (up to 5 seconds)
+        thread = system_log_capture_instance.get('thread')
+        if thread and thread.is_alive():
+            thread.join(timeout=5)
+            if thread.is_alive():
+                logger.warning("System log capture thread did not exit in time")
+
+        # Close log file safely
+        try:
+            log_file = system_log_capture_instance.get('log_file')
+            if log_file:
+                log_file.flush()
+                log_file.close()
+                logger.info(f"Closed system log capture file: {system_log_capture_instance['log_filename']}")
+        except Exception as close_err:
+            logger.warning(f"Error closing system log file: {close_err}")
+
+        system_log_capture_instance = None
+
+        logger.info("System log capture stopped")
+
+        return jsonify({
+            'success': True,
+            'message': 'System log capture stopped'
+        })
+
+    except Exception as e:
+        logger.error(f"Error stopping system log capture: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/system-log/status', methods=['GET'])
+def get_system_log_status():
+    """Get system log capture status"""
+    global system_log_capture_instance
+
+    try:
+        if not system_log_capture_instance:
+            return jsonify({'running': False})
+
+        return jsonify({
+            'running': system_log_capture_instance['running'],
+            'log_directory': system_log_capture_instance['log_directory'],
+            'file_pattern': system_log_capture_instance['file_pattern'],
+            'started_at': system_log_capture_instance['started_at'].isoformat() if system_log_capture_instance.get('started_at') else None
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting system log status: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/system-log/logs', methods=['GET'])
+def get_system_logs():
+    """Get captured system logs for analysis from the dynamic log file"""
+    global system_log_capture_instance
+
+    try:
+        # Check if system log capture is running or has been stopped
+        if not system_log_capture_instance:
+            # Try to find the most recent system log capture file
+            logs_dir = LOGS_DIR
+            if not os.path.exists(logs_dir):
+                logger.warning("Logs directory not found")
+                return jsonify({
+                    'error': 'No system log capture logs found. Please start system log capture first.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+
+            # Find the most recent system_logs_*.log file
+            system_log_files = [f for f in os.listdir(logs_dir) if f.startswith('system_logs_') and f.endswith('.log')]
+            if not system_log_files:
+                logger.warning("No system log capture files found")
+                return jsonify({
+                    'error': 'No system log capture logs found. Please start system log capture first.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+
+            # Sort by modification time and get the most recent
+            system_log_files.sort(key=lambda f: os.path.getmtime(os.path.join(logs_dir, f)), reverse=True)
+            log_file_path = os.path.join(logs_dir, system_log_files[0])
+        else:
+            # Use the current system log capture file
+            log_file_path = system_log_capture_instance.get('log_filename')
+            if not log_file_path or not os.path.exists(log_file_path):
+                logger.warning(f"System log capture file not found: {log_file_path}")
+                return jsonify({
+                    'error': 'System log capture file not found. Please start system log capture first.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+
+        # Read and parse log file
+        formatted_logs = []
+        try:
+            with open(log_file_path, 'r') as f:
+                lines = f.readlines()
+
+            # Check if file is empty
+            if not lines or len(lines) == 0:
+                logger.warning("System log file is empty")
+                return jsonify({
+                    'error': 'No logs captured yet. Please wait for system logs to be collected.',
+                    'logs': [],
+                    'count': 0
+                }), 400
+
+            # Get last 100 lines or all if less
+            recent_lines = lines[-100:] if len(lines) > 100 else lines
+
+            for line in recent_lines:
+                line = line.strip()
+                if line:
+                    formatted_logs.append({
+                        'timestamp': '',
+                        'content': line,
+                        'severity': 'INFO',
+                        'source': 'system-log'
+                    })
+
+            logger.info(f"Successfully read {len(formatted_logs)} logs from {log_file_path}")
+
             return jsonify({
-                'error': f'Error reading log file: {str(read_error)}',
+                'logs': formatted_logs,
+                'count': len(formatted_logs),
+                'source_file': log_file_path
+            })
+
+        except Exception as read_error:
+            logger.error(f"Error reading system log file: {read_error}", exc_info=True)
+            return jsonify({
+                'error': f'Error reading system log file: {str(read_error)}',
                 'logs': [],
                 'count': 0
             }), 500
-        
+
     except Exception as e:
-        logger.error(f"Error getting network capture logs: {e}", exc_info=True)
+        logger.error(f"Error getting system logs: {e}", exc_info=True)
         return jsonify({
             'error': str(e),
             'logs': [],

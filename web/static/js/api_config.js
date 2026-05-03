@@ -298,7 +298,7 @@ async function loadAIProviders() {
 
 // Update AI provider status indicators
 function updateAIProviderStatus() {
-    ['openai', 'anthropic', 'gemini'].forEach(provider => {
+    ['groq', 'openai', 'anthropic', 'gemini'].forEach(provider => {
         const statusEl = document.getElementById(`${provider}-status`);
         if (aiProviders[provider] && aiProviders[provider].configured) {
             statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Configured';
@@ -323,6 +323,12 @@ function configureAIProvider(provider) {
     
     // Set provider-specific defaults
     const providerConfig = {
+        'groq': {
+            title: 'Configure Groq Cloud (free tier)',
+            defaultModel: 'llama-3.1-8b-instant',
+            modelHint: 'Examples: llama-3.1-8b-instant, llama-3.3-70b-versatile, mixtral-8x7b-32768',
+            defaultBaseURL: 'https://api.groq.com/openai'
+        },
         'openai': {
             title: 'Configure OpenAI (ChatGPT)',
             defaultModel: 'gpt-4o-mini',

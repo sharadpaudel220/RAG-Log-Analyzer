@@ -1,57 +1,254 @@
-2026-03-15 20:09:52 - __main__ - INFO - Network capture stopped
-2026-03-15 20:43:08 - __main__ - INFO - Initializing system components...
-2026-03-15 20:43:08 - __main__ - INFO - Initializing database connection...
-2026-03-15 20:43:08 - __main__ - INFO - Database connection established
-2026-03-15 20:43:08 - __main__ - INFO - Database tables verified/created
-2026-03-15 20:43:13 - __main__ - INFO - System components initialized successfully
-2026-03-15 20:46:03 - __main__ - INFO - Network capture started on en0
-2026-03-15 20:54:51 - __main__ - INFO - Network capture stopped
-2026-03-15 20:54:52 - __main__ - INFO - Network capture started on en0
-2026-03-15 20:54:59 - __main__ - INFO - Network capture stopped
-2026-03-16 22:03:32 - __main__ - INFO - Initializing system components...
-2026-03-16 22:03:32 - __main__ - INFO - Initializing database connection...
-2026-03-16 22:03:32 - __main__ - INFO - Database connection established
-2026-03-16 22:03:33 - __main__ - INFO - Database tables verified/created
-2026-03-16 22:03:38 - __main__ - INFO - System components initialized successfully
-2026-03-16 22:04:25 - __main__ - INFO - Network capture started on en0
-2026-03-16 22:11:16 - __main__ - INFO - Initializing system components...
-2026-03-16 22:11:16 - __main__ - INFO - Initializing database connection...
-2026-03-16 22:11:16 - __main__ - INFO - Database connection established
-2026-03-16 22:11:16 - __main__ - INFO - Database tables verified/created
-2026-03-16 22:11:21 - __main__ - INFO - System components initialized successfully
-2026-03-16 22:11:39 - __main__ - INFO - Network capture started on en0
-2026-03-16 22:11:46 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:11:46 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:11:47 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:11:47 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:11:48 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:11:48 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:11:48 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:11:48 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:16:30 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:16:30 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:16:39 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:16:39 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:16:40 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:16:40 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:16:40 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:16:40 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:17:09 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:17:09 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:17:11 - __main__ - INFO - Found 0 logs in recent_logs
-2026-03-16 22:17:11 - __main__ - INFO - Returning 0 formatted logs
-2026-03-16 22:20:41 - __main__ - INFO - Initializing system components...
-2026-03-16 22:20:41 - __main__ - INFO - Initializing database connection...
-2026-03-16 22:20:41 - __main__ - INFO - Database connection established
-2026-03-16 22:20:42 - __main__ - INFO - Database tables verified/created
-2026-03-16 22:20:47 - __main__ - INFO - System components initialized successfully
-2026-03-16 22:20:59 - __main__ - INFO - Network capture started on en0
-2026-03-16 22:20:59 - __main__ - INFO - Network capture stopped
-2026-03-16 22:21:02 - __main__ - INFO - Network capture started on en0
-2026-03-16 22:21:19 - __main__ - INFO - Successfully read 50 logs from logs/web_app.log
-2026-03-16 22:21:19 - __main__ - INFO - Starting agentic analysis of 50 logs for session 6fca53b8-ebdf-472e-9c72-90675dc4fd96
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 10/50 logs analyzed (20%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 20/50 logs analyzed (40%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 30/50 logs analyzed (60%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 40/50 logs analyzed (80%)
-2026-03-16 22:21:20 - __main__ - INFO - Progress: 50/50 logs analyzed (100%)
+2026-05-03 11:31:34 - __main__ - INFO - Initializing system components...
+2026-05-03 11:31:34 - __main__ - INFO - Initializing database connection...
+2026-05-03 11:31:34 - __main__ - INFO - Database connection established
+2026-05-03 11:31:34 - __main__ - INFO - Database tables verified/created
+2026-05-03 11:31:40 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 11:31:40 - __main__ - INFO - System components initialized successfully
+2026-05-03 11:33:49 - __main__ - WARNING - No network capture log files found
+2026-05-03 11:33:53 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_11-33-53.log
+2026-05-03 11:34:03 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_11-33-53.log
+2026-05-03 11:34:03 - __main__ - INFO - Network capture stopped
+2026-05-03 11:34:06 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_11-34-06.log
+2026-05-03 11:34:22 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_11-34-06.log
+2026-05-03 11:34:22 - __main__ - INFO - Network capture stopped
+2026-05-03 12:18:37 - __main__ - INFO - Initializing system components...
+2026-05-03 12:18:37 - __main__ - INFO - Initializing database connection...
+2026-05-03 12:18:37 - __main__ - INFO - Database connection established
+2026-05-03 12:18:37 - __main__ - INFO - Database tables verified/created
+2026-05-03 12:18:42 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 12:18:42 - __main__ - INFO - System components initialized successfully
+2026-05-03 12:19:02 - __main__ - WARNING - No network capture log files found
+2026-05-03 12:19:06 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_12-19-06.log
+2026-05-03 12:19:12 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_12-19-06.log
+2026-05-03 12:19:12 - __main__ - INFO - Network capture stopped
+2026-05-03 12:19:17 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:18 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:18 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:18 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:19 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:19 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:19 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:19 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:20 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:20 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:20 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:20 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:20 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:21 - __main__ - WARNING - Log file is empty
+2026-05-03 12:19:23 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_12-19-23.log
+2026-05-03 12:20:02 - __main__ - WARNING - No system log capture files found
+2026-05-03 12:20:06 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_12-20-06.log
+2026-05-03 12:20:06 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:08 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:10 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:12 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:14 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:16 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:18 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:20 - __main__ - ERROR - Error in system log capture thread: '>' not supported between instances of 'int' and 'str'
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1737, in capture_system_logs_thread
+    if len(all_lines) > max_lines:
+TypeError: '>' not supported between instances of 'int' and 'str'
+2026-05-03 12:20:22 - __main__ - INFO - System log capture thread stopped
+2026-05-03 12:20:24 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_12-20-06.log
+2026-05-03 12:20:24 - __main__ - INFO - System log capture stopped
+2026-05-03 12:20:25 - __main__ - ERROR - Error stopping system log capture: 'NoneType' object has no attribute 'get'
+2026-05-03 12:20:27 - __main__ - ERROR - Error stopping system log capture: 'NoneType' object has no attribute 'get'
+2026-05-03 12:25:51 - __main__ - INFO - Initializing system components...
+2026-05-03 12:25:51 - __main__ - INFO - Initializing database connection...
+2026-05-03 12:25:51 - __main__ - INFO - Database connection established
+2026-05-03 12:25:51 - __main__ - INFO - Database tables verified/created
+2026-05-03 12:25:56 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 12:25:56 - __main__ - INFO - System components initialized successfully
+2026-05-03 12:28:42 - __main__ - WARNING - Log file is empty
+2026-05-03 12:28:44 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_12-28-44.log
+2026-05-03 12:31:23 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_12-28-44.log
+2026-05-03 12:31:23 - __main__ - INFO - Network capture stopped
+2026-05-03 12:48:03 - __main__ - INFO - Initializing system components...
+2026-05-03 12:48:03 - __main__ - INFO - Initializing database connection...
+2026-05-03 12:48:03 - __main__ - INFO - Database connection established
+2026-05-03 12:48:03 - __main__ - INFO - Database tables verified/created
+2026-05-03 12:48:08 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 12:48:08 - __main__ - INFO - System components initialized successfully
+2026-05-03 12:48:14 - __main__ - WARNING - No system log capture files found
+2026-05-03 12:48:18 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_12-48-18.log
+2026-05-03 12:48:19 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 12:48:24 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 12:48:29 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 12:48:34 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 12:48:39 - __main__ - INFO - System log capture thread stopped
+2026-05-03 12:48:39 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-03 12:48:39 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_12-48-18.log
+2026-05-03 12:48:39 - __main__ - INFO - System log capture stopped
+2026-05-03 12:48:39 - __main__ - INFO - System log capture stopped
+2026-05-03 12:48:40 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_12-48-18.log
+2026-05-03 12:48:48 - __main__ - INFO - Starting rule_based analysis of 100 logs for session 7134192e-5a04-45c4-8106-093eb84a2462
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-05-03 12:48:48 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-05-03 13:08:17 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_12-48-18.log
+2026-05-03 13:08:19 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_13-08-18.log
+2026-05-03 13:08:19 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 13:08:24 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 13:08:29 - __main__ - INFO - System log capture thread stopped
+2026-05-03 13:08:29 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-03 13:08:29 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-03 13:08:29 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_13-08-18.log
+2026-05-03 13:08:29 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-03 13:08:29 - __main__ - INFO - System log capture stopped
+2026-05-03 13:08:29 - __main__ - INFO - System log capture stopped
+2026-05-03 13:08:29 - __main__ - INFO - System log capture stopped
+2026-05-03 13:08:29 - __main__ - INFO - System log capture stopped
+2026-05-03 13:08:30 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_13-08-18.log
+2026-05-03 13:08:39 - __main__ - INFO - Starting rule_based analysis of 100 logs for session 9f55e202-556b-4281-b135-a3b4edb9eede
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-05-03 13:08:39 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-05-03 13:09:01 - __main__ - INFO - Analysis session 8f28b44f-326d-4ec4-bc0c-425e04570ca9 deleted from database
+2026-05-03 13:09:03 - __main__ - INFO - Analysis session 7134192e-5a04-45c4-8106-093eb84a2462 deleted from database
+2026-05-03 13:50:54 - __main__ - INFO - Initializing system components...
+2026-05-03 13:50:54 - __main__ - INFO - Initializing database connection...
+2026-05-03 13:50:54 - __main__ - INFO - Database connection established
+2026-05-03 13:50:54 - __main__ - INFO - Database tables verified/created
+2026-05-03 13:51:00 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 13:51:00 - __main__ - INFO - System components initialized successfully
+2026-05-03 14:20:16 - __main__ - INFO - Initializing system components...
+2026-05-03 14:20:16 - __main__ - INFO - Initializing database connection...
+2026-05-03 14:20:16 - __main__ - INFO - Database connection established
+2026-05-03 14:20:16 - __main__ - INFO - Database tables verified/created
+2026-05-03 14:20:22 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 14:20:22 - __main__ - INFO - System components initialized successfully
+2026-05-03 14:20:28 - __main__ - INFO - Session data loaded: 100 logs, keys: ['session_id', 'filename', 'system_type', 'total_logs', 'anomalies_detected', 'analysis_time', 'timestamp', 'status', 'anomalies', 'all_logs', 'chat_history']
+2026-05-03 14:20:28 - __main__ - INFO - Built 100 raw log entries for session evaluation
+2026-05-03 14:20:28 - __main__ - INFO - Preprocessed into 100 parsed log entries
+2026-05-03 14:20:41 - __main__ - INFO - Session data loaded: 100 logs, keys: ['session_id', 'filename', 'system_type', 'total_logs', 'anomalies_detected', 'analysis_time', 'timestamp', 'status', 'anomalies', 'all_logs', 'chat_history']
+2026-05-03 14:20:41 - __main__ - INFO - Built 100 raw log entries for session evaluation
+2026-05-03 14:20:41 - __main__ - INFO - Preprocessed into 100 parsed log entries
+2026-05-03 14:20:50 - __main__ - INFO - Session data loaded: 100 logs, keys: ['session_id', 'filename', 'system_type', 'total_logs', 'anomalies_detected', 'analysis_time', 'timestamp', 'status', 'anomalies', 'all_logs', 'chat_history']
+2026-05-03 14:20:50 - __main__ - INFO - Built 100 raw log entries for session evaluation
+2026-05-03 14:20:50 - __main__ - INFO - Preprocessed into 100 parsed log entries
+2026-05-03 14:21:00 - __main__ - INFO - Session data loaded: 100 logs, keys: ['session_id', 'filename', 'system_type', 'total_logs', 'anomalies_detected', 'analysis_time', 'timestamp', 'status', 'anomalies', 'all_logs', 'chat_history']
+2026-05-03 14:21:00 - __main__ - INFO - Built 100 raw log entries for session evaluation
+2026-05-03 14:21:00 - __main__ - INFO - Preprocessed into 100 parsed log entries
+2026-05-03 14:21:11 - __main__ - INFO - Session data loaded: 100 logs, keys: ['session_id', 'filename', 'system_type', 'total_logs', 'anomalies_detected', 'analysis_time', 'timestamp', 'status', 'anomalies', 'all_logs', 'chat_history']
+2026-05-03 14:21:11 - __main__ - INFO - Built 100 raw log entries for session evaluation
+2026-05-03 14:21:11 - __main__ - INFO - Preprocessed into 100 parsed log entries
+2026-05-03 16:44:00 - __main__ - INFO - Initializing system components...
+2026-05-03 16:44:00 - __main__ - INFO - Initializing database connection...
+2026-05-03 16:44:00 - __main__ - INFO - Database connection established
+2026-05-03 16:44:00 - __main__ - INFO - Database tables verified/created
+2026-05-03 16:44:05 - __main__ - INFO - Ollama is running and available for Agentic RAG
+2026-05-03 16:44:05 - __main__ - INFO - System components initialized successfully
+2026-05-03 16:47:01 - __main__ - INFO - Analysis session 9f55e202-556b-4281-b135-a3b4edb9eede deleted from database
+2026-05-03 16:47:08 - __main__ - WARNING - No network capture log files found
+2026-05-03 16:47:16 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_16-47-16.log
+2026-05-03 16:47:23 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-03_16-47-16.log
+2026-05-03 16:47:23 - __main__ - INFO - Network capture stopped
+2026-05-03 16:47:26 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:29 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:30 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:31 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:31 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:31 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:32 - __main__ - WARNING - Log file is empty
+2026-05-03 16:47:32 - __main__ - WARNING - Log file is empty
+2026-05-03 18:28:45 - __main__ - INFO - Benchmark evaluation: HDFS, 2000 logs, 80 anomalies (4.00%)
+2026-05-03 18:28:45 - __main__ - INFO - Benchmark evaluation: HDFS, 2000 logs, 80 anomalies (4.00%)
+2026-05-03 19:29:49 - __main__ - INFO - Initializing system components...
+2026-05-03 19:29:49 - __main__ - INFO - Initializing database connection...
+2026-05-03 19:29:49 - __main__ - INFO - Database connection established
+2026-05-03 19:29:49 - __main__ - INFO - Database tables verified/created
+2026-05-03 19:29:54 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 19:29:54 - __main__ - INFO - System components initialized successfully
+2026-05-03 19:30:02 - __main__ - WARNING - No network capture log files found
+2026-05-03 19:30:45 - __main__ - WARNING - No system log capture files found
+2026-05-03 19:30:48 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_19-30-48.log
+2026-05-03 19:30:48 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 19:30:53 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 19:30:58 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 19:31:03 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-03 19:31:08 - __main__ - INFO - System log capture thread stopped
+2026-05-03 19:31:08 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-03 19:31:08 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-03 19:31:08 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_19-30-48.log
+2026-05-03 19:31:08 - __main__ - INFO - System log capture stopped
+2026-05-03 19:31:08 - __main__ - INFO - System log capture stopped
+2026-05-03 19:31:08 - __main__ - INFO - System log capture stopped
+2026-05-03 19:31:14 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_19-30-48.log
+2026-05-03 19:51:34 - __main__ - INFO - Initializing system components...
+2026-05-03 19:51:34 - __main__ - INFO - Initializing database connection...
+2026-05-03 19:51:34 - __main__ - INFO - Database connection established
+2026-05-03 19:51:35 - __main__ - INFO - Database tables verified/created
+2026-05-03 19:51:40 - __main__ - WARNING - Ollama is not running. Agentic RAG will not function properly without Ollama.
+2026-05-03 19:51:40 - __main__ - INFO - System components initialized successfully
+2026-05-03 20:42:05 - __main__ - ERROR - Full evaluation crashed: unsupported format string passed to NoneType.__format__
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 1671, in _run_full_eval_in_background
+    run_full_evaluation(max_logs_per_dataset=max_logs)
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/run_full_evaluation.py", line 513, in run_full_evaluation
+    _write_outputs(full_results, tracker)
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/run_full_evaluation.py", line 640, in _write_outputs
+    f'  {k:<24} t={t if t is None else f"{t:+.4f}":>9}  '
+TypeError: unsupported format string passed to NoneType.__format__
+2026-05-03 20:42:30 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_19-30-48.log
+2026-05-03 20:42:33 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-03_19-30-48.log
+2026-05-03 20:42:37 - __main__ - INFO - Starting rule_based analysis of 100 logs for session 1d13cffa-0644-4d65-9706-3eb7cf1557e5
+2026-05-03 20:42:37 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-05-03 20:42:38 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-05-03 21:37:50 - __main__ - INFO - Initializing system components...
+2026-05-03 21:37:50 - __main__ - INFO - Initializing database connection...
+2026-05-03 21:37:50 - __main__ - INFO - Database connection established
+2026-05-03 21:37:50 - __main__ - INFO - Database tables verified/created
+2026-05-03 21:37:55 - __main__ - INFO - Ollama is running and available for Agentic RAG
+2026-05-03 21:37:55 - __main__ - INFO - System components initialized successfully

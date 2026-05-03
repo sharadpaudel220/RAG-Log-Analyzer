@@ -99,6 +99,167 @@
             opacity: 0.6;
         }
 
+        /* Analysis Options Grid */
+        .analysis-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-option-card {
+            background: var(--glass-medium);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+                0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .analysis-option-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--color-teal);
+            box-shadow: 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+                0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .option-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .option-content {
+            flex: 1;
+        }
+
+        .option-content h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .option-content p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .option-arrow {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            transition: all var(--transition-base);
+        }
+
+        .analysis-option-card:hover .option-arrow {
+            color: var(--color-teal);
+            transform: translateX(4px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--glass-medium);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--glass-light);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
         .upload-zone h4 {
             font-size: 1.125rem;
             margin-bottom: 0.5rem;
@@ -507,6 +668,8 @@
                     <span class="status-dot online" id="statusDot"></span>
                     <span id="statusText">System Healthy</span>
                 </div>
+                <div class="ollama-status" id="ollamaStatusSidebar" style="margin-top: 10px; cursor: pointer; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;" onclick="showOllamaDetails()">
+                </div>
             </div>
         </aside>
 
@@ -525,153 +688,231 @@
                 </div>
             </header>
 
-            <!-- Main Analysis Cards -->
-            <div class="analyzer-grid">
-                <!-- Upload File Card -->
-                <div class="analyzer-card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-upload"></i>
-                        </div>
-                        <div class="card-title">
-                            <h3>Upload Log File</h3>
-                            <p>Select a log file from your computer</p>
-                        </div>
+            <!-- Main Analysis Options -->
+            <div class="analysis-options-grid">
+                <!-- Network Log Capture -->
+                <div class="analysis-option-card" onclick="openNetworkCaptureModal()">
+                    <div class="option-icon" style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.03) 100%); color: var(--color-teal);">
+                        <i class="fas fa-network-wired"></i>
                     </div>
-
-                    <div id="uploadZone" class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h4>Drop file here or click to browse</h4>
-                        <p>Supports .log, .txt, .json, .csv files</p>
-                        <input type="file" id="fileInput" accept=".log,.txt,.json,.csv" style="display: none;">
-                        <button class="btn btn-primary">
-                            <i class="fas fa-folder-open"></i> Browse Files
-                        </button>
+                    <div class="option-content">
+                        <h3>Capture Network Log</h3>
+                        <p>Capture network packets and analyze them in real-time</p>
                     </div>
-
-                    <div id="fileSelected" class="file-selected" style="display: none;">
-                        <i class="fas fa-file-alt"></i>
-                        <div class="file-details">
-                            <h4 id="fileName">No file selected</h4>
-                            <p id="fileSize">0 KB</p>
-                        </div>
-                        <button class="btn btn-sm btn-remove" onclick="removeFile()">
-                            <i class="fas fa-times"></i> Remove
-                        </button>
+                    <div class="option-arrow">
+                        <i class="fas fa-chevron-right"></i>
                     </div>
                 </div>
 
-                <!-- API Sources Card -->
-                <div class="analyzer-card">
-                    <div class="card-header">
-                        <div class="card-icon" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(167, 139, 250, 0.03) 100%); color: var(--color-lavender);">
-                            <i class="fas fa-cloud"></i>
-                        </div>
-                        <div class="card-title">
-                            <h3>API Log Sources</h3>
-                            <p>Stream logs from configured connections</p>
-                        </div>
+                <!-- System Log Capture -->
+                <div class="analysis-option-card" onclick="openSystemLogModal()">
+                    <div class="option-icon" style="background: linear-gradient(135deg, rgba(251, 113, 133, 0.15) 0%, rgba(251, 113, 133, 0.03) 100%); color: var(--color-coral);">
+                        <i class="fas fa-server"></i>
                     </div>
-
-                    <div id="apiSourcesLoading" style="text-align: center; padding: 2rem;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-lavender);"></i>
-                        <p style="margin-top: 1rem; color: var(--text-secondary);">Loading API sources...</p>
+                    <div class="option-content">
+                        <h3>Capture System Log</h3>
+                        <p>Monitor and analyze system logs in real-time</p>
                     </div>
-
-                    <div id="noApiSources" style="display: none; text-align: center; padding: 2rem;">
-                        <i class="fas fa-cloud-slash" style="font-size: 2rem; color: var(--text-secondary); opacity: 0.5;"></i>
-                        <p style="margin-top: 1rem; color: var(--text-secondary);">No active API sources found</p>
-                        <a href="/api-config" class="btn btn-sm btn-secondary" style="margin-top: 1rem;">
-                            <i class="fas fa-plus"></i> Configure Sources
-                        </a>
+                    <div class="option-arrow">
+                        <i class="fas fa-chevron-right"></i>
                     </div>
+                </div>
 
-                    <div id="apiSourcesGrid" style="display: none; margin-bottom: 1rem;"></div>
-
-                    <div id="selectedSourceControls" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
-                        <div style="margin-bottom: 1rem;">
-                            <strong style="color: var(--color-lavender);">
-                                <i class="fas fa-check-circle"></i> Selected: <span id="selectedSourceName"></span>
-                            </strong>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">
-                                <i class="fas fa-list-ol"></i> Number of logs to fetch
-                            </label>
-                            <input type="number" id="apiLogCount" class="form-input" value="100" min="1" max="1000" 
-                                   style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-light);">
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">
-                                <i class="fas fa-brain"></i> Analysis Method
-                            </label>
-                            <select id="apiAnalysisMethod" class="form-input" 
-                                    style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-light);">
-                                <option value="agentic">Agentic RAG (Recommended)</option>
-                                <option value="non_agentic">Non-Agentic RAG</option>
-                                <option value="rule_based">Rule-Based</option>
-                                <option value="isolation_forest">Isolation Forest</option>
-                            </select>
-                        </div>
-
-                        <button class="btn btn-primary" onclick="fetchAndAnalyzeApiLogs()" style="width: 100%;">
-                            <i class="fas fa-download"></i> Fetch & Analyze Logs
-                        </button>
+                <!-- Upload File -->
+                <div class="analysis-option-card" onclick="document.getElementById('fileInput').click()">
+                    <div class="option-icon" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(167, 139, 250, 0.03) 100%); color: var(--color-lavender);">
+                        <i class="fas fa-upload"></i>
                     </div>
-
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <a href="/api-config" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-cog"></i> Manage Sources
-                        </a>
+                    <div class="option-content">
+                        <h3>Upload Log File</h3>
+                        <p>Select a log file from your computer to analyze</p>
+                    </div>
+                    <div class="option-arrow">
+                        <i class="fas fa-chevron-right"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Configuration Card -->
-            <div class="section">
-                <div class="analyzer-card">
-                    <div class="card-header">
-                        <div class="card-icon" style="background: linear-gradient(135deg, rgba(251, 113, 133, 0.15) 0%, rgba(251, 113, 133, 0.03) 100%); color: var(--color-coral);">
-                            <i class="fas fa-sliders-h"></i>
-                        </div>
-                        <div class="card-title">
-                            <h3>Analysis Configuration</h3>
-                            <p>Configure how your logs will be analyzed</p>
+            <!-- Hidden file input -->
+            <input type="file" id="fileInput" accept=".log,.txt,.json,.csv" style="display: none;" onchange="handleFile(this.files[0])">
+
+            <!-- File Upload Section (shown after file selection) -->
+            <div id="fileUploadSection" style="display: none;">
+                <div class="section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-file-alt"></i> Selected File</h3>
+                    </div>
+                    <div class="analyzer-card">
+                        <div id="fileSelected" class="file-selected">
+                            <i class="fas fa-file-alt"></i>
+                            <div class="file-details">
+                                <h4 id="fileName">No file selected</h4>
+                                <p id="fileSize">0 KB</p>
+                            </div>
+                            <button class="btn btn-sm btn-remove" onclick="removeFile()">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="config-section">
+                <!-- Configuration Card -->
+                <div class="section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-sliders-h"></i> Analysis Configuration</h3>
+                    </div>
+                    <div class="analyzer-card">
+                        <div class="config-section">
+                            <div class="form-group">
+                                <label><i class="fas fa-brain"></i> Analysis System</label>
+                                <select id="batchSystemSelect" class="form-select">
+                                    <option value="agentic">Agentic RAG (Recommended)</option>
+                                    <option value="non_agentic">Non-Agentic RAG</option>
+                                    <option value="rule_based">Rule-Based</option>
+                                    <option value="isolation_forest">Isolation Forest</option>
+                                </select>
+                                <div id="ollamaStatus" style="margin-top: 0.5rem; font-size: 0.85rem;"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-list-ol"></i> Maximum Logs to Analyze</label>
+                                <input type="number" id="maxLogs" class="form-input" value="100" min="1" max="10000" placeholder="Enter number of logs">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-file-export"></i> Export Options</label>
+                                <div style="display: flex; gap: 1rem; align-items: center;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                        <input type="checkbox" id="generateReport" checked>
+                                        <span>Generate Report</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                        <input type="checkbox" id="exportJson">
+                                        <span>Export to JSON</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-analyze" onclick="analyzeFile()">
+                                <i class="fas fa-play-circle"></i> Start Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Capture Modal -->
+            <div id="networkCaptureModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-network-wired"></i> Network Capture Configuration</h3>
+                        <button class="modal-close" onclick="closeNetworkCaptureModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="networkCaptureStatus" style="display: none; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3); margin-bottom: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981;">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                                <span>Network capture is running...</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-ethernet"></i> Network Interface</label>
+                            <select id="networkInterface" class="form-select">
+                                <option value="en0">en0 (Default)</option>
+                                <option value="en1">en1</option>
+                                <option value="eth0">eth0</option>
+                                <option value="wlan0">wlan0</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-filter"></i> Filter (optional)</label>
+                            <input type="text" id="networkFilter" class="form-input" placeholder="e.g., tcp port 80">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-list-ol"></i> Maximum Packets</label>
+                            <input type="number" id="maxPackets" class="form-input" value="100" min="10" max="1000">
+                        </div>
                         <div class="form-group">
                             <label><i class="fas fa-brain"></i> Analysis System</label>
-                            <select id="batchSystemSelect" class="form-select">
+                            <select id="networkAnalysisSystem" class="form-select">
                                 <option value="agentic">Agentic RAG (Recommended)</option>
                                 <option value="non_agentic">Non-Agentic RAG</option>
                                 <option value="rule_based">Rule-Based</option>
                                 <option value="isolation_forest">Isolation Forest</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeNetworkCaptureModal()">Cancel</button>
+                        <button class="btn btn-danger" id="stopNetworkCaptureBtn" onclick="stopNetworkCapture()" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Capture
+                        </button>
+                        <button class="btn btn-primary" id="startNetworkCaptureBtn" onclick="startNetworkCapture()">
+                            <i class="fas fa-play"></i> Start Capture
+                        </button>
+                        <button class="btn btn-success" id="analyzeNetworkLogsBtn" onclick="analyzeCapturedNetworkLogs()" style="display: none;">
+                            <i class="fas fa-chart-line"></i> Analyze Captured Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
 
+            <!-- System Log Modal -->
+            <div id="systemLogModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-server"></i> System Log Capture Configuration</h3>
+                        <button class="modal-close" onclick="closeSystemLogModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="systemLogCaptureStatus" style="display: none; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3); margin-bottom: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: #10b981;">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                                <span>System log capture is running...</span>
+                            </div>
+                        </div>
                         <div class="form-group">
-                            <label><i class="fas fa-list-ol"></i> Maximum Logs to Analyze</label>
-                            <input type="number" id="maxLogs" class="form-input" value="100" min="1" max="10000" placeholder="Enter number of logs">
+                            <label><i class="fas fa-folder"></i> Log Directory</label>
+                            <input type="text" id="logDirectory" class="form-input" value="/var/log" placeholder="/var/log">
                         </div>
-
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="generateReport" checked>
-                            <label for="generateReport"><i class="fas fa-file-alt"></i> Generate Detailed Report</label>
+                        <div class="form-group">
+                            <label><i class="fas fa-file"></i> Log File Pattern</label>
+                            <input type="text" id="logFilePattern" class="form-input" value="*.log" placeholder="*.log">
                         </div>
-
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="exportResults" checked>
-                            <label for="exportResults"><i class="fas fa-download"></i> Export Results to JSON</label>
+                        <div class="form-group">
+                            <label><i class="fas fa-clock"></i> Refresh Interval (seconds)</label>
+                            <input type="number" id="refreshInterval" class="form-input" value="5" min="1" max="60">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-list-ol"></i> Maximum Lines</label>
+                            <input type="number" id="maxLines" class="form-input" value="100" min="10" max="1000">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-brain"></i> Analysis System</label>
+                            <select id="systemAnalysisSystem" class="form-select">
+                                <option value="agentic">Agentic RAG (Recommended)</option>
+                                <option value="non_agentic">Non-Agentic RAG</option>
+                                <option value="rule_based">Rule-Based</option>
+                                <option value="isolation_forest">Isolation Forest</option>
+                            </select>
                         </div>
                     </div>
-
-                    <div class="action-buttons">
-                        <button class="btn btn-primary btn-analyze" onclick="analyzeFile()">
-                            <i class="fas fa-play-circle"></i> Start Analysis
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeSystemLogModal()">Cancel</button>
+                        <button class="btn btn-danger" id="stopSystemLogCaptureBtn" onclick="stopSystemLogCapture()" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Capture
+                        </button>
+                        <button class="btn btn-primary" id="startSystemLogCaptureBtn" onclick="startSystemLogCapture()">
+                            <i class="fas fa-play"></i> Start Capture
+                        </button>
+                        <button class="btn btn-success" id="analyzeSystemLogsBtn" onclick="analyzeCapturedSystemLogs()" style="display: none;">
+                            <i class="fas fa-chart-line"></i> Analyze Captured Logs
                         </button>
                     </div>
                 </div>
@@ -738,5 +979,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/log_analyzer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ollama_status.js') }}"></script>
 </body>
 </html>

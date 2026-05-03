@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+import re
 
 from src.preprocessing.log_preprocessor import ParsedLogEntry
 from src.retrieval.retrieval_system import RetrievalSystem, RetrievalResult
@@ -32,13 +33,69 @@ class NonAgenticRAGSystem:
     def __init__(self, retrieval_system: RetrievalSystem, llm_engine: LLMEngine):
         self.retrieval_system = retrieval_system
         self.llm_engine = llm_engine
-        
+
         self.top_k = config.get('baselines.non_agentic_rag.top_k', 5)
         self.single_pass = config.get('baselines.non_agentic_rag.single_pass', True)
-        
+
+        # Ignore patterns for system/infrastructure logs
+        self.ignore_patterns = [
+            r'initializing',
+            r'network capture',
+            r'starting network',
+            r'network capture started',
+            r'network capture stopped',
+            r'network capture status',
+            r'system healthy',
+            r'health check',
+            r'status check',
+            r'configuration loaded',
+            r'initialized successfully',
+            r'startup complete',
+            r'ready to accept',
+            r'listening on',
+            r'server started',
+            r'service started',
+            r'api server',
+            r'web server',
+            r'application started',
+            r'bootstrapping',
+            r'loading configuration',
+            r'database connected',
+            r'connection established',
+            r'cache initialized',
+            r'memory manager',
+            r'log analyzer',
+            r'agentic controller',
+            r'retrieval system',
+            r'knowledge base',
+            r'preprocessing',
+            r'ingestion'
+        ]
+        self.compiled_ignore_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.ignore_patterns]
+
         logger.info("NonAgenticRAGSystem initialized")
-    
+
+    def _should_ignore_log(self, log_entry: ParsedLogEntry) -> bool:
+        """Check if log should be ignored as system/infrastructure noise"""
+        log_content_lower = log_entry.raw_content.lower()
+
+        for pattern in self.compiled_ignore_patterns:
+            if pattern.search(log_content_lower):
+                return True
+
+        return False
+
     def analyze(self, log_entry: ParsedLogEntry) -> NonAgenticRAGResult:
+        # Skip system/infrastructure logs
+        if self._should_ignore_log(log_entry):
+            return NonAgenticRAGResult(
+                log_entry=log_entry,
+                is_anomaly=False,
+                severity='INFO',
+                analysis='System infrastructure log - ignored',
+                retrieved_documents=[],
+                confidence_score=1.0
+            )
         retrieved_docs = self.retrieval_system.retrieve(
             query=log_entry.raw_content,
             top_k=self.top_k,

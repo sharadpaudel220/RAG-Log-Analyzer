@@ -4,6 +4,7 @@ let uploadedFile = null;
 let analysisResults = null;
 let currentSessionId = null;
 let chatHistory = [];
+let ollamaAvailable = false;
 
 function showToast(message, type = 'info', title = null, timeoutMs = 7000) {
     const container = document.getElementById('toastContainer');
@@ -66,8 +67,10 @@ function showToast(message, type = 'info', title = null, timeoutMs = 7000) {
 document.addEventListener('DOMContentLoaded', function() {
     checkHealth();
     setupFileUpload();
-    loadConfiguredAPISources();
+    // loadConfiguredAPISources(); // Removed - old API sources UI replaced with new 3-option grid
     setInterval(checkHealth, 30000);
+    updateOllamaStatus();
+    setInterval(updateOllamaStatus, 10000);
     
     // Check if we're continuing an existing session
     const urlParams = new URLSearchParams(window.location.search);
@@ -96,11 +99,125 @@ async function checkHealth() {
             statusText.textContent = 'Initializing...';
         }
     } catch (error) {
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        statusDot.style.background = '#ef4444';
-        statusText.textContent = 'System Error';
+        console.error('Health check failed:', error);
     }
+}
+
+// Check Ollama status and update UI
+async function updateOllamaStatus() {
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        ollamaAvailable = data.ollama_available || false;
+        
+        const ollamaStatus = document.getElementById('ollamaStatus');
+        if (ollamaStatus) {
+            if (ollamaAvailable) {
+                ollamaStatus.innerHTML = '<i class="fas fa-circle" style="color: #10b981; font-size: 0.75rem;"></i> Ollama Active (Click for details)';
+                ollamaStatus.style.color = '#10b981';
+            } else {
+                ollamaStatus.innerHTML = '<i class="fas fa-circle" style="color: #ef4444; font-size: 0.75rem;"></i> Ollama Inactive (Click for details)';
+                ollamaStatus.style.color = '#ef4444';
+            }
+        }
+        
+        // Disable/enable Agentic RAG option based on Ollama status
+        const agenticOption = document.getElementById('batchSystemSelect')?.querySelector('option[value="agentic"]');
+        if (agenticOption) {
+            if (!ollamaAvailable) {
+                agenticOption.disabled = true;
+                agenticOption.textContent = 'Agentic RAG (Ollama Required - Not Running)';
+            } else {
+                agenticOption.disabled = false;
+                agenticOption.textContent = 'Agentic RAG';
+            }
+        }
+
+        // Remove repeated toast warnings - only show once when status changes
+        if (typeof window.lastOllamaStatus !== 'undefined' && window.lastOllamaStatus !== ollamaAvailable) {
+            if (!ollamaAvailable) {
+                showToast('Ollama is not running. Agentic RAG requires Ollama for ReAct-based analysis.', 'warning');
+            }
+        }
+        window.lastOllamaStatus = ollamaAvailable;
+    } catch (error) {
+        console.error('Ollama status check failed:', error);
+        ollamaAvailable = false;
+    }
+}
+
+// Show Ollama details dialog
+async function showOllamaDetails() {
+    // Fetch Ollama model info
+    let modelInfo = null;
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        if (data.ollama_available) {
+            modelInfo = data.ollama_model || 'Unknown';
+        }
+    } catch (error) {
+        console.error('Failed to fetch Ollama model info:', error);
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-brain"></i> Ollama Status</h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 1rem;">
+                    <strong>Status:</strong>
+                    <span style="margin-left: 0.5rem; color: ${ollamaAvailable ? '#10b981' : '#f59e0b'};">
+                        ${ollamaAvailable ? 'Running' : 'Not Running'}
+                    </span>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Base URL:</strong>
+                    <span style="margin-left: 0.5rem; color: var(--text-secondary);">http://localhost:11434</span>
+                </div>
+                ${ollamaAvailable && modelInfo ? `
+                <div style="margin-bottom: 1rem;">
+                    <strong>LLM Model:</strong>
+                    <span style="margin-left: 0.5rem; color: var(--text-secondary);">${modelInfo}</span>
+                </div>
+                ` : ''}
+                <div style="margin-bottom: 1rem;">
+                    <strong>Purpose:</strong>
+                    <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                        Ollama is required for Agentic RAG analysis to use the ReAct technique with local LLM models.
+                    </p>
+                </div>
+                ${!ollamaAvailable ? `
+                <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <strong style="color: #f59e0b;">How to start Ollama:</strong>
+                    <ul style="color: var(--text-secondary); margin-top: 0.5rem; margin-left: 1.5rem;">
+                        <li>Install Ollama from <a href="https://ollama.ai" target="_blank" style="color: var(--color-teal);">ollama.ai</a></li>
+                        <li>Run: <code style="background: var(--glass-light); padding: 0.25rem 0.5rem; border-radius: 4px;">ollama serve</code></li>
+                        <li>Ensure it's running on port 11434</li>
+                    </ul>
+                </div>
+                ` : ''}
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on click outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
 }
 
 // Setup file upload
@@ -112,37 +229,478 @@ function setupFileUpload() {
         return;
     }
     
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
-        }
-    });
+    // File input is handled via onchange attribute in HTML
 }
 
-// Handle file selection
+// Open network capture modal
+async function openNetworkCaptureModal() {
+    document.getElementById('networkCaptureModal').style.display = 'flex';
+
+    // Check current capture status
+    try {
+        const response = await fetch('/api/network-capture/status');
+        const data = await response.json();
+
+        if (data.running) {
+            // Show stop button if capture is running
+            document.getElementById('networkCaptureStatus').style.display = 'block';
+            document.getElementById('startNetworkCaptureBtn').style.display = 'none';
+            document.getElementById('stopNetworkCaptureBtn').style.display = 'inline-block';
+            document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
+        } else {
+            // Check if there are captured logs available
+            try {
+                const logsResponse = await fetch('/api/network-capture/logs');
+
+                if (logsResponse.status === 400) {
+                    // Log file is empty, show start button only
+                    document.getElementById('networkCaptureStatus').style.display = 'none';
+                    document.getElementById('startNetworkCaptureBtn').style.display = 'inline-block';
+                    document.getElementById('stopNetworkCaptureBtn').style.display = 'none';
+                    document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
+                } else {
+                    const logsData = await logsResponse.json();
+
+                    if (logsResponse.ok && logsData.logs && logsData.logs.length > 0) {
+                        // Show analyze button if logs are available
+                        document.getElementById('networkCaptureStatus').style.display = 'none';
+                        document.getElementById('startNetworkCaptureBtn').style.display = 'inline-block';
+                        document.getElementById('stopNetworkCaptureBtn').style.display = 'none';
+                        document.getElementById('analyzeNetworkLogsBtn').style.display = 'inline-block';
+                    } else {
+                        // Show start button if no logs available
+                        document.getElementById('networkCaptureStatus').style.display = 'none';
+                        document.getElementById('startNetworkCaptureBtn').style.display = 'inline-block';
+                        document.getElementById('stopNetworkCaptureBtn').style.display = 'none';
+                        document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking network logs:', error);
+                // Default to showing start button
+                document.getElementById('networkCaptureStatus').style.display = 'none';
+                document.getElementById('startNetworkCaptureBtn').style.display = 'inline-block';
+                document.getElementById('stopNetworkCaptureBtn').style.display = 'none';
+                document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error checking network capture status:', error);
+        // Default to showing start button
+        document.getElementById('networkCaptureStatus').style.display = 'none';
+        document.getElementById('startNetworkCaptureBtn').style.display = 'inline-block';
+        document.getElementById('stopNetworkCaptureBtn').style.display = 'none';
+        document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
+    }
+}
+
+function closeNetworkCaptureModal() {
+    const modal = document.getElementById('networkCaptureModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function startNetworkCapture() {
+    const interface = document.getElementById('networkInterface').value;
+    const filter = document.getElementById('networkFilter').value;
+    const maxPackets = parseInt(document.getElementById('maxPackets').value, 10) || 1000;
+
+    try {
+        const response = await fetch('/api/network-capture/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                interface: interface,
+                filter: filter,
+                max_packets: maxPackets,
+                auto_analyze: false,
+                store_logs: true
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(`Network capture started on ${interface}`, 'success');
+            // Update UI to show running state
+            document.getElementById('networkCaptureStatus').style.display = 'block';
+            document.getElementById('startNetworkCaptureBtn').style.display = 'none';
+            document.getElementById('stopNetworkCaptureBtn').style.display = 'inline-block';
+            document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
+        } else {
+            showToast(`Error: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error starting network capture:', error);
+        showToast('Error starting network capture', 'error');
+    }
+}
+
+async function stopNetworkCapture() {
+    try {
+        const response = await fetch('/api/network-capture/stop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast('Network capture stopped', 'success');
+            // Update UI to show stopped state with analyze option
+            document.getElementById('networkCaptureStatus').style.display = 'none';
+            document.getElementById('startNetworkCaptureBtn').style.display = 'inline-block';
+            document.getElementById('stopNetworkCaptureBtn').style.display = 'none';
+            document.getElementById('analyzeNetworkLogsBtn').style.display = 'inline-block';
+        } else {
+            showToast(`Error: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error stopping network capture:', error);
+        showToast('Error stopping network capture', 'error');
+    }
+}
+
+async function analyzeCapturedNetworkLogs() {
+    try {
+        const response = await fetch('/api/network-capture/logs');
+
+        if (response.status === 400) {
+            showToast('No logs captured yet. The log file is empty. Please start capture and wait for logs to be collected.', 'warning');
+            return;
+        }
+
+        const data = await response.json();
+
+        if (response.ok && data.logs && data.logs.length > 0) {
+            showToast(`Loaded ${data.logs.length} captured network logs`, 'success');
+            closeNetworkCaptureModal();
+
+            // Convert logs to file-like object
+            const logContent = data.logs.map(log => log.content || JSON.stringify(log)).join('\n');
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const file = new File([blob], 'network_captured_logs.txt', { type: 'text/plain' });
+
+            // Set the uploaded file
+            uploadedFile = file;
+
+            // Show file upload section with configuration
+            document.getElementById('fileUploadSection').style.display = 'block';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(2) + ' KB';
+
+            // Set the analysis system from the modal
+            document.getElementById('batchSystemSelect').value = document.getElementById('networkAnalysisSystem').value;
+
+            // Scroll to file upload section
+            document.getElementById('fileUploadSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            showToast('No logs captured yet. Please start capture first.', 'warning');
+        }
+    } catch (error) {
+        console.error('Error fetching network logs:', error);
+        showToast('Error fetching network logs', 'error');
+    }
+}
+
+async function fetchAndAnalyzeNetworkLogs(systemType) {
+    try {
+        const response = await fetch('/api/network-capture/logs');
+        const data = await response.json();
+
+        if (response.ok && data.logs && data.logs.length > 0) {
+            // Analyze the logs
+            await analyzeLogs(data.logs, systemType);
+        }
+    } catch (error) {
+        console.error('Error fetching network logs:', error);
+    }
+}
+
+async function fetchAndAnalyzeNetworkLogs(systemType) {
+    showToast('Fetching captured logs...', 'info');
+
+    try {
+        const response = await fetch('/api/network-capture/logs');
+        const data = await response.json();
+
+        if (data.logs && data.logs.length > 0) {
+            showToast(`Analyzing ${data.logs.length} captured logs...`, 'info');
+            
+            // Convert logs to file-like object for analysis
+            const logContent = data.logs.map(log => log.content || JSON.stringify(log)).join('\n');
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const file = new File([blob], 'network_captured_logs.txt', { type: 'text/plain' });
+            
+            // Set the file and system type
+            uploadedFile = file;
+            
+            // Show file upload section with configuration
+            document.getElementById('fileUploadSection').style.display = 'block';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('batchSystemSelect').value = systemType;
+            
+            // Scroll to configuration section
+            document.getElementById('fileUploadSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            showToast('No logs captured yet. Please wait a bit longer or check the network capture status.', 'warning');
+        }
+    } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+    }
+}
+
+// System Log Modal Functions
+async function openSystemLogModal() {
+    const modal = document.getElementById('systemLogModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+
+    // Check current capture status
+    try {
+        const response = await fetch('/api/system-log/status');
+        const data = await response.json();
+
+        if (data.running) {
+            // Show stop button if capture is running
+            document.getElementById('systemLogCaptureStatus').style.display = 'block';
+            document.getElementById('startSystemLogCaptureBtn').style.display = 'none';
+            document.getElementById('stopSystemLogCaptureBtn').style.display = 'inline-block';
+            document.getElementById('analyzeSystemLogsBtn').style.display = 'none';
+        } else {
+            // Check if there are captured logs available
+            try {
+                const logsResponse = await fetch('/api/system-log/logs');
+
+                if (logsResponse.status === 400) {
+                    // Log file is empty, show start button only
+                    document.getElementById('systemLogCaptureStatus').style.display = 'none';
+                    document.getElementById('startSystemLogCaptureBtn').style.display = 'inline-block';
+                    document.getElementById('stopSystemLogCaptureBtn').style.display = 'none';
+                    document.getElementById('analyzeSystemLogsBtn').style.display = 'none';
+                } else {
+                    const logsData = await logsResponse.json();
+
+                    if (logsResponse.ok && logsData.logs && logsData.logs.length > 0) {
+                        // Show analyze button if logs are available
+                        document.getElementById('systemLogCaptureStatus').style.display = 'none';
+                        document.getElementById('startSystemLogCaptureBtn').style.display = 'inline-block';
+                        document.getElementById('stopSystemLogCaptureBtn').style.display = 'none';
+                        document.getElementById('analyzeSystemLogsBtn').style.display = 'inline-block';
+                    } else {
+                        // Show start button if no logs available
+                        document.getElementById('systemLogCaptureStatus').style.display = 'none';
+                        document.getElementById('startSystemLogCaptureBtn').style.display = 'inline-block';
+                        document.getElementById('stopSystemLogCaptureBtn').style.display = 'none';
+                        document.getElementById('analyzeSystemLogsBtn').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking system logs:', error);
+                // Default to showing start button
+                document.getElementById('systemLogCaptureStatus').style.display = 'none';
+                document.getElementById('startSystemLogCaptureBtn').style.display = 'inline-block';
+                document.getElementById('stopSystemLogCaptureBtn').style.display = 'none';
+                document.getElementById('analyzeSystemLogsBtn').style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error checking system log capture status:', error);
+        // Default to showing start button
+        document.getElementById('systemLogCaptureStatus').style.display = 'none';
+        document.getElementById('startSystemLogCaptureBtn').style.display = 'inline-block';
+        document.getElementById('stopSystemLogCaptureBtn').style.display = 'none';
+        document.getElementById('analyzeSystemLogsBtn').style.display = 'none';
+    }
+}
+
+function closeSystemLogModal() {
+    const modal = document.getElementById('systemLogModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function startSystemLogCapture() {
+    const logDirectory = document.getElementById('logDirectory').value;
+    const logFilePattern = document.getElementById('logFilePattern').value;
+    const refreshInterval = parseInt(document.getElementById('refreshInterval').value, 10) || 1;
+    const maxLines = parseInt(document.getElementById('maxLines').value, 10) || 100;
+
+    try {
+        const response = await fetch('/api/system-log/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                log_directory: logDirectory,
+                file_pattern: logFilePattern,
+                refresh_interval: refreshInterval,
+                max_lines: maxLines
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(`System log capture started for ${logDirectory}`, 'success');
+            // Update UI to show running state
+            document.getElementById('systemLogCaptureStatus').style.display = 'block';
+            document.getElementById('startSystemLogCaptureBtn').style.display = 'none';
+            document.getElementById('stopSystemLogCaptureBtn').style.display = 'inline-block';
+            document.getElementById('analyzeSystemLogsBtn').style.display = 'none';
+        } else {
+            showToast(`Error: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error starting system log capture:', error);
+        showToast('Error starting system log capture', 'error');
+    }
+}
+
+async function stopSystemLogCapture() {
+    try {
+        const response = await fetch('/api/system-log/stop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast('System log capture stopped', 'success');
+            // Update UI to show stopped state with analyze option
+            document.getElementById('systemLogCaptureStatus').style.display = 'none';
+            document.getElementById('startSystemLogCaptureBtn').style.display = 'inline-block';
+            document.getElementById('stopSystemLogCaptureBtn').style.display = 'none';
+            document.getElementById('analyzeSystemLogsBtn').style.display = 'inline-block';
+        } else {
+            showToast(`Error: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error stopping system log capture:', error);
+        showToast('Error stopping system log capture', 'error');
+    }
+}
+
+async function analyzeCapturedSystemLogs() {
+    try {
+        const response = await fetch('/api/system-log/logs');
+
+        if (response.status === 400) {
+            showToast('No logs captured yet. The log file is empty. Please start capture and wait for logs to be collected.', 'warning');
+            return;
+        }
+
+        const data = await response.json();
+
+        if (response.ok && data.logs && data.logs.length > 0) {
+            showToast(`Loaded ${data.logs.length} captured system logs`, 'success');
+            closeSystemLogModal();
+
+            // Convert logs to file-like object
+            const logContent = data.logs.map(log => log.content || JSON.stringify(log)).join('\n');
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const file = new File([blob], 'system_captured_logs.txt', { type: 'text/plain' });
+
+            // Set the uploaded file
+            uploadedFile = file;
+
+            // Show file upload section with configuration
+            document.getElementById('fileUploadSection').style.display = 'block';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(2) + ' KB';
+
+            // Set the analysis system from the modal
+            document.getElementById('batchSystemSelect').value = document.getElementById('systemAnalysisSystem').value;
+
+            // Scroll to file upload section
+            document.getElementById('fileUploadSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            showToast('No logs captured yet. Please start capture first.', 'warning');
+        }
+    } catch (error) {
+        console.error('Error fetching system logs:', error);
+        showToast('Error fetching system logs', 'error');
+    }
+}
+
+async function fetchAndAnalyzeSystemLogs(systemType) {
+    try {
+        const response = await fetch('/api/system-log/logs');
+        const data = await response.json();
+
+        if (response.ok && data.logs && data.logs.length > 0) {
+            // Analyze the logs
+            await analyzeLogs(data.logs, systemType);
+        }
+    } catch (error) {
+        console.error('Error fetching system logs:', error);
+    }
+}
+
+async function fetchAndAnalyzeSystemLogs(systemType) {
+    showToast('Fetching system logs...', 'info');
+
+    try {
+        const response = await fetch('/api/system-log/logs');
+        const data = await response.json();
+
+        if (data.logs && data.logs.length > 0) {
+            showToast(`Analyzing ${data.logs.length} system logs...`, 'info');
+            
+            // Convert logs to file-like object for analysis
+            const logContent = data.logs.map(log => log.content || JSON.stringify(log)).join('\n');
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const file = new File([blob], 'system_logs.txt', { type: 'text/plain' });
+            
+            // Set the file and system type
+            uploadedFile = file;
+            
+            // Show file upload section with configuration
+            document.getElementById('fileUploadSection').style.display = 'block';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('batchSystemSelect').value = systemType;
+            
+            // Scroll to configuration section
+            document.getElementById('fileUploadSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            showToast('No logs found. Please check the log directory and file pattern.', 'warning');
+        }
+    } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+    }
+}
+
+// Handle file selection from the new UI
 function handleFile(file) {
+    if (!file) return;
+
     const allowedTypes = ['.log', '.txt', '.json', '.csv'];
     const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-    
+
     if (!allowedTypes.includes(fileExt)) {
         showToast('Invalid file type. Please upload .log, .txt, .json, or .csv files.', 'warning');
         return;
     }
-    
+
     uploadedFile = file;
-    
-    // Show file info
-    document.getElementById('uploadArea').style.display = 'none';
-    document.getElementById('uploadInfo').style.display = 'block';
+    document.getElementById('fileUploadSection').style.display = 'block';
     document.getElementById('fileName').textContent = file.name;
     document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    
+    // Scroll to configuration section
+    document.getElementById('fileUploadSection').scrollIntoView({ behavior: 'smooth' });
 }
+
 
 // Remove file
 function removeFile() {
     uploadedFile = null;
-    document.getElementById('uploadArea').style.display = 'flex';
-    document.getElementById('uploadInfo').style.display = 'none';
+    document.getElementById('fileUploadSection').style.display = 'none';
     document.getElementById('fileInput').value = '';
 }
 
@@ -159,17 +717,21 @@ async function analyzeFile() {
         showToast('Please upload a log file first.', 'warning');
         return;
     }
-    
+
     const systemType = document.getElementById('batchSystemSelect').value;
     const maxLogs = parseInt(document.getElementById('maxLogs').value);
-    
+    const generateReport = document.getElementById('generateReport').checked;
+    const exportJson = document.getElementById('exportJson').checked;
+
     showProgress('Uploading file...');
-    
+
     try {
         const formData = new FormData();
         formData.append('file', uploadedFile);
         formData.append('system_type', systemType);
         formData.append('max_logs', maxLogs);
+        formData.append('generate_report', generateReport);
+        formData.append('export_json', exportJson);
         
         updateProgress(5, 'File uploaded, starting analysis...');
         
@@ -334,9 +896,12 @@ function displayBatchResults(data) {
                 </div>
             </div>
         </div>
-        <div style="margin-top: 1.5rem; text-align: center;">
+        <div style="margin-top: 1.5rem; text-align: center; display: flex; gap: 1rem; justify-content: center;">
             <button class="btn btn-primary" onclick="viewAnalytics('${data.session_id}')" style="padding: 0.75rem 2rem; font-size: 1rem;">
                 <i class="fas fa-chart-line"></i> View Analytics
+            </button>
+            <button class="btn btn-secondary" onclick="runEvaluation('${data.session_id}')" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                <i class="fas fa-flask"></i> Run Evaluation
             </button>
         </div>
     `;
@@ -875,10 +1440,14 @@ async function fetchAndAnalyzeApiLogs() {
 // Navigate to analysis history page with session ID
 function viewAnalytics(sessionId) {
     if (sessionId) {
-        window.location.href = `/analysis-history?session=${sessionId}`;
+        window.open(`/analysis-history?session_id=${sessionId}`, '_blank');
     } else {
         window.location.href = '/analysis-history';
     }
+}
+
+function runEvaluation(sessionId) {
+    window.location.href = `/evaluation?session_id=${sessionId}`;
 }
 
 // Format date for datetime-local input

@@ -1,0 +1,8 @@
+[2026-05-03 21:41:42]   Agentic RAG: F1=0.5748  Precision=0.4033  Recall=1.0000  AUC-ROC=0.5206  MCC=0.0000  Latency=20.76ms  errors=0 timeouts=0
+[2026-05-03 21:41:42]   Wrote evaluation_results.json
+[2026-05-03 21:41:42]   Wrote evaluation_metrics.csv
+[2026-05-03 21:41:42]   Wrote evaluation_report.txt
+[2026-05-03 21:41:42] ======================================================================
+[2026-05-03 21:41:42] COMPARATIVE EVALUATION — COMPLETE
+[2026-05-03 21:41:42] Outputs: evaluation_results.json, evaluation_metrics.csv, evaluation_report.txt
+[2026-05-03 21:41:42] ======================================================================

@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import json
+import re
 
 from src.preprocessing.log_preprocessor import ParsedLogEntry
 from src.retrieval.retrieval_system import RetrievalSystem, RetrievalResult
@@ -61,29 +62,82 @@ class AgenticAnalysisResult:
         }
 
 class AgenticController:
-    def __init__(self, retrieval_system: RetrievalSystem, llm_engine: LLMEngine):
+    def __init__(self, retrieval_system: RetrievalSystem, llm_engine: LLMEngine, force_full_react: bool = False):
         self.retrieval_system = retrieval_system
         self.llm_engine = llm_engine
         
-        self.max_reasoning_steps = config.get('agentic.max_reasoning_steps', 5)
+        self.max_reasoning_steps = config.get('agentic.max_reasoning_steps', 3)  # Reduced from 5 to 3 for better performance
         self.reasoning_strategy = config.get('agentic.reasoning_strategy', 'react')
         self.enable_self_reflection = config.get('agentic.enable_self_reflection', True)
         self.confidence_threshold = config.get('agentic.confidence_threshold', 0.75)
-        
-        self.fast_mode = config.get('agentic.fast_mode', True)
-        self.early_stop_on_low_severity = config.get('agentic.early_stop_on_low_severity', True)
-        self.skip_info_logs = config.get('agentic.skip_info_logs', True)
-        self.skip_warning_logs = config.get('agentic.skip_warning_logs', True)
-        self.only_analyze_errors = config.get('agentic.only_analyze_errors', True)
-        self.max_steps_fast = config.get('agentic.max_steps_fast', 1)
-        self.enable_template_cache = config.get('agentic.enable_template_cache', True)
-        
+
+        # When force_full_react is True, disable most fallbacks but keep template_cache for performance
+        self.force_full_react = force_full_react
+        self.fast_mode = False if force_full_react else config.get('agentic.fast_mode', True)
+        self.early_stop_on_low_severity = False if force_full_react else config.get('agentic.early_stop_on_low_severity', True)
+        self.skip_info_logs = False if force_full_react else config.get('agentic.skip_info_logs', True)
+        self.skip_warning_logs = False if force_full_react else config.get('agentic.skip_warning_logs', True)
+        self.only_analyze_errors = False if force_full_react else config.get('agentic.only_analyze_errors', True)
+        self.max_steps_fast = self.max_reasoning_steps if force_full_react else config.get('agentic.max_steps_fast', 1)
+        self.enable_template_cache = True  # Keep template cache enabled for performance
+
         self.template_cache = {} if self.enable_template_cache else None
+
+        # Ignore patterns for system/infrastructure logs
+        self.ignore_patterns = [
+            r'initializing',
+            r'network capture',
+            r'starting network',
+            r'network capture started',
+            r'network capture stopped',
+            r'network capture status',
+            r'system healthy',
+            r'health check',
+            r'status check',
+            r'configuration loaded',
+            r'initialized successfully',
+            r'startup complete',
+            r'ready to accept',
+            r'listening on',
+            r'server started',
+            r'service started',
+            r'api server',
+            r'web server',
+            r'application started',
+            r'bootstrapping',
+            r'loading configuration',
+            r'database connected',
+            r'connection established',
+            r'cache initialized',
+            r'memory manager',
+            r'log analyzer',
+            r'agentic controller',
+            r'retrieval system',
+            r'knowledge base',
+            r'preprocessing',
+            r'ingestion'
+        ]
+        self.compiled_ignore_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.ignore_patterns]
         
-        logger.info(f"AgenticController initialized with {self.reasoning_strategy} strategy (fast_mode={self.fast_mode})")
-    
+        mode_str = "FULL REACT MODE" if force_full_react else f"fast_mode={self.fast_mode}"
+        logger.info(f"AgenticController initialized with {self.reasoning_strategy} strategy ({mode_str})")
+
+    def _should_ignore_log(self, log_entry: ParsedLogEntry) -> bool:
+        """Check if log should be ignored as system/infrastructure noise"""
+        log_content_lower = log_entry.raw_content.lower()
+
+        for pattern in self.compiled_ignore_patterns:
+            if pattern.search(log_content_lower):
+                return True
+
+        return False
+
     def analyze_log(self, log_entry: ParsedLogEntry) -> AgenticAnalysisResult:
         logger.debug(f"Starting agentic analysis for log: {log_entry.raw_content[:100]}")
+
+        # Skip system/infrastructure logs
+        if self._should_ignore_log(log_entry):
+            return self._create_fast_result(log_entry, is_anomaly=False, severity='INFO')
         
         if self.skip_info_logs and log_entry.severity in ['INFO', 'DEBUG']:
             return self._create_fast_result(log_entry, is_anomaly=False, severity='INFO')

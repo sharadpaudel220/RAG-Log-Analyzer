@@ -27,13 +27,51 @@ class RuleBasedResult:
 
 class RuleBasedSystem:
     def __init__(self):
-        self.error_keywords = config.get('baselines.rule_based.error_keywords', 
+        self.error_keywords = config.get('baselines.rule_based.error_keywords',
             ['ERROR', 'FATAL', 'CRITICAL', 'EXCEPTION', 'FAILED'])
         self.threshold = config.get('baselines.rule_based.threshold', 1)
-        
+
+        # Ignore patterns for system/infrastructure logs
+        self.ignore_patterns = [
+            r'initializing',
+            r'network capture',
+            r'starting network',
+            r'network capture started',
+            r'network capture stopped',
+            r'network capture status',
+            r'system healthy',
+            r'health check',
+            r'status check',
+            r'configuration loaded',
+            r'initialized successfully',
+            r'startup complete',
+            r'ready to accept',
+            r'listening on',
+            r'server started',
+            r'service started',
+            r'api server',
+            r'web server',
+            r'application started',
+            r'bootstrapping',
+            r'loading configuration',
+            r'database connected',
+            r'connection established',
+            r'cache initialized',
+            r'memory manager',
+            r'log analyzer',
+            r'agentic controller',
+            r'retrieval system',
+            r'knowledge base',
+            r'preprocessing',
+            r'ingestion'
+        ]
+
         self.rules = self._initialize_rules()
-        
-        logger.info(f"RuleBasedSystem initialized with {len(self.rules)} rules")
+
+        # Compile ignore patterns
+        self.compiled_ignore_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.ignore_patterns]
+
+        logger.info(f"RuleBasedSystem initialized with {len(self.rules)} rules and {len(self.ignore_patterns)} ignore patterns")
     
     def _initialize_rules(self) -> List[Dict[str, Any]]:
         rules = []
@@ -147,6 +185,52 @@ class RuleBasedSystem:
         }
         
         return severity_order.get(sev1, 4) < severity_order.get(sev2, 4)
+
+    def _should_ignore_log(self, log_entry: ParsedLogEntry) -> bool:
+        """Check if log should be ignored as system/infrastructure noise"""
+        log_content_lower = log_entry.raw_content.lower()
+
+        for pattern in self.compiled_ignore_patterns:
+            if pattern.search(log_content_lower):
+                return True
+
+        return False
+
+    def analyze(self, log_entry: ParsedLogEntry) -> RuleBasedResult:
+        # Skip system/infrastructure logs
+        if self._should_ignore_log(log_entry):
+            return RuleBasedResult(
+                log_entry=log_entry,
+                is_anomaly=False,
+                severity='INFO',
+                matched_rules=[],
+                confidence_score=1.0
+            )
+
+        matched_rules = []
+        max_severity = 'INFO'
+
+        for rule in self.rules:
+            if rule['pattern'].search(log_entry.raw_content):
+                matched_rules.append(rule['name'])
+
+                if self._is_higher_severity(rule['severity'], max_severity):
+                    max_severity = rule['severity']
+
+        is_anomaly = len(matched_rules) >= self.threshold
+
+        if not is_anomaly and log_entry.severity in ['ERROR', 'CRITICAL', 'FATAL']:
+            is_anomaly = True
+            max_severity = log_entry.severity
+            matched_rules.append('severity_based')
+
+        return RuleBasedResult(
+            log_entry=log_entry,
+            is_anomaly=is_anomaly,
+            severity=max_severity,
+            matched_rules=matched_rules,
+            confidence_score=1.0
+        )
     
     def add_rule(self, name: str, pattern: str, severity: str, description: str = ""):
         self.rules.append({
