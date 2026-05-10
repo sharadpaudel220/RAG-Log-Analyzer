@@ -25,6 +25,7 @@ Or import and call run_full_evaluation(callback=...).
 from __future__ import annotations
 
 import csv
+import io
 import json
 import os
 import sys
@@ -123,8 +124,11 @@ class StatusTracker:
 
     def _flush(self) -> None:
         try:
-            with open(STATUS_FILE, 'w') as f:
+            # Atomic write: write to temp file, then rename to avoid race conditions
+            temp_file = STATUS_FILE.with_suffix('.tmp')
+            with open(temp_file, 'w') as f:
                 json.dump(self.state, f, indent=2, default=str)
+            temp_file.replace(STATUS_FILE)
         except Exception:
             pass
 
@@ -143,8 +147,11 @@ def load_checkpoint() -> Dict[str, Any]:
 
 
 def save_checkpoint(ckpt: Dict[str, Any]) -> None:
-    with open(CHECKPOINT_FILE, 'w') as f:
+    # Atomic write to prevent race conditions
+    temp_file = CHECKPOINT_FILE.with_suffix('.tmp')
+    with open(temp_file, 'w') as f:
         json.dump(ckpt, f, indent=2, default=str)
+    temp_file.replace(CHECKPOINT_FILE)
 
 
 # ============================================================
@@ -244,6 +251,8 @@ def _run_single_system(
         message=f'{name}: analysing {len(test_logs)} entries',
     )
 
+    # NOTE: Removed artificial rate limiting - relying on Groq's server-side limits
+    # and the retry logic in llm_interface.py for 429 errors
     for i, entry in enumerate(test_logs):
         t0 = time.perf_counter()
         try:
@@ -256,13 +265,9 @@ def _run_single_system(
             else:
                 is_anom = bool(getattr(result, 'is_anomaly', False))
                 y_pred.append(1 if is_anom else 0)
-                # Score should reflect anomaly likelihood; if normal & score is high,
-                # invert so AUC has correct semantics.
+                # Use raw anomaly score as provided by the detection system
+                # For AUC calculation, scores should reflect anomaly likelihood
                 conf = _safe_get_score(result)
-                if not is_anom and conf > 0.5:
-                    conf = 1.0 - conf
-                if is_anom and conf < 0.5:
-                    conf = 0.5 + conf / 2.0
                 y_score.append(float(conf))
             latencies_ms.append(elapsed_ms)
         except Exception as exc:  # noqa: BLE001
@@ -440,11 +445,18 @@ def run_full_evaluation(
         y_true = [labels[i] for i in test_idx]
         tracker.log(f'\n--- Dataset: {ds_name} | train={len(train_logs)} test={len(test_logs)} ---')
 
-        # Train Isolation Forest once per dataset
+        # Train Isolation Forest once per dataset with dataset-specific contamination
         if 'Isolation Forest' in systems and train_logs:
             try:
                 tracker.update(message=f'Training Isolation Forest on {ds_name}')
-                tracker.log(f'  Training Isolation Forest on {len(train_logs)} entries...')
+                # Calculate contamination from training data labels
+                train_labels = [labels[i] for i in train_idx]
+                anomaly_count = sum(train_labels)
+                contamination = max(0.01, min(0.5, anomaly_count / len(train_labels))) if train_labels else 0.1
+                tracker.log(f'  Training Isolation Forest on {len(train_logs)} entries (contamination={contamination:.4f})...')
+                # Reinitialize Isolation Forest with correct contamination for this dataset
+                from src.baselines.isolation_forest import IsolationForestSystem
+                systems['Isolation Forest']['instance'] = IsolationForestSystem(contamination=contamination)
                 systems['Isolation Forest']['instance'].train(train_logs)
             except Exception as exc:  # noqa: BLE001
                 tracker.log(f'  Isolation Forest training failed: {exc}')
@@ -509,7 +521,30 @@ def run_full_evaluation(
                 ttests[f'vs_{baseline}'] = {'error': str(exc)}
         full_results[ds_name]['t_tests'] = ttests
 
-    # 9. Persist outputs
+    # 9. False Positive Analysis - detailed breakdown for each system/dataset
+    tracker.update(message='Analyzing false positives')
+    for ds_name, by_system in full_results.items():
+        tracker.log(f'\n--- False Positive Analysis: {ds_name} ---')
+        for sys_name in SYSTEMS:
+            if sys_name not in by_system:
+                continue
+            run = by_system[sys_name]
+            y_true_arr = np.asarray(run['y_true'], dtype=int)
+            y_pred_arr = np.asarray(run['y_pred'], dtype=int)
+            
+            # Calculate confusion matrix
+            tp = int(np.sum((y_true_arr == 1) & (y_pred_arr == 1)))
+            tn = int(np.sum((y_true_arr == 0) & (y_pred_arr == 0)))
+            fp = int(np.sum((y_true_arr == 0) & (y_pred_arr == 1)))
+            fn = int(np.sum((y_true_arr == 1) & (y_pred_arr == 0)))
+            
+            fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+            fnr = fn / (fn + tp) if (fn + tp) > 0 else 0.0
+            
+            tracker.log(f'  {sys_name}: FP={fp} FN={fn} FPR={fpr:.4f} FNR={fnr:.4f}')
+    tracker.log('')
+
+    # 10. Persist outputs
     _write_outputs(full_results, tracker)
 
     tracker.update(state='done', finished_at=datetime.now().isoformat(),
@@ -558,8 +593,11 @@ def _write_outputs(results: Dict[str, Any], tracker: StatusTracker) -> None:
         'test_size': TEST_SIZE,
         'max_agentic_test': MAX_AGENTIC_TEST,
     }
-    with open(RESULTS_JSON, 'w') as f:
+    # Atomic write to prevent corruption during concurrent reads
+    temp_results = RESULTS_JSON.with_suffix('.tmp')
+    with open(temp_results, 'w') as f:
         json.dump(json_payload, f, indent=2, default=str)
+    temp_results.replace(RESULTS_JSON)
     tracker.log(f'  Wrote {RESULTS_JSON.name}')
 
     # ----- CSV -----
@@ -567,23 +605,29 @@ def _write_outputs(results: Dict[str, Any], tracker: StatusTracker) -> None:
                 'auc_roc', 'auc_pr', 'mcc', 'fpr',
                 'latency_mean_ms', 'latency_median_ms', 'latency_p95_ms',
                 'throughput_per_sec', 'TP', 'TN', 'FP', 'FN', 'n_samples']
-    with open(RESULTS_CSV, 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=csv_cols)
-        w.writeheader()
-        for ds_name, by_system in json_payload.items():
-            if ds_name.startswith('_'):
+    # Build CSV in memory, then write atomically
+    csv_buffer = io.StringIO()
+    w = csv.DictWriter(csv_buffer, fieldnames=csv_cols)
+    w.writeheader()
+    for ds_name, by_system in json_payload.items():
+        if ds_name.startswith('_'):
+            continue
+        for sys_name in SYSTEMS:
+            m = by_system.get(sys_name)
+            if not isinstance(m, dict) or 'precision' not in m:
                 continue
-            for sys_name in SYSTEMS:
-                m = by_system.get(sys_name)
-                if not isinstance(m, dict) or 'precision' not in m:
-                    continue
-                row = {'dataset': ds_name, 'system': sys_name}
-                for c in csv_cols[2:]:
-                    v = m.get(c, '')
-                    if isinstance(v, float):
-                        v = round(v, 6)
-                    row[c] = v
-                w.writerow(row)
+            row = {'dataset': ds_name, 'system': sys_name}
+            for c in csv_cols[2:]:
+                v = m.get(c, '')
+                if isinstance(v, float):
+                    v = round(v, 6)
+                row[c] = v
+            w.writerow(row)
+    # Atomic write
+    temp_csv = RESULTS_CSV.with_suffix('.tmp')
+    with open(temp_csv, 'w', newline='') as f:
+        f.write(csv_buffer.getvalue())
+    temp_csv.replace(RESULTS_CSV)
     tracker.log(f'  Wrote {RESULTS_CSV.name}')
 
     # ----- TXT (Chapter 6 tables) -----
@@ -646,7 +690,10 @@ def _write_outputs(results: Dict[str, Any], tracker: StatusTracker) -> None:
     lines.append('=' * 78)
     lines.append('END OF REPORT')
     lines.append('=' * 78)
-    RESULTS_TXT.write_text('\n'.join(lines))
+    # Atomic write for TXT report
+    temp_txt = RESULTS_TXT.with_suffix('.tmp')
+    temp_txt.write_text('\n'.join(lines))
+    temp_txt.replace(RESULTS_TXT)
     tracker.log(f'  Wrote {RESULTS_TXT.name}')
 
 

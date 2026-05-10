@@ -36,6 +36,27 @@
         .toast-info .toast-title { color:#a78bfa; }
         @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
         @keyframes slideOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(100%); opacity:0; } }
+        /* Danger button style */
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            transform: translateY(-1px);
+        }
+        .btn-danger:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -86,6 +107,9 @@
                         </button>
                         <button id="fullEvalStopBtn" class="btn btn-secondary" onclick="stopFullEvaluation()" style="display:none;">
                             <i class="fas fa-stop"></i> Stop
+                        </button>
+                        <button id="fullEvalClearBtn" class="btn btn-danger" onclick="clearAllResults()" style="margin-left:auto;">
+                            <i class="fas fa-trash-alt"></i> Clear All Results
                         </button>
                         <label style="display:flex; align-items:center; gap:0.5rem;">
                             <input type="checkbox" id="fullEvalReset" checked> Reset checkpoint (fresh run)
@@ -298,6 +322,30 @@
         async function stopFullEvaluation() {
             await fetch('/api/evaluation/full/stop', { method: 'POST' });
             showToast('Stop requested', 'warning');
+        }
+
+        async function clearAllResults() {
+            if (!confirm('Are you sure you want to clear all evaluation results? This will delete all evaluation files and reset the display.')) {
+                return;
+            }
+            try {
+                const r = await fetch('/api/evaluation/full/clear', { method: 'POST' });
+                if (!r.ok) throw new Error('Failed to clear results');
+                const data = await r.json();
+                // Hide results section
+                document.getElementById('fullEvalResults').style.display = 'none';
+                // Reset progress bar
+                document.getElementById('fullEvalBar').style.width = '0%';
+                document.getElementById('fullEvalPct').textContent = '0%';
+                document.getElementById('fullEvalStage').textContent = 'Ready';
+                document.getElementById('fullEvalSubMsg').textContent = '';
+                // Destroy charts
+                Object.values(fullEvalCharts).forEach(chart => chart.destroy());
+                fullEvalCharts = {};
+                showToast(data.message || 'All results cleared successfully', 'success');
+            } catch (e) {
+                showToast('Error clearing results: ' + e.message, 'error');
+            }
         }
 
         function pollFullEvalStatus() {

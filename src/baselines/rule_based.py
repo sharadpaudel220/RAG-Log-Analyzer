@@ -31,8 +31,9 @@ class RuleBasedSystem:
             ['ERROR', 'FATAL', 'CRITICAL', 'EXCEPTION', 'FAILED'])
         self.threshold = config.get('baselines.rule_based.threshold', 1)
 
-        # Ignore patterns for system/infrastructure logs
+        # Ignore patterns for system/infrastructure logs and normal hardware events
         self.ignore_patterns = [
+            # System/infrastructure logs
             r'initializing',
             r'network capture',
             r'starting network',
@@ -63,7 +64,13 @@ class RuleBasedSystem:
             r'retrieval system',
             r'knowledge base',
             r'preprocessing',
-            r'ingestion'
+            r'ingestion',
+            # Normal hardware events (often incorrectly labeled as anomalies in BGL)
+            r'INFO.*parity error corrected',  # "instruction cache parity error corrected" is normal
+            r'INFO.*alignment exceptions',     # "double-hummer alignment exceptions" is normal
+            r'INFO.*generating core\.\d+',   # Core dumps during normal operation
+            r'INFO.*CE sym',                  # Correctable error symbols
+            r'RAS KERNEL INFO',               # RAS (Reliability, Availability, Serviceability) kernel info
         ]
 
         self.rules = self._initialize_rules()
@@ -136,44 +143,6 @@ class RuleBasedSystem:
             'WARN': 'LOW'
         }
         return severity_map.get(keyword.upper(), 'MEDIUM')
-    
-    def analyze(self, log_entry: ParsedLogEntry) -> RuleBasedResult:
-        matched_rules = []
-        max_severity = 'INFO'
-        
-        for rule in self.rules:
-            if rule['pattern'].search(log_entry.raw_content):
-                matched_rules.append(rule['name'])
-                
-                if self._is_higher_severity(rule['severity'], max_severity):
-                    max_severity = rule['severity']
-        
-        is_anomaly = len(matched_rules) >= self.threshold
-        
-        if not is_anomaly and log_entry.severity in ['ERROR', 'CRITICAL', 'FATAL']:
-            is_anomaly = True
-            max_severity = log_entry.severity
-            matched_rules.append('severity_based')
-        
-        return RuleBasedResult(
-            log_entry=log_entry,
-            is_anomaly=is_anomaly,
-            severity=max_severity,
-            matched_rules=matched_rules,
-            confidence_score=1.0
-        )
-    
-    def analyze_batch(self, log_entries: List[ParsedLogEntry]) -> List[RuleBasedResult]:
-        results = []
-        
-        for entry in log_entries:
-            result = self.analyze(entry)
-            results.append(result)
-        
-        anomaly_count = sum(1 for r in results if r.is_anomaly)
-        logger.info(f"Rule-based analysis: {anomaly_count}/{len(results)} anomalies detected")
-        
-        return results
     
     def _is_higher_severity(self, sev1: str, sev2: str) -> bool:
         severity_order = {

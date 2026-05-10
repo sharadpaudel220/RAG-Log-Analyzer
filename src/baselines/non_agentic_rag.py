@@ -37,8 +37,9 @@ class NonAgenticRAGSystem:
         self.top_k = config.get('baselines.non_agentic_rag.top_k', 5)
         self.single_pass = config.get('baselines.non_agentic_rag.single_pass', True)
 
-        # Ignore patterns for system/infrastructure logs
+        # Ignore patterns for system/infrastructure logs and normal hardware events
         self.ignore_patterns = [
+            # System/infrastructure logs
             r'initializing',
             r'network capture',
             r'starting network',
@@ -69,7 +70,13 @@ class NonAgenticRAGSystem:
             r'retrieval system',
             r'knowledge base',
             r'preprocessing',
-            r'ingestion'
+            r'ingestion',
+            # Normal hardware events (often incorrectly labeled as anomalies in BGL)
+            r'INFO.*parity error corrected',  # "instruction cache parity error corrected" is normal
+            r'INFO.*alignment exceptions',     # "double-hummer alignment exceptions" is normal
+            r'INFO.*generating core\.\d+',   # Core dumps during normal operation
+            r'INFO.*CE sym',                  # Correctable error symbols
+            r'RAS KERNEL INFO',               # RAS (Reliability, Availability, Serviceability) kernel info
         ]
         self.compiled_ignore_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.ignore_patterns]
 
@@ -153,25 +160,34 @@ class NonAgenticRAGSystem:
             if any(keyword in analysis_lower for keyword in keywords):
                 return severity
         
-        return default_severity or 'MEDIUM'
+        # Default to LOW severity when unclear - assume normal unless evidence suggests otherwise
+        return default_severity or 'LOW'
     
     def _determine_anomaly(self, severity: str, analysis: str) -> bool:
-        severity_scores = {
-            'CRITICAL': 1.0,
-            'HIGH': 0.8,
-            'MEDIUM': 0.5,
-            'LOW': 0.3,
-            'INFO': 0.1
-        }
+        """Conservative anomaly detection - prioritize precision over recall.
         
-        severity_score = severity_scores.get(severity, 0.5)
+        Non-Agentic RAG is more prone to false positives due to simpler reasoning.
+        We use conservative thresholds with broader keyword matching.
+        """
+        analysis_lower = analysis.lower()
         
-        anomaly_keywords = ['error', 'failure', 'exception', 'critical', 'issue', 'problem']
-        keyword_score = sum(1 for keyword in anomaly_keywords if keyword in analysis.lower()) / len(anomaly_keywords)
-        
-        combined_score = (severity_score + keyword_score) / 2
-        
-        return combined_score >= 0.4
+        # Conservative severity-based thresholds
+        if severity == 'INFO':
+            return False  # INFO logs are never anomalies
+        elif severity == 'LOW':
+            return False  # LOW severity logs are never anomalies
+        elif severity == 'MEDIUM':
+            # Flag if analysis suggests potential issues (broader matching)
+            anomaly_indicators = ['anomaly', 'error', 'warning', 'issue', 'problem', 'fail', 'exception']
+            return any(indicator in analysis_lower for indicator in anomaly_indicators)
+        elif severity == 'HIGH':
+            # Flag for high severity issues
+            high_indicators = ['error', 'failure', 'critical', 'severe', 'fail', 'exception', 'anomaly']
+            return any(indicator in analysis_lower for indicator in high_indicators)
+        elif severity == 'CRITICAL':
+            return True  # Always flag CRITICAL severity
+        else:
+            return False  # Unknown severity - assume normal
     
     def _estimate_confidence(self, analysis: str, retrieved_docs: List[RetrievalResult]) -> float:
         confidence_indicators = {

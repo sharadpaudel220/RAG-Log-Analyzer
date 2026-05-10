@@ -1721,14 +1721,39 @@ def start_full_evaluation():
 @app.route('/api/evaluation/full/status', methods=['GET'])
 def full_evaluation_status():
     """Return the current evaluation status (polled by the UI)."""
+    import time
     status_path = os.path.join(os.path.dirname(__file__), 'evaluation_status.json')
     if not os.path.exists(status_path):
-        return jsonify({'state': 'idle', 'percent': 0})
-    try:
-        with open(status_path, 'r') as f:
-            return jsonify(json.load(f))
-    except Exception as exc:
-        return jsonify({'state': 'error', 'message': str(exc)}), 500
+        return jsonify({'state': 'idle', 'percent': 0, 'current_system': '-', 'current_dataset': '-'})
+    
+    # Retry logic for file reading (file may be locked during write)
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            with open(status_path, 'r') as f:
+                data = json.load(f)
+                # Ensure required fields exist
+                data.setdefault('state', 'unknown')
+                data.setdefault('percent', 0)
+                data.setdefault('current_system', '-')
+                data.setdefault('current_dataset', '-')
+                data.setdefault('message', '')
+                return jsonify(data)
+        except json.JSONDecodeError:
+            # File is being written or corrupted, retry
+            if attempt < max_retries - 1:
+                time.sleep(0.05)  # Small delay before retry
+                continue
+            # Return default state if all retries failed
+            return jsonify({'state': 'running', 'percent': 0, 'current_system': '-', 'current_dataset': '-', 'message': 'Reading status...'})
+        except Exception as exc:
+            if attempt < max_retries - 1:
+                time.sleep(0.05)
+                continue
+            return jsonify({'state': 'error', 'message': str(exc), 'percent': 0}), 500
+    
+    # Fallback
+    return jsonify({'state': 'running', 'percent': 0, 'current_system': '-', 'current_dataset': '-'})
 
 
 @app.route('/api/evaluation/full/results', methods=['GET'])
@@ -1778,6 +1803,51 @@ def stop_full_evaluation():
         return jsonify({'success': True})
     except Exception as exc:
         return jsonify({'error': str(exc)}), 500
+
+
+@app.route('/api/evaluation/full/clear', methods=['POST'])
+def clear_full_evaluation():
+    """Clear all evaluation results, checkpoint files, and status files."""
+    import glob
+    base_dir = os.path.dirname(__file__)
+    files_to_remove = [
+        'evaluation_results.json',
+        'evaluation_metrics.csv',
+        'evaluation_report.txt',
+        'evaluation_run_log.txt',
+        'evaluation_status.json',
+        'evaluation_checkpoint.json',
+        'fresh_evaluation.log'
+    ]
+    removed = []
+    errors = []
+    for fname in files_to_remove:
+        fpath = os.path.join(base_dir, fname)
+        try:
+            if os.path.exists(fpath):
+                os.remove(fpath)
+                removed.append(fname)
+        except Exception as e:
+            errors.append(f"{fname}: {str(e)}")
+    
+    # Also clear any evaluation_*.json files
+    try:
+        for fpath in glob.glob(os.path.join(base_dir, 'evaluation_*.json')):
+            os.remove(fpath)
+            removed.append(os.path.basename(fpath))
+    except Exception as e:
+        errors.append(f"evaluation_*.json: {str(e)}")
+    
+    logger.info(f"Cleared evaluation files: {removed}")
+    if errors:
+        logger.warning(f"Errors clearing some files: {errors}")
+    
+    return jsonify({
+        'success': True,
+        'message': f'Cleared {len(removed)} evaluation files',
+        'removed': removed,
+        'errors': errors if errors else None
+    })
 
 
 # ==================== Network Capture API ====================

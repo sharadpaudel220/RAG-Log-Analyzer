@@ -88,7 +88,10 @@ baselines:
     - FAILED
     threshold: 1
   isolation_forest:
-    contamination: 0.1
+    # Contamination: expected proportion of anomalies in the data
+    # 'auto' estimates from data (often unreliable) - evaluation script uses dataset-specific values
+    # HDFS: ~0.04 (4% anomalies), BGL: ~0.40 (40% anomalies)
+    contamination: 0.1  # Default 10%, overridden per-dataset in evaluation
     n_estimators: 100
     max_samples: 256
     random_state: 42

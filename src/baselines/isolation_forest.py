@@ -30,8 +30,9 @@ class IsolationForestResult:
         }
 
 class IsolationForestSystem:
-    def __init__(self):
-        self.contamination = config.get('baselines.isolation_forest.contamination', 0.1)
+    def __init__(self, contamination=None):
+        # Allow contamination to be set per dataset, or use 'auto' for adaptive estimation
+        self.contamination = contamination if contamination is not None else config.get('baselines.isolation_forest.contamination', 'auto')
         self.n_estimators = config.get('baselines.isolation_forest.n_estimators', 100)
         self.max_samples = config.get('baselines.isolation_forest.max_samples', 256)
         self.random_state = config.get('baselines.isolation_forest.random_state', 42)
@@ -41,8 +42,11 @@ class IsolationForestSystem:
         self.small_batch_min_df = config.get('baselines.isolation_forest.small_batch_min_df', 1)
         self.small_batch_threshold = config.get('baselines.isolation_forest.small_batch_threshold', 25)
         
+        # Use 'auto' if contamination is not explicitly set - this estimates from data
+        model_contamination = self.contamination if self.contamination != 'auto' else 'auto'
+        
         self.model = IsolationForest(
-            contamination=self.contamination,
+            contamination=model_contamination,
             n_estimators=self.n_estimators,
             max_samples=self.max_samples,
             random_state=self.random_state,

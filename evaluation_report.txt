@@ -1,55 +1,55 @@
 ==============================================================================
 COMPARATIVE EVALUATION REPORT
-Generated: 2026-05-03 21:41:42
+Generated: 2026-05-10 10:29:28
 ==============================================================================
 
 Table — HDFS Dataset Detection Performance
 ------------------------------------------------------------------------------
 System                  Prec     Rec      F1     Acc   AUC-ROC    AUC-PR     MCC     FPR
 ------------------------------------------------------------------------------
-Rule-Based            0.6857  1.0000  0.8136  0.9817  0.9905    0.6857    0.8201  0.0191
-Isolation Forest      0.3810  1.0000  0.5517  0.9350  1.0000    1.0000    0.5960  0.0677
-Non-Agentic RAG       0.0401  0.9583  0.0769  0.0800  0.5009    0.0401    0.0017  0.9566
-Agentic RAG           0.0401  1.0000  0.0770  0.0417  0.5009    0.0401    0.0083  0.9983
+Rule-Based            0.9333  1.0000  0.9655  0.9933  0.5000    0.0933    0.9625  0.0074
+Isolation Forest      0.4286  0.2143  0.2857  0.9000  0.9259    0.5092    0.2550  0.0294
+Non-Agentic RAG       0.1129  1.0000  0.2029  0.2667  0.5368    0.1029    0.1469  0.8088
+Agentic RAG           0.1022  1.0000  0.1854  0.1800  0.8761    0.7446    0.0988  0.9044
 
 Table — HDFS Dataset Efficiency Metrics
 ------------------------------------------------------------------------------
 System                  Latency μ ms    Latency p95 ms    Throughput/s   Samples
 ------------------------------------------------------------------------------
-Rule-Based                      0.07              0.08        15122.54       600
-Isolation Forest                6.79              7.58          147.25       600
-Non-Agentic RAG               137.04            354.58            7.30       600
-Agentic RAG                     6.09              0.07          164.32       600
+Rule-Based                      0.07              0.08        14524.79       150
+Isolation Forest                6.83              7.92          146.32       150
+Non-Agentic RAG              3181.52           3788.96            0.31       150
+Agentic RAG                   488.63           3661.08            2.05       150
 
 Paired t-tests (Agentic RAG vs baselines) — HDFS
 ------------------------------------------------------------------------------
-  vs_Rule-Based            t= -96.8728  p=  0.000000  significant_at_α=0.017: True
-  vs_Isolation Forest      t= -70.8281  p=  0.000000  significant_at_α=0.017: True
-  vs_Non-Agentic RAG       t=  -4.4967  p=  0.000008  significant_at_α=0.017: True
+  vs_Rule-Based            t= -25.4797  p=  0.000000  significant_at_α=0.017: True
+  vs_Isolation Forest      t= -14.8926  p=  0.000000  significant_at_α=0.017: True
+  vs_Non-Agentic RAG       t=  -2.1632  p=  0.032117  significant_at_α=0.017: False
 
 Table — BGL Dataset Detection Performance
 ------------------------------------------------------------------------------
 System                  Prec     Rec      F1     Acc   AUC-ROC    AUC-PR     MCC     FPR
 ------------------------------------------------------------------------------
-Rule-Based            0.9798  1.0000  0.9898  0.9917  0.9930    0.9798    0.9829  0.0140
-Isolation Forest      0.5417  0.1074  0.1793  0.6033  0.7131    0.6116    0.0832  0.0615
-Non-Agentic RAG       0.4040  1.0000  0.5755  0.4050  0.5021    0.4044    0.0336  0.9972
-Agentic RAG           0.4033  1.0000  0.5748  0.4033  0.5206    0.4250    0.0000  1.0000
+Rule-Based            1.0000  0.8148  0.8980  0.9000  0.5000    0.5400    0.8181  0.0000
+Isolation Forest      0.8525  0.6420  0.7324  0.7467  0.8944    0.8801    0.5190  0.1304
+Non-Agentic RAG       0.9851  0.8148  0.8919  0.8933  0.0985    0.4413    0.8023  0.0145
+Agentic RAG           0.9851  0.8148  0.8919  0.8933  0.1029    0.4248    0.8023  0.0145
 
 Table — BGL Dataset Efficiency Metrics
 ------------------------------------------------------------------------------
 System                  Latency μ ms    Latency p95 ms    Throughput/s   Samples
 ------------------------------------------------------------------------------
-Rule-Based                      0.07              0.11        14675.59       600
-Isolation Forest                7.58              9.95          131.96       600
-Non-Agentic RAG               131.97            302.70            7.58       600
-Agentic RAG                    20.76            121.79           48.16       600
+Rule-Based                      0.05              0.09        18977.54       150
+Isolation Forest                6.49              6.90          154.20       150
+Non-Agentic RAG              1611.35           3732.23            0.62       150
+Agentic RAG                   751.27           3680.95            1.33       150
 
 Paired t-tests (Agentic RAG vs baselines) — BGL
 ------------------------------------------------------------------------------
-  vs_Rule-Based            t= -29.2585  p=  0.000000  significant_at_α=0.017: True
-  vs_Isolation Forest      t=  -5.2180  p=  0.000000  significant_at_α=0.017: True
-  vs_Non-Agentic RAG       t=  -1.0000  p=  0.317714  significant_at_α=0.017: False
+  vs_Rule-Based            t=  -1.0000  p=  0.318932  significant_at_α=0.017: False
+  vs_Isolation Forest      t=  +3.6158  p=  0.000409  significant_at_α=0.017: True
+  vs_Non-Agentic RAG       t=      N/A  p=       N/A  significant_at_α=0.017: False
 
 ==============================================================================
 END OF REPORT

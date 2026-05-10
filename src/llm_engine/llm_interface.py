@@ -270,7 +270,9 @@ class LLMEngine:
     
     def _generate_groq(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> LLMResponse:
         """Groq Cloud — OpenAI-compatible API. Free tier: ~14,400 req/day.
-        Recommended models: llama-3.1-8b-instant, llama-3.3-70b-versatile, mixtral-8x7b-32768."""
+        Recommended models: llama-3.1-8b-instant, llama-3.3-70b-versatile, mixtral-8x7b-32768.
+        Includes exponential backoff retry for rate limit (429) errors."""
+        import time
         self._ensure_api_key('groq', self.groq_api_key)
         url = f"{self.groq_base_url.rstrip('/')}/v1/chat/completions"
 
@@ -290,30 +292,59 @@ class LLMEngine:
             "Content-Type": "application/json"
         }
 
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
-            response.raise_for_status()
-            result = response.json()
+        # Exponential backoff retry for rate limits
+        max_retries = 5
+        base_delay = 1.0  # Start with 1 second
 
-            choice = (result.get('choices') or [{}])[0]
-            message = choice.get('message') or {}
-            content = message.get('content', '')
-            usage = result.get('usage') or {}
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
 
-            return LLMResponse(
-                content=content,
-                model=result.get('model', self.model),
-                prompt_tokens=usage.get('prompt_tokens', 0),
-                completion_tokens=usage.get('completion_tokens', 0),
-                total_tokens=usage.get('total_tokens', 0),
-                finish_reason=choice.get('finish_reason', 'stop')
-            )
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error calling Groq API: {e}")
-            return LLMResponse(
-                content=f"Error: Unable to generate response - {str(e)}",
-                model=self.model
-            )
+                # Handle rate limit (429) with retry
+                if response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2 ** attempt)  # Exponential: 1, 2, 4, 8, 16 seconds
+                        logger.warning(f"Groq rate limit hit (429), retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                        time.sleep(delay)
+                        continue
+                    else:
+                        logger.error("Groq rate limit exceeded, max retries reached")
+                        raise requests.exceptions.RequestException("Rate limit exceeded after max retries")
+
+                response.raise_for_status()
+                result = response.json()
+
+                choice = (result.get('choices') or [{}])[0]
+                message = choice.get('message') or {}
+                content = message.get('content', '')
+                usage = result.get('usage') or {}
+
+                return LLMResponse(
+                    content=content,
+                    model=result.get('model', self.model),
+                    prompt_tokens=usage.get('prompt_tokens', 0),
+                    completion_tokens=usage.get('completion_tokens', 0),
+                    total_tokens=usage.get('total_tokens', 0),
+                    finish_reason=choice.get('finish_reason', 'stop')
+                )
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(f"Groq API error, retrying in {delay}s: {e}")
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.error(f"Error calling Groq API: {e}")
+                    return LLMResponse(
+                        content=f"Error: Unable to generate response - {str(e)}",
+                        model=self.model
+                    )
+
+        # Should not reach here, but return error just in case
+        return LLMResponse(
+            content="Error: Max retries exceeded for Groq API",
+            model=self.model
+        )
 
     def analyze_log_anomaly(self, log_content: str, context: str, template: str) -> LLMResponse:
         system_prompt = "You are a log analysis expert. Analyze logs quickly and concisely."

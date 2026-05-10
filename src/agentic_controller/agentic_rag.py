@@ -83,8 +83,9 @@ class AgenticController:
 
         self.template_cache = {} if self.enable_template_cache else None
 
-        # Ignore patterns for system/infrastructure logs
+        # Ignore patterns for system/infrastructure logs and normal hardware events
         self.ignore_patterns = [
+            # System/infrastructure logs
             r'initializing',
             r'network capture',
             r'starting network',
@@ -115,7 +116,13 @@ class AgenticController:
             r'retrieval system',
             r'knowledge base',
             r'preprocessing',
-            r'ingestion'
+            r'ingestion',
+            # Normal hardware events (often incorrectly labeled as anomalies in BGL)
+            r'INFO.*parity error corrected',  # "instruction cache parity error corrected" is normal
+            r'INFO.*alignment exceptions',     # "double-hummer alignment exceptions" is normal
+            r'INFO.*generating core\.\d+',   # Core dumps during normal operation
+            r'INFO.*CE sym',                  # Correctable error symbols
+            r'RAS KERNEL INFO',               # RAS (Reliability, Availability, Serviceability) kernel info
         ]
         self.compiled_ignore_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.ignore_patterns]
         
@@ -418,22 +425,29 @@ class AgenticController:
             if any(keyword in analysis_lower for keyword in keywords):
                 return severity
         
-        return default_severity or 'MEDIUM'
+        # Default to LOW severity when unclear - assume normal unless evidence suggests otherwise
+        return default_severity or 'LOW'
     
     def _determine_anomaly(self, severity: str, confidence: float) -> bool:
-        severity_scores = {
-            'CRITICAL': 1.0,
-            'HIGH': 0.8,
-            'MEDIUM': 0.5,
-            'LOW': 0.3,
-            'INFO': 0.1
-        }
+        """Conservative anomaly detection - balance precision and recall.
         
-        severity_score = severity_scores.get(severity, 0.5)
-        
-        anomaly_score = (severity_score + confidence) / 2
-        
-        return anomaly_score >= 0.6
+        Key insight: We want good precision but not zero recall.
+        INFO/LOW severity logs should almost never be anomalies regardless of confidence.
+        MEDIUM/HIGH/CRITICAL use moderate confidence thresholds.
+        """
+        # Balanced thresholds - flag anomalies when there's reasonable evidence
+        if severity == 'INFO':
+            return False  # INFO logs are never anomalies
+        elif severity == 'LOW':
+            return False  # LOW severity logs are never anomalies  
+        elif severity == 'MEDIUM':
+            return confidence >= 0.6  # Moderate confidence for MEDIUM
+        elif severity == 'HIGH':
+            return confidence >= 0.5  # Lower threshold for HIGH severity
+        elif severity == 'CRITICAL':
+            return confidence >= 0.3  # Flag CRITICAL unless very low confidence
+        else:
+            return confidence >= 0.7  # Unknown severity - moderate confidence
     
     def _extract_recommendations(self, analysis: str) -> List[str]:
         recommendations = []
