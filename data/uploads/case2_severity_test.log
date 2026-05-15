@@ -1,0 +1,6 @@
+CRITICAL: kernel panic detected on node BGL/R00-M0-N00
+ERROR: failed to write block blk_-1608999687919862906
+WARNING: disk usage above 90% on DataNode /10.251.31.5
+081109 203518 143 INFO dfs.DataNode: heartbeat received
+DEBUG: connection pool size=10 active=3
+081109 203518 143 dfs.DataNode: no level keyword here

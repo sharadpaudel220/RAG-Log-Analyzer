@@ -363,3 +363,32 @@ TypeError: unsupported format string passed to NoneType.__format__
 2026-05-10 10:14:03 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
 2026-05-10 10:14:03 - __main__ - INFO - System components initialized successfully
 2026-05-10 10:14:08 - __main__ - INFO - Cleared evaluation files: []
+2026-05-12 21:28:12 - __main__ - INFO - Initializing system components...
+2026-05-12 21:28:12 - __main__ - INFO - Initializing database connection...
+2026-05-12 21:28:13 - __main__ - INFO - Database connection established
+2026-05-12 21:28:13 - __main__ - INFO - Database tables verified/created
+2026-05-12 21:28:19 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-12 21:28:19 - __main__ - INFO - System components initialized successfully
+2026-05-12 21:30:29 - __main__ - INFO - Starting rule_based analysis of 1 logs for session 9554beea-e0f8-4e9c-8c69-c8b619bcd41c
+2026-05-12 21:30:29 - __main__ - INFO - Progress: 1/1 logs analyzed (100%)
+2026-05-12 21:37:19 - __main__ - INFO - Starting rule_based analysis of 6 logs for session 7b26f1b4-37d6-4492-adda-10e7898aa8a4
+2026-05-12 21:37:19 - __main__ - INFO - Progress: 6/6 logs analyzed (100%)
+2026-05-15 20:59:54 - __main__ - INFO - Initializing system components...
+2026-05-15 20:59:54 - __main__ - INFO - Initializing database connection...
+2026-05-15 20:59:54 - __main__ - INFO - Database connection established
+2026-05-15 20:59:54 - __main__ - INFO - Database tables verified/created
+2026-05-15 20:59:59 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-15 20:59:59 - __main__ - INFO - System components initialized successfully
+2026-05-15 21:08:09 - __main__ - INFO - Initializing system components...
+2026-05-15 21:08:09 - __main__ - INFO - Initializing database connection...
+2026-05-15 21:08:09 - __main__ - INFO - Database connection established
+2026-05-15 21:08:09 - __main__ - INFO - Database tables verified/created
+2026-05-15 21:08:15 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-15 21:08:15 - __main__ - INFO - System components initialized successfully
+2026-05-15 21:13:09 - __main__ - INFO - Initializing system components...
+2026-05-15 21:13:09 - __main__ - INFO - Initializing database connection...
+2026-05-15 21:13:09 - __main__ - INFO - Database connection established
+2026-05-15 21:13:09 - __main__ - INFO - Database tables verified/created
+2026-05-15 21:13:15 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-15 21:13:15 - __main__ - INFO - System components initialized successfully
+2026-05-15 21:14:04 - __main__ - INFO - Cleared evaluation files: ['evaluation_results.json', 'evaluation_metrics.csv', 'evaluation_report.txt', 'evaluation_run_log.txt', 'evaluation_status.json', 'evaluation_checkpoint.json']

@@ -11,9 +11,32 @@ async function updateOllamaStatus() {
         const response = await fetch('/api/health');
         const data = await response.json();
         window.ollamaAvailable = data.ollama_available || false;
+        window.llmProvider = data.provider || 'unknown';
 
-        // Update all Ollama status elements
+        // Hide Ollama section for cloud providers
+        const cloudProviders = ['groq', 'openai', 'anthropic', 'gemini'];
+        const isCloudProvider = cloudProviders.includes(window.llmProvider.toLowerCase());
+
         const ollamaStatusElements = ['ollamaStatus', 'ollamaStatusSidebar'];
+        ollamaStatusElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                if (isCloudProvider) {
+                    // Hide Ollama status for cloud providers
+                    element.style.display = 'none';
+                    return;
+                } else {
+                    element.style.display = 'flex';
+                }
+            }
+        });
+
+        if (isCloudProvider) {
+            console.log(`Using cloud provider: ${window.llmProvider} - Ollama status hidden`);
+            return;
+        }
+
+        // Update all Ollama status elements (already declared above)
         ollamaStatusElements.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -30,11 +53,17 @@ async function updateOllamaStatus() {
         console.error('Ollama status check failed:', error);
         window.ollamaAvailable = false;
 
-        // Update all Ollama status elements
-        const ollamaStatusElements = ['ollamaStatus', 'ollamaStatusSidebar'];
-        ollamaStatusElements.forEach(id => {
+        // Only update if not using cloud provider
+        const cloudProviders = ['groq', 'openai', 'anthropic', 'gemini'];
+        if (window.llmProvider && cloudProviders.includes(window.llmProvider.toLowerCase())) {
+            return;
+        }
+
+        // Update Ollama status elements
+        ['ollamaStatus', 'ollamaStatusSidebar'].forEach(id => {
             const element = document.getElementById(id);
             if (element) {
+                element.style.display = 'flex';
                 element.innerHTML = '<i class="fas fa-circle" style="color: #ef4444; font-size: 0.75rem;"></i> Ollama Inactive (Click for details)';
                 element.style.color = '#ef4444';
             }

@@ -4,8 +4,9 @@ Enhanced Flask Web Application for Agentic RAG Log Analyzer
 With multi-source log ingestion capabilities
 """
 
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, session
 from flask_cors import CORS
+from functools import wraps
 import os
 import time
 import json
@@ -83,6 +84,22 @@ ALLOWED_EXTENSIONS = {'log', 'txt', 'json', 'csv'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Authentication configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Hardcoded admin credentials (as requested)
+ADMIN_EMAIL = 'admin@gmail.com'
+ADMIN_PASSWORD = 'admin@123'
+
+def login_required(f):
+    """Decorator to require login for routes."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Global system components
 system_components = {
@@ -221,39 +238,75 @@ def _setup_default_sources():
         metadata={'description': 'Security events and audit trails'}
     ))
 
+# ==================== Authentication Routes ====================
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            session['user_email'] = email
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error='Invalid email or password')
+
+    # If already logged in, redirect to dashboard
+    if 'logged_in' in session:
+        return redirect(url_for('index'))
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    """Logout and clear session"""
+    session.pop('logged_in', None)
+    session.pop('user_email', None)
+    return redirect(url_for('login'))
+
 # ==================== Web Pages ====================
 
 @app.route('/')
+@login_required
 def index():
     """Main dashboard page"""
     return render_template('dashboard.html')
 
 @app.route('/log-analyzer')
+@login_required
 def log_analyzer():
     """Log analyzer page"""
     return render_template('log_analyzer.html')
 
 @app.route('/analysis-history')
+@login_required
 def analysis_history():
     """Analysis history page"""
     return render_template('analysis_history.html')
 
 @app.route('/api-config')
+@login_required
 def api_config():
     """API configuration page"""
     return render_template('api_config.html')
 
 @app.route('/chat')
+@login_required
 def chat():
     """Chat interface page"""
     return render_template('chat.html')
 
 @app.route('/sources')
+@login_required
 def sources():
     """Log sources management page"""
     return render_template('sources.html')
 
 @app.route('/evaluation')
+@login_required
 def evaluation():
     """Evaluation page"""
     return render_template('evaluation.html')
@@ -263,10 +316,13 @@ def evaluation():
 @app.route('/api/health')
 def health_check():
     """Health check endpoint"""
+    llm_engine = system_components.get('llm_engine')
+    provider = llm_engine.provider if llm_engine else 'unknown'
     return jsonify({
         'status': 'healthy',
         'system_initialized': system_components['initialized'],
-        'ollama_available': system_components.get('ollama_available', False)
+        'ollama_available': system_components.get('ollama_available', False),
+        'provider': provider
     })
 
 @app.route('/api/stats', methods=['GET'])
