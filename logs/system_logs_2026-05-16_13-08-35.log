@@ -1,3 +1,15 @@
+/dev/rdisk2s2: ** Checking the container superblock.
+/dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
+/dev/rdisk3s3: fsck_apfs completed at Wed May  6 08:17:24 2026
+/dev/rdisk2s2:    Checking the checkpoint with transaction ID 276.
+/dev/rdisk2s2: ** Checking the object map.
+/dev/rdisk2s2: ** Checking volume /dev/rdisk2s2.
+/dev/rdisk2s2: ** Checking the APFS volume superblock.
+/dev/rdisk2s2:    The volume Update was formatted by com.apple.Mobile (1677.81.1) and last modified by apfs_kext (2332.140.13).
+/dev/rdisk2s2: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
+/dev/rdisk2s2: fsck_apfs completed at Wed May  6 08:17:24 2026
+/dev/rdisk1s3: fsck_apfs started at Wed May  6 08:17:24 2026
+/dev/rdisk1s3: error: container /dev/rdisk1 is mounted with write access; please re-run with -l.
 /dev/rdisk1s3: fsck_apfs completed at Wed May  6 08:17:24 2026
 /dev/rdisk3s4: fsck_apfs started at Wed May  6 08:17:25 2026
 /dev/rdisk3s4: error: container /dev/rdisk3 is mounted with write access; please re-run with -l.
@@ -86,15 +98,3 @@
 /dev/rdisk3s3: fsck_apfs started at Sat May 16 08:48:50 2026
 /dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
 /dev/rdisk3s3: fsck_apfs completed at Sat May 16 08:48:50 2026
-/dev/rdisk3s3: fsck_apfs started at Sun May 17 00:05:01 2026
-/dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
-/dev/rdisk3s3: fsck_apfs completed at Sun May 17 00:05:01 2026
-/dev/rdisk3s3: fsck_apfs started at Tue May 19 04:24:58 2026
-/dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
-/dev/rdisk3s3: fsck_apfs completed at Tue May 19 04:24:58 2026
-/dev/rdisk3s3: fsck_apfs started at Wed May 20 21:43:49 2026
-/dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
-/dev/rdisk3s3: fsck_apfs completed at Wed May 20 21:43:49 2026
-/dev/rdisk3s3: fsck_apfs started at Thu May 21 05:25:26 2026
-/dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
-/dev/rdisk3s3: fsck_apfs completed at Thu May 21 05:25:26 2026

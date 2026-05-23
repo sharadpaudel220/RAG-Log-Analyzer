@@ -850,6 +850,10 @@ body {
     transform: scale(1.05);
 }
 
+.delete-btn-small i {
+    pointer-events: none;
+}
+
 /* Evaluation */
 .evaluation-controls {
     display: flex;

@@ -143,9 +143,16 @@ def initialize_system():
         logger.info("Database connection established")
         # Create tables if they don't exist
         try:
-            from src.database.models import Base
+            from src.database.models import Base, SystemStats
             Base.metadata.create_all(bind=db_config.engine)
             logger.info("Database tables verified/created")
+            # Ensure SystemStats row exists
+            with db_config.get_session() as session:
+                stats = session.query(SystemStats).filter_by(stat_id=1).first()
+                if not stats:
+                    stats = SystemStats(stat_id=1)
+                    session.add(stats)
+                    logger.info("Created default system stats")
         except Exception as e:
             logger.error(f"Error creating database tables: {e}")
         
@@ -330,15 +337,33 @@ def get_stats():
     """Get system statistics"""
     try:
         db_stats = db_service.get_system_stats()
-        system_components['system_stats'].update(db_stats)
-        return jsonify(system_components['system_stats'])
+        # Recalculate from sessions if stats are 0 but sessions exist
+        if db_stats.get('total_logs_analyzed', 0) == 0:
+            sessions = db_service.get_analysis_sessions(limit=1000)
+            if sessions:
+                total_logs = sum(s.get('total_logs', 0) for s in sessions)
+                total_anomalies = sum(s.get('anomalies_detected', 0) for s in sessions)
+                db_stats['total_logs_analyzed'] = total_logs
+                db_stats['total_anomalies_detected'] = total_anomalies
+                db_stats['total_alerts_generated'] = total_anomalies  # Each anomaly generates an alert
+                db_stats['total_sessions'] = len(sessions)
+        # Get knowledge base stats
+        kb_stats = {}
+        if system_components.get('knowledge_manager'):
+            kb_stats = system_components['knowledge_manager'].get_statistics()
+        # Map database keys (with total_ prefix) to frontend keys
+        mapped_stats = {
+            'total_logs_analyzed': db_stats.get('total_logs_analyzed', 0),
+            'anomalies_detected': db_stats.get('total_anomalies_detected', 0),
+            'alerts_generated': db_stats.get('total_alerts_generated', 0),
+            'total_sessions': db_stats.get('total_sessions', 0),
+            'knowledge_base_size': kb_stats.get('total_documents', 0),
+            'uptime_start': system_components['system_stats'].get('uptime_start')
+        }
+        return jsonify(mapped_stats)
     except Exception as e:
         logger.error(f"Error getting stats: {e}")
         return jsonify(system_components['system_stats'])
-    stats['active_sources'] = len([s for s in system_components['source_manager'].list_sources() if s.enabled])
-    stats['total_sources'] = len(system_components['source_manager'].sources)
-    
-    return jsonify(stats)
 
 # ==================== Log Source Management API ====================
 
@@ -645,8 +670,12 @@ def analyze_file():
         with open(filepath, 'r') as f:
             file_content = f.read()
         
-        # Check if Ollama is available for Agentic RAG
-        if system_type == 'agentic' and not system_components.get('ollama_available', False):
+        # Check if Ollama is available for Agentic RAG (only when using Ollama provider)
+        llm_engine = system_components.get('llm_engine')
+        provider = llm_engine.provider if llm_engine else 'unknown'
+        logger.info(f"DEBUG analyze_file: system_type={system_type}, provider={provider}, ollama_available={system_components.get('ollama_available', False)}")
+        if system_type == 'agentic' and provider.lower() == 'ollama' and not system_components.get('ollama_available', False):
+            logger.warning(f"Blocking agentic analysis - Ollama not available for provider={provider}")
             return jsonify({'error': 'Ollama is not running. Agentic RAG requires Ollama to be running for ReAct-based log analysis. Please start Ollama and try again.'}), 503
         
         # Create database session (returns session_id as string)
@@ -1203,8 +1232,10 @@ def analyze_log():
         if not log_content:
             return jsonify({'error': 'No log content provided'}), 400
 
-        # Check if Ollama is available for Agentic RAG
-        if system_type == 'agentic' and not system_components.get('ollama_available', False):
+        # Check if Ollama is available for Agentic RAG (only when using Ollama provider)
+        llm_engine = system_components.get('llm_engine')
+        provider = llm_engine.provider if llm_engine else 'unknown'
+        if system_type == 'agentic' and provider.lower() == 'ollama' and not system_components.get('ollama_available', False):
             return jsonify({'error': 'Ollama is not running. Agentic RAG requires Ollama to be running for ReAct-based log analysis. Please start Ollama and try again.'}), 503
 
         raw_log = RawLogEntry(content=log_content, timestamp=datetime.now())
@@ -2121,6 +2152,9 @@ def get_network_capture_logs():
     global network_capture_instance
 
     try:
+        log_file_path = None
+        lines = []
+        
         # Check if network capture is running or has been stopped
         if not network_capture_instance:
             # Try to find the most recent network capture log file
@@ -2151,45 +2185,56 @@ def get_network_capture_logs():
             log_file_path = network_capture_instance.log_filename if hasattr(network_capture_instance, 'log_filename') else None
             has_file = log_file_path and os.path.exists(log_file_path)
             
-            # If log file exists, read from file (primary source)
-            if has_file:
-                try:
-                    with open(log_file_path, 'r', errors='ignore') as f:
-                        lines = f.readlines()
-                except Exception as e:
-                    logger.error(f"Error reading network capture log file: {e}")
+            # If log file exists, we'll read it below
+            # If no log file but capture is running, fall back to in-memory logs
+            if not has_file:
+                if hasattr(network_capture_instance, 'recent_logs') and network_capture_instance.recent_logs:
+                    logger.info(f"No log file on disk; returning {len(network_capture_instance.recent_logs)} in-memory network logs")
                     return jsonify({
-                        'error': f'Error reading log file: {str(e)}',
+                        'logs': network_capture_instance.recent_logs,
+                        'count': len(network_capture_instance.recent_logs),
+                        'source': 'network-capture-memory'
+                    })
+                elif hasattr(network_capture_instance, 'collected_logs') and network_capture_instance.collected_logs:
+                    logger.info(f"No log file on disk; returning {len(network_capture_instance.collected_logs)} in-memory network logs")
+                    return jsonify({
+                        'logs': network_capture_instance.collected_logs,
+                        'count': len(network_capture_instance.collected_logs),
+                        'source': 'network-capture-memory'
+                    })
+                else:
+                    logger.warning(f"Network capture log file not found: {log_file_path}")
+                    return jsonify({
+                        'error': 'Network capture log file not found. Please start network capture first.',
                         'logs': [],
                         'count': 0
-                    }), 500
-            # If no log file but capture is running, fall back to in-memory logs
-            elif hasattr(network_capture_instance, 'recent_logs') and network_capture_instance.recent_logs:
-                logger.info(f"No log file on disk; returning {len(network_capture_instance.recent_logs)} in-memory network logs")
+                    }), 400
+        
+        # Read the log file (works for both cases - from recent file or from active capture)
+        if log_file_path and os.path.exists(log_file_path):
+            try:
+                with open(log_file_path, 'r', errors='ignore') as f:
+                    lines = f.readlines()
+            except Exception as e:
+                logger.error(f"Error reading network capture log file: {e}")
                 return jsonify({
-                    'logs': network_capture_instance.recent_logs,
-                    'count': len(network_capture_instance.recent_logs),
-                    'source': 'network-capture-memory'
-                })
-            elif hasattr(network_capture_instance, 'collected_logs') and network_capture_instance.collected_logs:
-                logger.info(f"No log file on disk; returning {len(network_capture_instance.collected_logs)} in-memory network logs")
-                return jsonify({
-                    'logs': network_capture_instance.collected_logs,
-                    'count': len(network_capture_instance.collected_logs),
-                    'source': 'network-capture-memory'
-                })
-            else:
-                logger.warning(f"Network capture log file not found: {log_file_path}")
-                return jsonify({
-                    'error': 'Network capture log file not found. Please start network capture first.',
+                    'error': f'Error reading log file: {str(e)}',
                     'logs': [],
                     'count': 0
-                }), 400
-            
-            # Get last 100 lines or all if less
-            recent_lines = lines[-100:] if len(lines) > 100 else lines
-            
-            for line in recent_lines:
+                }), 500
+        else:
+            return jsonify({
+                'error': 'Network capture log file not found.',
+                'logs': [],
+                'count': 0
+            }), 400
+        
+        # Get last 100 lines or all if less
+        recent_lines = lines[-100:] if len(lines) > 100 else lines
+        
+        formatted_logs = []
+        
+        for line in recent_lines:
                 line = line.strip()
                 if not line:
                     continue
@@ -2228,22 +2273,22 @@ def get_network_capture_logs():
                         'source': 'network-capture'
                     })
             
-            # Check if we have any formatted logs
-            if len(formatted_logs) == 0:
-                logger.warning("No valid logs found in file")
-                return jsonify({
-                    'error': 'No valid logs found. The log file exists but contains no parseable log entries.',
-                    'logs': [],
-                    'count': 0
-                }), 400
-            
-            logger.info(f"Successfully read {len(formatted_logs)} logs from {log_file_path}")
-            
+        # Check if we have any formatted logs
+        if len(formatted_logs) == 0:
+            logger.warning("No valid logs found in file")
             return jsonify({
-                'logs': formatted_logs,
-                'count': len(formatted_logs),
-                'source_file': log_file_path
-            })
+                'error': 'No valid logs found. The log file exists but contains no parseable log entries.',
+                'logs': [],
+                'count': 0
+            }), 400
+        
+        logger.info(f"Successfully read {len(formatted_logs)} logs from {log_file_path}")
+        
+        return jsonify({
+            'logs': formatted_logs,
+            'count': len(formatted_logs),
+            'source_file': log_file_path
+        })
             
     except Exception as e:
         logger.error(f"Error getting network capture logs: {e}", exc_info=True)

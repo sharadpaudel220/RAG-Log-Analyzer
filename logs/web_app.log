@@ -392,3 +392,150 @@ TypeError: unsupported format string passed to NoneType.__format__
 2026-05-15 21:13:15 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
 2026-05-15 21:13:15 - __main__ - INFO - System components initialized successfully
 2026-05-15 21:14:04 - __main__ - INFO - Cleared evaluation files: ['evaluation_results.json', 'evaluation_metrics.csv', 'evaluation_report.txt', 'evaluation_run_log.txt', 'evaluation_status.json', 'evaluation_checkpoint.json']
+2026-05-16 12:17:24 - __main__ - INFO - Initializing system components...
+2026-05-16 12:17:24 - __main__ - INFO - Initializing database connection...
+2026-05-16 12:17:24 - __main__ - INFO - Database connection established
+2026-05-16 12:17:24 - __main__ - INFO - Database tables verified/created
+2026-05-16 12:19:07 - __main__ - INFO - Initializing system components...
+2026-05-16 12:19:07 - __main__ - INFO - Initializing database connection...
+2026-05-16 12:19:07 - __main__ - INFO - Database connection established
+2026-05-16 12:19:07 - __main__ - INFO - Database tables verified/created
+2026-05-16 12:19:15 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-16 12:19:15 - __main__ - INFO - System components initialized successfully
+2026-05-16 12:25:41 - __main__ - WARNING - No network capture log files found
+2026-05-16 13:08:13 - __main__ - ERROR - Error getting network capture logs: name 'formatted_logs' is not defined
+Traceback (most recent call last):
+  File "/Users/sharadpaudel/Documents/Log analyzer/log-analyzer/web_app_enhanced.py", line 2232, in get_network_capture_logs
+    if len(formatted_logs) == 0:
+NameError: name 'formatted_logs' is not defined
+2026-05-16 13:08:26 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-04_17-40-59.log
+2026-05-16 13:08:35 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-16_13-08-35.log
+2026-05-16 13:08:35 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-16 13:08:40 - __main__ - INFO - System log capture thread stopped
+2026-05-16 13:08:40 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-16 13:08:40 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-16_13-08-35.log
+2026-05-16 13:08:40 - __main__ - INFO - System log capture stopped
+2026-05-16 13:08:40 - __main__ - INFO - System log capture stopped
+2026-05-16 13:08:43 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-16_13-08-35.log
+2026-05-22 17:29:02 - __main__ - INFO - Initializing system components...
+2026-05-22 17:29:02 - __main__ - INFO - Initializing database connection...
+2026-05-22 17:29:07 - __main__ - INFO - Database connection established
+2026-05-22 17:29:07 - __main__ - INFO - Database tables verified/created
+2026-05-22 17:29:14 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 17:29:14 - __main__ - INFO - System components initialized successfully
+2026-05-22 22:45:06 - __main__ - INFO - Initializing system components...
+2026-05-22 22:45:06 - __main__ - INFO - Initializing database connection...
+2026-05-22 22:45:06 - __main__ - INFO - Database connection established
+2026-05-22 22:45:07 - __main__ - INFO - Database tables verified/created
+2026-05-22 22:45:14 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 22:45:14 - __main__ - INFO - System components initialized successfully
+2026-05-22 22:49:55 - __main__ - INFO - Initializing system components...
+2026-05-22 22:49:55 - __main__ - INFO - Initializing database connection...
+2026-05-22 22:49:55 - __main__ - INFO - Database connection established
+2026-05-22 22:49:55 - __main__ - INFO - Database tables verified/created
+2026-05-22 22:50:01 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 22:50:01 - __main__ - INFO - System components initialized successfully
+2026-05-22 22:51:03 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:51:10 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:51:20 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:51:30 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:51:40 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:51:50 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:00 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:10 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:20 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:30 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:40 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:50 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:53 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:52:54 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:53:13 - __main__ - INFO - Initializing system components...
+2026-05-22 22:53:13 - __main__ - INFO - Initializing database connection...
+2026-05-22 22:53:13 - __main__ - INFO - Database connection established
+2026-05-22 22:53:14 - __main__ - INFO - Database tables verified/created
+2026-05-22 22:53:20 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 22:53:20 - __main__ - INFO - System components initialized successfully
+2026-05-22 22:53:46 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:53:49 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:53:53 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:54:16 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:54:26 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:54:36 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:54:46 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:54:56 - __main__ - ERROR - Error getting stats: 'KnowledgeBaseManager' object has no attribute 'get_stats'
+2026-05-22 22:55:09 - __main__ - INFO - Initializing system components...
+2026-05-22 22:55:09 - __main__ - INFO - Initializing database connection...
+2026-05-22 22:55:09 - __main__ - INFO - Database connection established
+2026-05-22 22:55:09 - __main__ - INFO - Database tables verified/created
+2026-05-22 22:55:15 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 22:55:15 - __main__ - INFO - System components initialized successfully
+2026-05-22 22:59:02 - __main__ - INFO - Analysis session 9554beea-e0f8-4e9c-8c69-c8b619bcd41c deleted from database
+2026-05-22 23:16:32 - __main__ - INFO - Initializing system components...
+2026-05-22 23:16:32 - __main__ - INFO - Initializing database connection...
+2026-05-22 23:16:32 - __main__ - INFO - Database connection established
+2026-05-22 23:16:32 - __main__ - INFO - Database tables verified/created
+2026-05-22 23:16:40 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 23:16:40 - __main__ - INFO - System components initialized successfully
+2026-05-22 23:16:50 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-16-49.log
+2026-05-22 23:16:56 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-16-49.log
+2026-05-22 23:16:56 - __main__ - INFO - Network capture stopped
+2026-05-22 23:21:22 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-21-22.log
+2026-05-22 23:21:24 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-21-22.log
+2026-05-22 23:21:24 - __main__ - INFO - Network capture stopped
+2026-05-22 23:21:52 - __main__ - INFO - Initializing system components...
+2026-05-22 23:21:52 - __main__ - INFO - Initializing database connection...
+2026-05-22 23:21:52 - __main__ - INFO - Database connection established
+2026-05-22 23:21:52 - __main__ - INFO - Database tables verified/created
+2026-05-22 23:21:58 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 23:21:58 - __main__ - INFO - System components initialized successfully
+2026-05-22 23:22:12 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-21-22.log
+2026-05-22 23:22:13 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-21-22.log
+2026-05-22 23:23:08 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-16_13-08-35.log
+2026-05-22 23:23:14 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-23-14.log
+2026-05-22 23:23:15 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-22 23:23:20 - __main__ - INFO - System log capture thread stopped
+2026-05-22 23:23:20 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-22 23:23:20 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-23-14.log
+2026-05-22 23:23:20 - __main__ - INFO - System log capture stopped
+2026-05-22 23:23:20 - __main__ - INFO - System log capture stopped
+2026-05-22 23:23:22 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-23-14.log
+2026-05-22 23:24:16 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-23-14.log
+2026-05-22 23:24:17 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-24-17.log
+2026-05-22 23:24:18 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-22 23:24:23 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-22 23:24:28 - __main__ - INFO - System log capture thread stopped
+2026-05-22 23:24:28 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-22 23:24:28 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-22 23:24:28 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-22 23:24:28 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-22 23:24:28 - __main__ - WARNING - Error closing system log file: I/O operation on closed file.
+2026-05-22 23:24:28 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-24-17.log
+2026-05-22 23:24:28 - __main__ - INFO - System log capture stopped
+2026-05-22 23:24:28 - __main__ - INFO - System log capture stopped
+2026-05-22 23:24:28 - __main__ - INFO - System log capture stopped
+2026-05-22 23:24:28 - __main__ - INFO - System log capture stopped
+2026-05-22 23:24:28 - __main__ - INFO - System log capture stopped
+2026-05-22 23:24:28 - __main__ - INFO - System log capture stopped
+2026-05-22 23:24:29 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-24-17.log
+2026-05-22 23:25:37 - __main__ - INFO - Initializing system components...
+2026-05-22 23:25:37 - __main__ - INFO - Initializing database connection...
+2026-05-22 23:25:37 - __main__ - INFO - Database connection established
+2026-05-22 23:25:37 - __main__ - INFO - Database tables verified/created
+2026-05-22 23:25:43 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-22 23:25:43 - __main__ - INFO - System components initialized successfully
+2026-05-22 23:25:48 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-21-22.log
+2026-05-22 23:25:50 - __main__ - INFO - Network capture started on en0, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-25-49.log
+2026-05-22 23:25:52 - __main__ - INFO - Closed network capture log file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-25-49.log
+2026-05-22 23:25:52 - __main__ - INFO - Network capture stopped
+2026-05-22 23:25:53 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/network_logs_2026-05-22_23-25-49.log
+2026-05-22 23:25:56 - __main__ - INFO - Starting agentic analysis of 100 logs for session 4a68e1f0-ca3b-4346-88f9-1c1fb0d6bb8b
+2026-05-22 23:26:01 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-05-22 23:26:01 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-05-22 23:26:08 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-05-22 23:26:08 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-05-22 23:26:08 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-05-22 23:26:09 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-05-22 23:26:09 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-05-22 23:26:09 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-05-22 23:26:10 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-05-22 23:26:10 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)

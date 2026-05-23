@@ -109,37 +109,47 @@ async function updateOllamaStatus() {
         const response = await fetch('/api/health');
         const data = await response.json();
         ollamaAvailable = data.ollama_available || false;
+        const provider = data.provider || 'unknown';
+        const isOllamaProvider = provider.toLowerCase() === 'ollama';
         
         const ollamaStatus = document.getElementById('ollamaStatus');
         if (ollamaStatus) {
-            if (ollamaAvailable) {
-                ollamaStatus.innerHTML = '<i class="fas fa-circle" style="color: #10b981; font-size: 0.75rem;"></i> Ollama Active (Click for details)';
-                ollamaStatus.style.color = '#10b981';
+            if (isOllamaProvider) {
+                if (ollamaAvailable) {
+                    ollamaStatus.innerHTML = '<i class="fas fa-circle" style="color: #10b981; font-size: 0.75rem;"></i> Ollama Active (Click for details)';
+                    ollamaStatus.style.color = '#10b981';
+                } else {
+                    ollamaStatus.innerHTML = '<i class="fas fa-circle" style="color: #ef4444; font-size: 0.75rem;"></i> Ollama Inactive (Click for details)';
+                    ollamaStatus.style.color = '#ef4444';
+                }
             } else {
-                ollamaStatus.innerHTML = '<i class="fas fa-circle" style="color: #ef4444; font-size: 0.75rem;"></i> Ollama Inactive (Click for details)';
-                ollamaStatus.style.color = '#ef4444';
+                // Using cloud provider like Groq
+                ollamaStatus.innerHTML = `<i class="fas fa-cloud" style="color: #10b981; font-size: 0.75rem;"></i> Using ${provider} (Cloud)`;
+                ollamaStatus.style.color = '#10b981';
             }
         }
         
-        // Disable/enable Agentic RAG option based on Ollama status
+        // Disable/enable Agentic RAG option based on Ollama status (only when using Ollama)
         const agenticOption = document.getElementById('batchSystemSelect')?.querySelector('option[value="agentic"]');
         if (agenticOption) {
-            if (!ollamaAvailable) {
+            if (isOllamaProvider && !ollamaAvailable) {
                 agenticOption.disabled = true;
                 agenticOption.textContent = 'Agentic RAG (Ollama Required - Not Running)';
             } else {
                 agenticOption.disabled = false;
-                agenticOption.textContent = 'Agentic RAG';
+                agenticOption.textContent = 'Agentic RAG (Recommended)';
             }
         }
 
-        // Remove repeated toast warnings - only show once when status changes
-        if (typeof window.lastOllamaStatus !== 'undefined' && window.lastOllamaStatus !== ollamaAvailable) {
-            if (!ollamaAvailable) {
-                showToast('Ollama is not running. Agentic RAG requires Ollama for ReAct-based analysis.', 'warning');
+        // Only show Ollama warning if using Ollama provider and it's not available
+        if (isOllamaProvider) {
+            if (typeof window.lastOllamaStatus !== 'undefined' && window.lastOllamaStatus !== ollamaAvailable) {
+                if (!ollamaAvailable) {
+                    showToast('Ollama is not running. Agentic RAG requires Ollama for ReAct-based analysis.', 'warning');
+                }
             }
+            window.lastOllamaStatus = ollamaAvailable;
         }
-        window.lastOllamaStatus = ollamaAvailable;
     } catch (error) {
         console.error('Ollama status check failed:', error);
         ollamaAvailable = false;
@@ -329,11 +339,16 @@ async function startNetworkCapture() {
             document.getElementById('stopNetworkCaptureBtn').style.display = 'inline-block';
             document.getElementById('analyzeNetworkLogsBtn').style.display = 'none';
         } else {
-            showToast(`Error: ${data.error}`, 'error');
+            // Handle permission error specifically
+            if (response.status === 403) {
+                showToast(`Permission denied: ${data.error || 'Network capture requires sudo/root privileges on macOS. Please run the application with sudo.'}`, 'error', 8000);
+            } else {
+                showToast(`Error: ${data.error || 'Failed to start network capture'}`, 'error');
+            }
         }
     } catch (error) {
         console.error('Error starting network capture:', error);
-        showToast('Error starting network capture', 'error');
+        showToast('Error starting network capture. Please check console for details.', 'error');
     }
 }
 

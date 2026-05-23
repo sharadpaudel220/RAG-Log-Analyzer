@@ -173,9 +173,6 @@ async function loadRecentSessions() {
                         </div>
                         <div class="session-status">
                             <span class="status-badge ${statusClass}">${session.status}</span>
-                            <button class="delete-btn-small" onclick="deleteSessionFromDashboard(event, '${session.session_id}')" title="Delete session">
-                                <i class="fas fa-trash"></i>
-                            </button>
                             <i class="fas fa-chevron-right"></i>
                         </div>
                     </div>
@@ -290,8 +287,18 @@ async function confirmDelete(sessionId, button) {
 
 // Delete session from dashboard
 async function deleteSessionFromDashboard(event, sessionId) {
+    event.preventDefault();
     event.stopPropagation();
-    showDeleteConfirmation(sessionId);
+    // If clicked on the icon inside the button, get the session_id from the button
+    if (!sessionId && event.target.closest('.delete-btn-small')) {
+        const btn = event.target.closest('.delete-btn-small');
+        const onclickAttr = btn.getAttribute('onclick');
+        const match = onclickAttr.match(/deleteSessionFromDashboard\(event,\s*['"]([^'"]+)['"]/);
+        if (match) sessionId = match[1];
+    }
+    if (sessionId) {
+        showDeleteConfirmation(sessionId);
+    }
 }
 
 // Refresh data
