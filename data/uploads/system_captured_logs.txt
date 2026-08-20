@@ -1,6 +1,3 @@
-/dev/rdisk1s3: fsck_apfs completed at Wed May  6 08:17:24 2026
-/dev/rdisk3s4: fsck_apfs started at Wed May  6 08:17:25 2026
-/dev/rdisk3s4: error: container /dev/rdisk3 is mounted with write access; please re-run with -l.
 /dev/rdisk3s4: fsck_apfs completed at Wed May  6 08:17:25 2026
 /dev/rdisk1s4: fsck_apfs started at Wed May  6 08:17:25 2026
 /dev/rdisk1s4: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
@@ -98,3 +95,6 @@
 /dev/rdisk3s3: fsck_apfs started at Thu May 21 05:25:26 2026
 /dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
 /dev/rdisk3s3: fsck_apfs completed at Thu May 21 05:25:26 2026
+/dev/rdisk3s3: fsck_apfs started at Sat May 23 01:33:31 2026
+/dev/rdisk3s3: ** QUICKCHECK ONLY; FILESYSTEM CLEAN
+/dev/rdisk3s3: fsck_apfs completed at Sat May 23 01:33:31 2026

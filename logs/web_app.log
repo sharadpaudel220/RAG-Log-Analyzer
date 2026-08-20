@@ -539,3 +539,60 @@ NameError: name 'formatted_logs' is not defined
 2026-05-22 23:26:09 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
 2026-05-22 23:26:10 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
 2026-05-22 23:26:10 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-05-24 07:11:26 - __main__ - INFO - Initializing system components...
+2026-05-24 07:11:26 - __main__ - INFO - Initializing database connection...
+2026-05-24 07:11:26 - __main__ - INFO - Database connection established
+2026-05-24 07:11:26 - __main__ - INFO - Database tables verified/created
+2026-05-24 07:11:30 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-24 07:11:30 - __main__ - INFO - System components initialized successfully
+2026-05-24 07:12:18 - __main__ - INFO - DEBUG analyze_file: system_type=agentic, provider=groq, ollama_available=False
+2026-05-24 07:12:19 - __main__ - INFO - Starting agentic analysis of 100 logs for session d8066eca-ed76-4271-be31-b4e9dea5e4aa
+2026-05-24 07:12:21 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-05-24 07:12:30 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-05-24 07:12:34 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-05-24 07:12:35 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-05-24 07:12:47 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-05-24 07:12:47 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-05-24 07:12:47 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-05-24 07:12:47 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-05-24 07:12:55 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-05-24 07:12:55 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-05-24 07:13:57 - __main__ - INFO - Analysis session d8066eca-ed76-4271-be31-b4e9dea5e4aa deleted from database
+2026-05-24 07:14:29 - __main__ - INFO - Cleared evaluation files: []
+2026-05-24 09:11:56 - __main__ - INFO - Initializing system components...
+2026-05-24 09:11:56 - __main__ - INFO - Initializing database connection...
+2026-05-24 09:11:56 - __main__ - INFO - Database connection established
+2026-05-24 09:11:56 - __main__ - INFO - Database tables verified/created
+2026-05-24 09:12:01 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-24 09:12:01 - __main__ - INFO - System components initialized successfully
+2026-05-24 09:39:03 - __main__ - INFO - Initializing system components...
+2026-05-24 09:39:03 - __main__ - INFO - Initializing database connection...
+2026-05-24 09:39:03 - __main__ - INFO - Database connection established
+2026-05-24 09:39:03 - __main__ - INFO - Database tables verified/created
+2026-05-24 09:39:09 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-24 09:39:09 - __main__ - INFO - System components initialized successfully
+2026-05-24 09:40:32 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-22_23-24-17.log
+2026-05-24 09:40:39 - __main__ - INFO - System log capture started, saving to /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-24_09-40-39.log
+2026-05-24 09:40:40 - __main__ - INFO - Wrote 100 lines to system log capture file
+2026-05-24 09:40:45 - __main__ - INFO - System log capture thread stopped
+2026-05-24 09:40:45 - __main__ - INFO - Closed system log capture file: /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-24_09-40-39.log
+2026-05-24 09:40:45 - __main__ - INFO - System log capture stopped
+2026-05-24 09:40:45 - __main__ - INFO - Successfully read 100 logs from /Users/sharadpaudel/Documents/Log analyzer/log-analyzer/logs/system_logs_2026-05-24_09-40-39.log
+2026-05-24 09:40:52 - __main__ - INFO - DEBUG analyze_file: system_type=agentic, provider=groq, ollama_available=False
+2026-05-24 09:40:52 - __main__ - INFO - Starting agentic analysis of 100 logs for session 21e4a87a-efb5-43f5-9dc1-7f81e3632862
+2026-05-24 09:41:04 - __main__ - INFO - Progress: 10/100 logs analyzed (10%)
+2026-05-24 09:41:06 - __main__ - INFO - Progress: 20/100 logs analyzed (20%)
+2026-05-24 09:41:07 - __main__ - INFO - Progress: 30/100 logs analyzed (30%)
+2026-05-24 09:41:09 - __main__ - INFO - Progress: 40/100 logs analyzed (40%)
+2026-05-24 09:41:15 - __main__ - INFO - Progress: 50/100 logs analyzed (50%)
+2026-05-24 09:41:20 - __main__ - INFO - Progress: 60/100 logs analyzed (60%)
+2026-05-24 09:41:38 - __main__ - INFO - Progress: 70/100 logs analyzed (70%)
+2026-05-24 09:41:38 - __main__ - INFO - Progress: 80/100 logs analyzed (80%)
+2026-05-24 09:41:38 - __main__ - INFO - Progress: 90/100 logs analyzed (90%)
+2026-05-24 09:41:38 - __main__ - INFO - Progress: 100/100 logs analyzed (100%)
+2026-05-24 10:13:54 - __main__ - INFO - Initializing system components...
+2026-05-24 10:13:54 - __main__ - INFO - Initializing database connection...
+2026-05-24 10:13:54 - __main__ - INFO - Database connection established
+2026-05-24 10:13:54 - __main__ - INFO - Database tables verified/created
+2026-05-24 10:14:00 - __main__ - INFO - LLM provider 'groq' ready (model: llama-3.1-8b-instant)
+2026-05-24 10:14:00 - __main__ - INFO - System components initialized successfully

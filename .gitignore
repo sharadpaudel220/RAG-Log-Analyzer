@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Environment Variables (CONTAINS SECRETS)
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Results
+results/
+*.json
+dissertation_evaluation_results.json
+
+# Data
+data/uploads/
+data/knowledge_base/
+data/datasets/hdfs/
+data/datasets/bgl/
+
+# Database
+*.db
+*.sqlite
+
+# Pickle files
+*.pkl
+
+# FAISS index
+*.index
+
+# PDF and large files
+*.pdf
+Thesis.pdf
+thesis_text.txt
+
+# HTML reports
+SYSTEM_ARCHITECTURE.html
+
+# pytest
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
